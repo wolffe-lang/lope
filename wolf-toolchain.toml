@@ -1,0 +1,49 @@
+# lope — the pinned toolchain.
+#
+# wolf and lupin come from their RELEASE ARCHIVES, pinned by sha256
+# digest, never from a source build: boreutils' and pelt's shape.
+# `tools/fetch-toolchain` downloads the archive for this host, refuses
+# on a digest mismatch, and stages the whole archive into `.wolf-bin/`
+# (gitignored): the native tier needs `libwolf_rt.a` beside the driver.
+#
+# Identity is the FIRST line of `--version`: `tools/lib-toolchain.sh`
+# refuses when it drifts from `version_line`. `rev` is information: the
+# commit the tag names.
+#
+# ## The first pin: 0.2.33 / 0.1.54 (lp00, 2026-10-19)
+#
+# Digests read twice from the release API (wolf-lang release 417610226,
+# wolf-interp release 415937354), equal both times, and the linux x86-64
+# pair hashed twice after download on kasumi. The tag objects: v0.2.33
+# `56110e4f` -> `85dab5d7`, v0.1.54 `9c98d445` -> `0e536e8f`. The wolf
+# archive bundles wolf-std `cceda63` (`std/STD-REV`), which is the std
+# pin below.
+#
+# Windows is not pinned: lope is a shell companion for unix shells.
+
+[wolf]
+version = "0.2.33"
+repo = "wolffe-lang/wolf-lang"
+rev = "85dab5d7e597680d6fd7034f1d7ed2acb9a92f97"
+version_line = "wolf 0.2.33 (wolfgang, pin 85dab5d)"
+aarch64-apple-darwin = "9152dbd136d858539100088394cbaa97cf23f7ddd2816512cd9b48c70a9f40eb"
+x86_64-unknown-linux-gnu = "4f955e8dfe6eaafa441903eeba43c009c4ec2b45a8da09fe13431e8b12340af8"
+aarch64-unknown-linux-gnu = "24cde9e4668d17448527f774db602d93a348d285c2219a1edff791519530a2ac"
+
+[lupin]
+# The reference interpreter wolf 0.2.33 declares as its pairing:
+# `wolf --version` line 2 reads "paired with lupin 0.1.54 (reference
+# interpreter), pin 294d626".
+version = "0.1.54"
+repo = "wolffe-lang/wolf-interp"
+rev = "0e536e8fb4518eaa798ac426901ab81275db5c9f"
+version_line = "lupin 0.1.54 (wolf-interp, reference interpreter at pin 294d626)"
+aarch64-apple-darwin = "9cd14db71e32c277829b5e05cdae27bf60cd6f269a9a24f97a7dba67e28a4093"
+x86_64-unknown-linux-gnu = "175df23880cd5bb993b778e5c8fdd7d0d96c176696802e640f6fc87d3dab40dd"
+aarch64-unknown-linux-gnu = "5fb15e31289d810129b40a9a0af07417d85d5090e74045f66b1f7f4016d166e7"
+
+[std]
+# The tree is pinned by commit: git's object hash is the digest. It is
+# the commit the wolf archive bundles as `std/`.
+repo = "wolffe-lang/wolf-std"
+rev = "cceda63151430eac07df895fdfffddfa4a0b92c1"
