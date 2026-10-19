@@ -1,0 +1,29 @@
+#!/bin/sh
+# mkstatic — lope as a fully static x86-64 Linux executable, the shape PAX
+# runs (pax's tools/mkpelt builds pelt the same way): the release tier,
+# linked through a `cc` that adds `-static` (tools/build --static),
+# checked to be ET_EXEC with no PT_INTERP, its digest written to
+# OUTDIR/sums.txt as `lope <sha256> <bytes>`.
+#
+#   tools/mkstatic OUTDIR
+#
+# Build on a baseline x86-64 glibc (the CI runner's Ubuntu; an Ubuntu
+# container on kasumi), never on kasumi's CachyOS x86-64-v4 glibc (px10).
+set -eu
+LOPE_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+out=${1:?usage: mkstatic OUTDIR}
+cd "$LOPE_ROOT"
+tools/build --static
+mkdir -p "$out"
+[ "$(cd "$out" && pwd)" = "$LOPE_ROOT/target/static" ] || cp target/static/lope "$out/lope"
+bin="$out/lope"
+readelf -hW "$bin" | grep -Eq 'Type: +EXEC' || { echo "mkstatic: $bin is not ET_EXEC" >&2; exit 1; }
+if readelf -lW "$bin" | grep -q INTERP; then
+    echo "mkstatic: $bin has a PT_INTERP (not static)" >&2
+    exit 1
+fi
+"$bin" --version
+sum=$(sha256sum "$bin" | cut -d' ' -f1)
+bytes=$(wc -c <"$bin" | tr -d ' ')
+printf 'lope %s %s\n' "$sum" "$bytes" | tee "$out/sums.txt"
+printf 'linked against: %s\n' "$(cc -print-file-name=libc.a)"

@@ -1,0 +1,20 @@
+#!/bin/sh
+# fetch-gump — gump at gump.pin, built from its own tree into .gump/
+# (gitignored): the binary the speed gate times lope against. The oracle's
+# answers are recorded (tests/oracle/), so nothing else needs gump.
+set -eu
+LOPE_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$LOPE_ROOT"
+. ./gump.pin
+if [ ! -d .gump/.git ]; then
+    git init -q .gump
+fi
+if [ "$(git -C .gump rev-parse -q --verify HEAD 2>/dev/null || true)" != "$GUMP_REV" ]; then
+    git -C .gump fetch -q --depth 1 "$GUMP_REPO" "$GUMP_REV"
+    git -C .gump checkout -q --detach FETCH_HEAD
+fi
+[ "$(git -C .gump rev-parse HEAD)" = "$GUMP_REV" ] || { echo "fetch-gump: HEAD is not $GUMP_REV" >&2; exit 1; }
+(cd .gump && CARGO_INCREMENTAL=0 cargo build --release --locked --quiet)
+v=$(.gump/target/release/gump --version)
+[ "$v" = "gump $GUMP_VERSION" ] || { echo "fetch-gump: built '$v', pin says gump $GUMP_VERSION" >&2; exit 1; }
+echo "fetch-gump: $v at $GUMP_REV"
