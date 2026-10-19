@@ -24,10 +24,14 @@
     fi
 }
 
-# Interactive mode with fzf
+# Interactive mode: fzf when it is installed, else a numbered menu
 @CMD@i() {
     local result
-    result=$(command lope query --all -- "$@" | fzf --height=40% --reverse)
+    if command -v fzf >/dev/null 2>&1; then
+        result=$(command lope query --all -- "$@" | fzf --height=40% --reverse)
+    else
+        result=$(__lope_menu "$@")
+    fi
     if [[ -n "$result" ]]; then
         builtin cd -- "$result" && __lope_hook
     fi

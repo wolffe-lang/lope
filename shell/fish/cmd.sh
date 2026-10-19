@@ -23,10 +23,29 @@ function @CMD@ --description "Jump to a directory"
     end
 end
 
-# Interactive mode with fzf
+# Interactive mode: fzf when it is installed, else a numbered menu
 function @CMD@i --description "Jump to a directory (interactive)"
-    set -l result (command lope query --all -- $argv | fzf --height=40% --reverse)
-    if test -n "$result"
-        cd $result
+    if type -q fzf
+        set -l result (command lope query --all -- $argv | fzf --height=40% --reverse)
+        if test -n "$result"
+            cd $result
+        end
+        return
+    end
+    set -l all (command lope query --all -- $argv)
+    or return 1
+    set -l n (count $all)
+    if test $n -gt 9
+        set n 9
+    end
+    for i in (seq $n)
+        printf '%s) %s\n' $i $all[$i] >&2
+    end
+    read -P "lope: which (1-$n)? " -l pick
+    or return 1
+    if string match -qr '^[1-9]$' -- "$pick"; and test $pick -le $n
+        cd $all[$pick]
+    else
+        return 1
     end
 end
