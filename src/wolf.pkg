@@ -1,0 +1,17 @@
+// wolf.pkg — the lope manifest, beside the entry `wolf build` is given
+// (`src/lope.lu`), so it governs the real build (lobo's ws55 lesson).
+// Zero dependencies but wolf-std (the track's rule 2).
+//
+// THE CAPABILITIES are what lope's own code reaches:
+//   env  — its arguments, `HOME`, `XDG_DATA_HOME`, `LOPE_*`, `EDITOR`,
+//          `PATH`, the working directory;
+//   fs   — the store and its temporary file, gump's `db.bin` and the other
+//          tools' files for `import`, the working directory's listing,
+//          `edit`'s text file;
+//   exec — `edit` runs `$EDITOR`; `import` runs `zoxide query`.
+pkg {
+    name: "lope",
+    version: "0.1.0",
+    edition: "1",
+    capabilities: [env, exec, fs],
+}

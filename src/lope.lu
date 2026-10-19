@@ -1,0 +1,42 @@
+//! member: false
+//!
+//! lope — a frecency directory jumper: type a fragment of a directory,
+//! land where you meant (gump, ported to wolf and renamed; Track 13,
+//! ruling #91). `lope --help` lists the commands; README.md says how the
+//! shells call them.
+
+use cli
+use cmd
+use out
+
+fn main() -> int {
+    var o = out.stdout()
+    var e = out.stderr()
+    let a = cli.parse(env_args(), mut o, mut e)
+    var status = a.stop
+    if status < 0 {
+        status = run(a, mut o, mut e)
+    }
+    out.flush(mut o)
+    out.flush(mut e)
+    status
+}
+
+fn run(a: cli.Args, mut o: out.Out, mut e: out.Out) -> int {
+    if a.cmd == "add" {
+        return cmd.add(a.path, mut e)
+    }
+    if a.cmd == "query" {
+        return cmd.query(a.terms, a.score, a.all, a.cwd, mut o, mut e)
+    }
+    if a.cmd == "remove" {
+        return cmd.remove(a.path, mut e)
+    }
+    if a.cmd == "list" {
+        return cmd.list(a.score, mut o, mut e)
+    }
+    if a.cmd == "clean" {
+        return cmd.clean(mut o, mut e)
+    }
+    0
+}
