@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""oracle-record — ask the gump binary (gump.pin's commit) every query of
+tests/oracle/queries.jsonl against its store, and write the answers to
+tests/oracle/corpus.jsonl. Run on kasumi, where gump is built at the pin;
+the corpus is then committed and tools/oracle-check replays it against
+lope on every host, with no gump present.
+
+    tools/oracle-record GUMP
+
+Each store is written as gump's own `db.bin` (tools/gumpdb.py: bincode 1,
+the layout `src/db/gump.lu` reads) with every visit time set AGE seconds
+before now. Per query the record keeps gump's landing (`gump query --
+TERMS`, asked three times: gump's store is a hash map, so equal scores
+come back in a different order each run), the full ranking with scores
+(`query -a -s`), and the tie set: every path whose printed score equals
+the best one. A landing is null when gump found nothing (status 1).
+"""
+import json, os, shutil, subprocess, sys, tempfile, time
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import gumpdb  # noqa: E402
+
+
+def load_store(name):
+    rows = []
+    for line in open(os.path.join(ROOT, "tests/oracle/stores", name + ".tsv"), encoding="utf-8"):
+        if line.startswith("#") or not line.strip():
+            continue
+        s, a, c, p = line.rstrip("\n").split("\t", 3)
+        rows.append({"score": float(s), "age_s": int(a), "count": int(c), "path": p})
+    return rows
+
+
+def cwd_case(gump, q, d, cwd, names):
+    """`gump query --cwd` in a directory of `names`; the tie set from the
+    names' own match scores (a store of the bare names at frecency 0
+    prints them: `query -a -s`)."""
+    env = {"PATH": "/usr/bin:/bin", "HOME": d, "GUMP_DATA_DIR": os.path.join(d, "names")}
+    os.makedirs(env["GUMP_DATA_DIR"], exist_ok=True)
+    gumpdb.write([{"path": n, "score": 0} for n in names], os.path.join(env["GUMP_DATA_DIR"], "db.bin"))
+    p = subprocess.run([gump, "query", "--cwd", "--"] + q["terms"], env=env, cwd=cwd, capture_output=True, text=True)
+    land = p.stdout.strip()[len(cwd) + 1:] if p.returncode == 0 else None
+    p = subprocess.run([gump, "query", "-a", "-s", "--"] + q["terms"], env=env, cwd=cwd, capture_output=True, text=True)
+    ranking = []
+    if p.returncode == 0:
+        for line in p.stdout.splitlines():
+            sc, path = line.strip().split("  ", 1)
+            ranking.append((float(sc), path))
+    ties = [path for sc, path in ranking if ranking and sc == ranking[0][0]]
+    rec = dict(q)
+    rec.update({"gump": land, "landings": 1, "top": ranking[0][0] if ranking else None,
+                "ties": ties if len(ties) > 1 else [], "matches": len(ranking)})
+    return rec
+
+
+def main():
+    gump = os.path.abspath(sys.argv[1])
+    qs = [json.loads(l) for l in open(os.path.join(ROOT, "tests/oracle/queries.jsonl"), encoding="utf-8")]
+    out = []
+    d = tempfile.mkdtemp(prefix="lope-oracle-")
+    try:
+        current = None
+        names = [n for n in open(os.path.join(ROOT, "tests/oracle/cwd-names.txt"), encoding="utf-8").read().split("\n") if n]
+        cwd = os.path.join(d, "cwd")
+        os.makedirs(cwd)
+        for n in names:
+            os.makedirs(os.path.join(cwd, n))
+        for q in qs:
+            if q["store"] == "cwd":
+                out.append(cwd_case(gump, q, d, cwd, names))
+                continue
+            if q["store"] != current:
+                current = q["store"]
+                gumpdb.write(load_store(current), os.path.join(d, "db.bin"), now_ms=int(time.time() * 1000))
+            env = {"PATH": "/usr/bin:/bin", "HOME": d, "GUMP_DATA_DIR": d}
+            lands = set()
+            for _ in range(3):
+                p = subprocess.run([gump, "query", "--"] + q["terms"], env=env, cwd=d, capture_output=True, text=True)
+                lands.add(p.stdout.strip() if p.returncode == 0 else None)
+            p = subprocess.run([gump, "query", "-a", "-s", "--"] + q["terms"], env=env, cwd=d, capture_output=True, text=True)
+            ranking = []
+            if p.returncode == 0:
+                for line in p.stdout.splitlines():
+                    sc, path = line.strip().split("  ", 1)
+                    ranking.append((float(sc), path))
+            ties = [path for sc, path in ranking if ranking and sc == ranking[0][0]]
+            first = sorted(x for x in lands if x is not None)
+            rec = dict(q)
+            rec["gump"] = first[0] if first else None
+            rec["landings"] = len(lands)
+            rec["top"] = ranking[0][0] if ranking else None
+            rec["ties"] = ties if len(ties) > 1 else []
+            rec["matches"] = len(ranking)
+            out.append(rec)
+    finally:
+        shutil.rmtree(d)
+    with open(os.path.join(ROOT, "tests/oracle/corpus.jsonl"), "w", encoding="utf-8") as f:
+        for r in out:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print("oracle-record: %d cases, %d with ties at the top, %d with no match" % (
+        len(out), sum(1 for r in out if r["ties"]), sum(1 for r in out if r["gump"] is None)))
+
+
+if __name__ == "__main__":
+    main()
