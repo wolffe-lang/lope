@@ -1,0 +1,9 @@
+#!/bin/sh
+# check-test — the unit tests (`src/*_test.lu`) on the native tier: the
+# matcher's rows, the frecency buckets at frozen times, the codecs.
+set -eu
+LOPE_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+export LOPE_ROOT
+cd "$LOPE_ROOT"
+. tools/lib-toolchain.sh
+"$WOLF" test

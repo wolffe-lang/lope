@@ -1,0 +1,8 @@
+#!/bin/sh
+# check-fmt — `wolf fmt --check` over every .lu in src/.
+set -eu
+LOPE_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+export LOPE_ROOT
+cd "$LOPE_ROOT"
+. tools/lib-toolchain.sh
+"$WOLF" fmt --check src
