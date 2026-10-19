@@ -1,0 +1,65 @@
+//! entry — one directory the store remembers, and the frecency rule
+//! (gump `src/db/entry.rs`): a raw score that grows by one per visit,
+//! weighed by how long ago the last visit was.
+
+/// One remembered directory: its path, its raw score in millionths
+/// (gump keeps an `f64`; a millionth is far below any difference a
+/// ranking can see), the last visit in Unix milliseconds, and the number
+/// of visits.
+pub struct Entry {
+    path: str,
+    score: int,
+    last: int,
+    count: int,
+}
+
+/// One whole point of raw score, in millionths.
+pub fn unit() -> int {
+    1000000
+}
+
+/// A new entry for `path`, first visited at `now` (gump
+/// `entry.rs:19`: score 1, one visit).
+pub fn fresh(path: str, now: int) -> Entry {
+    Entry { path: path, score: unit(), last: now, count: 1 }
+}
+
+/// Whole hours from `then` to `now`, truncated toward zero as chrono's
+/// `num_hours` truncates (a visit in the future is a negative duration).
+pub fn hours_between(then: int, now: int) -> int {
+    (now - then) / 3600000
+}
+
+/// The frecency multiplier for a visit `hours` ago, in quarters (gump
+/// `entry.rs:50`): within the hour ×4 (16 quarters), within the day ×2
+/// (8), within the week ×½ (2), after that ×¼ (1).
+pub fn quarters(hours: int) -> int {
+    if hours < 1 {
+        return 16
+    }
+    if hours < 24 {
+        return 8
+    }
+    if hours < 24 * 7 {
+        return 2
+    }
+    1
+}
+
+/// The frecency of `e` at `now`, in quarter-millionths
+/// (`score × multiplier × 4,000,000`).
+pub fn frecency_q(e: Entry, now: int) -> int {
+    e.score * quarters(hours_between(e.last, now))
+}
+
+/// The frecency of a raw `score` (millionths) last visited at `last`.
+pub fn frecency_of(score: int, last: int, now: int) -> int {
+    score * quarters(hours_between(last, now))
+}
+
+/// Whether `e` is stale at `now`: more than 90 whole days since the
+/// last visit (gump `entry.rs:69`; `clean` also asks that the path be
+/// gone).
+pub fn is_stale(e: Entry, now: int) -> bool {
+    (now - e.last) / 86400000 > 90
+}
