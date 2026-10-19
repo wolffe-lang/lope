@@ -499,7 +499,7 @@ fn parse_sub(argv: List[str], mut a: Args, mut o: out.Out, mut e: out.Out) {
                 } else {
                     "--{sim}"
                 }
-                (mut fl).push(shown)
+                let _fresh = mark(mut fl, shown)
                 a.stop = fail(
                     mut e,
                     "error: unexpected argument '{arg}' found\n\n  tip: a similar argument exists: '--{sim}'\n\nUsage: {usage_used(cmd, ordered(fl), positional)}\n\nFor more information, try '--help'.\n",
