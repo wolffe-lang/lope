@@ -1,0 +1,362 @@
+//! cmd — the subcommands (gump `src/cmd/*.rs`): each answers the status
+//! the program ends with, its output written to `o` and its messages to
+//! `e`, as `lope: <message>` (gump `main.rs:26`).
+
+use db
+use matcher
+use out
+
+/// `lope: <msg>` on standard error; status 1.
+pub fn failed(mut e: out.Out, msg: str) -> int {
+    out.line(mut e, "lope: {msg}")
+    1
+}
+
+/// The words for the last host error, as Rust's `io::Error` prints them.
+pub fn io_words() -> str {
+    let code = os_error()
+    if code == 0 {
+        return "I/O error: an unknown failure"
+    }
+    "I/O error: {os_error_text(code)} (os error {code})"
+}
+
+/// The store, read whole; `stop` set (and a message written) when it
+/// cannot be.
+pub struct Loaded {
+    store: db.Store,
+    stop: int,
+}
+
+/// Open the store at `file` (an empty one when it does not exist).
+pub fn open_store(file: str, now: int, mut e: out.Out) -> Loaded {
+    let text = db.load_text(file) else |err| match err {
+        io => {
+            return Loaded { store: db.empty(file, now), stop: failed(mut e, io_words()) }
+        },
+        utf8 => {
+            return Loaded {
+                store: db.empty(file, now),
+                stop: failed(mut e, "{file}: the store is not text"),
+            }
+        },
+    }
+    let s = db.decode(text, file, now) else |_| {
+        let n = db.bad_line(text)
+        return Loaded {
+            store: db.empty(file, now),
+            stop: failed(mut e, "{file}: line {n} is not a lope store line"),
+        }
+    }
+    Loaded { store: s, stop: -1 }
+}
+
+/// Write the store back; status 0, or 1 with the reason.
+pub fn save_store(s: db.Store, mut e: out.Out) -> int {
+    db.save(s) else |_| {
+        return failed(mut e, io_words())
+    }
+    0
+}
+
+/// `lope add [PATH]` (gump `add.rs`): record a visit.
+pub fn add(path: str, mut e: out.Out) -> int {
+    let now = time_unix_ms()
+    var l = open_store(db.store_file(), now, mut e)
+    if l.stop >= 0 {
+        return l.stop
+    }
+    let p = db.canonical(path) else |_| {
+        return failed(mut e, io_words())
+    }
+    db.visit(mut l.store, p, now)
+    save_store(l.store, mut e)
+}
+
+/// `lope remove PATH` (gump `remove.rs`).
+pub fn remove(path: str, mut e: out.Out) -> int {
+    let now = time_unix_ms()
+    var l = open_store(db.store_file(), now, mut e)
+    if l.stop >= 0 {
+        return l.stop
+    }
+    let p = db.canonical(path) else |_| {
+        return failed(mut e, io_words())
+    }
+    db.drop_path(mut l.store, p) else |_| {
+        return failed(mut e, "Path not found in database: {p}")
+    }
+    save_store(l.store, mut e)
+}
+
+/// `lope clean` (gump `clean.rs`).
+pub fn clean(mut o: out.Out, mut e: out.Out) -> int {
+    let now = time_unix_ms()
+    var l = open_store(db.store_file(), now, mut e)
+    if l.stop >= 0 {
+        return l.stop
+    }
+    let gone = db.clean(mut l.store, now)
+    if gone.len == 0 {
+        out.line(mut o, "No stale entries found")
+    } else {
+        out.line(mut o, "Removed {gone.len} stale entries:")
+        for p in gone {
+            out.line(mut o, "  {p}")
+        }
+    }
+    save_store(l.store, mut e)
+}
+
+/// Whether ranked item `a` goes before `b`: the higher key; on a tie
+/// (where gump's order is its hash map's, a different one each run) the
+/// higher frecency, then the shorter path, then the smaller in byte
+/// order (docs/MATCHER.md, "Ties").
+fn before(ka: int, fa: int, pa: str, kb: int, fb: int, pb: str) -> bool {
+    if ka != kb {
+        return ka > kb
+    }
+    if fa != fb {
+        return fa > fb
+    }
+    if pa.len != pb.len {
+        return pa.len < pb.len
+    }
+    pa < pb
+}
+
+/// The indices `0..keys.len` in ranked order (a stable merge sort under
+/// `before`).
+pub fn ranked(keys: List[int], fq: List[int], paths: List[str]) -> List[int] {
+    var idx = List[int]()
+    for i in 0..keys.len {
+        (mut idx).push(i)
+    }
+    var tmp = copy idx
+    var width = 1
+    let n = idx.len
+    while width < n {
+        var lo = 0
+        while lo < n {
+            let mid = if lo + width < n then lo + width else n
+            let hi = if lo + 2 * width < n then lo + 2 * width else n
+            var i = lo
+            var j = mid
+            var k = lo
+            while k < hi {
+                if i < mid &&
+                    (
+                        j >= hi ||
+                            !before(
+                                keys[idx[j]],
+                                fq[idx[j]],
+                                paths[idx[j]],
+                                keys[idx[i]],
+                                fq[idx[i]],
+                                paths[idx[i]],
+                            )
+                    ) {
+                    tmp[k] = idx[i]
+                    i += 1
+                } else {
+                    tmp[k] = idx[j]
+                    j += 1
+                }
+                k += 1
+            }
+            lo += 2 * width
+        }
+        let t = idx
+        idx = tmp
+        tmp = t
+        width *= 2
+    }
+    idx
+}
+
+/// `lope list [-s]` (gump `list.rs`): every entry, most frecent first.
+pub fn list(score: bool, mut o: out.Out, mut e: out.Out) -> int {
+    let now = time_unix_ms()
+    let l = open_store(db.store_file(), now, mut e)
+    if l.stop >= 0 {
+        return l.stop
+    }
+    print_all(l.store, score, now, mut o)
+    0
+}
+
+/// Every entry of `s`, most frecent first, with the frecency when
+/// `score`.
+fn print_all(s: db.Store, score: bool, now: int, mut o: out.Out) {
+    var fq = List[int]()
+    var paths = List[str]()
+    for en in s.entries {
+        (mut fq).push(db.frecency_q(en, now))
+        (mut paths).push(en.path)
+    }
+    let order = ranked(fq, fq, paths)
+    for i in order {
+        if score {
+            out.line(mut o, "{out.score_cell(fq[i], 4000000)}  {paths[i]}")
+        } else {
+            out.line(mut o, paths[i])
+        }
+    }
+}
+
+/// `lope query [TERMS]... [-s] [-a] [--cwd]` (gump `query.rs`).
+pub fn query(
+    terms: List[str],
+    score: bool,
+    all: bool,
+    cwd: bool,
+    mut o: out.Out,
+    mut e: out.Out,
+) -> int {
+    if terms.len == 0 && !all {
+        return failed(mut e, "no search terms provided")
+    }
+    if cwd {
+        return query_cwd(terms, all, mut o, mut e)
+    }
+    let now = time_unix_ms()
+    let file = db.store_file()
+    let text = db.load_text(file) else |err| match err {
+        io => { return failed(mut e, io_words()) },
+        utf8 => { return failed(mut e, "{file}: the store is not text") },
+    }
+    if terms.len == 0 {
+        let s = db.decode(text, file, now) else |_| {
+            return failed(mut e, "{file}: line {db.bad_line(text)} is not a lope store line")
+        }
+        if s.entries.len == 0 {
+            return 1
+        }
+        print_all(s, score, now, mut o)
+        return 0
+    }
+    let q = matcher.query_of(terms)
+    var keys = List[int]()
+    var fqs = List[int]()
+    var paths = List[str]()
+    var n = 0
+    for line in text.lines() {
+        n += 1
+        if n == 1 {
+            if line != db.magic() {
+                return failed(mut e, "{file}: line 1 is not a lope store line")
+            }
+            continue
+        }
+        if line.len == 0 || n == 2 && line.starts_with("cleanup ") {
+            continue
+        }
+        let p0 = db.path_start(line)
+        if p0 < 0 || p0 >= line.len {
+            return failed(mut e, "{file}: line {n} is not a lope store line")
+        }
+        let path = db.unescape(line[p0..line.len]) else |_| {
+            return failed(mut e, "{file}: line {n} is not a lope store line")
+        }
+        if !matcher.may_match(q, path) {
+            continue
+        }
+        var s = -1
+        region scratch {
+            s = matcher.score(q, matcher.hay_of(path))
+        }
+        if s < 0 {
+            continue
+        }
+        let (raw, last, _c, _p) = db.fields_of(line) else |_| {
+            return failed(mut e, "{file}: line {n} is not a lope store line")
+        }
+        let f = db.frecency_of(raw, last, now)
+        (mut keys).push(matcher.key_of(s, f))
+        (mut fqs).push(f)
+        (mut paths).push(path)
+    }
+    if keys.len == 0 {
+        return 1
+    }
+    if !all {
+        var b = 0
+        var i = 1
+        while i < keys.len {
+            if before(keys[i], fqs[i], paths[i], keys[b], fqs[b], paths[b]) {
+                b = i
+            }
+            i += 1
+        }
+        emit(score, keys[b], paths[b], mut o)
+        return 0
+    }
+    for i in ranked(keys, fqs, paths) {
+        emit(score, keys[i], paths[i], mut o)
+    }
+    0
+}
+
+fn emit(score: bool, key: int, path: str, mut o: out.Out) {
+    if score {
+        out.line(mut o, "{out.score_cell(key, 640000000)}  {path}")
+    } else {
+        out.line(mut o, path)
+    }
+}
+
+/// `query --cwd` (gump `query.rs:81`): the working directory's own
+/// subdirectories, matched by NAME, each at frecency 1; ties keep the
+/// order the directory lists them in, as gump's stable sort keeps
+/// `read_dir`'s.
+fn query_cwd(terms: List[str], all: bool, mut o: out.Out, mut e: out.Out) -> int {
+    let cwd = os_cwd() else |_| {
+        return failed(mut e, io_words())
+    }
+    let listing = fs_read_dir_entries(cwd) else |_| {
+        return failed(mut e, io_words())
+    }
+    var names = List[str]()
+    for ent in listing {
+        if ent.len > 1 && ent[0] as int == 1 {
+            let name = str_from_utf8(ent[1..ent.len]) else ""
+            if name.len > 0 {
+                (mut names).push(name)
+            }
+        }
+    }
+    if names.len == 0 {
+        return 1
+    }
+    let q = matcher.query_of(terms)
+    var keys = List[int]()
+    var hits = List[str]()
+    for name in names {
+        var s = -1
+        region scratch {
+            s = matcher.score(q, matcher.hay_of(name))
+        }
+        if s >= 0 {
+            (mut keys).push(matcher.key_of(s, 4000000))
+            (mut hits).push(name)
+        }
+    }
+    if keys.len == 0 {
+        return 1
+    }
+    var same = List[int]()
+    var plen = List[str]()
+    for i in 0..keys.len {
+        (mut same).push(0)
+        (mut plen).push("")
+    }
+    let order = ranked(keys, same, plen)
+    if !all {
+        out.line(mut o, db.join(cwd, hits[order[0]]))
+        return 0
+    }
+    for i in order {
+        out.line(mut o, db.join(cwd, hits[i]))
+    }
+    0
+}
