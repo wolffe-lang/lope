@@ -1,0 +1,5 @@
+$ROOT/code/lope|25|1760000000
+$ROOT/code/wolf|7.5|1760000100
+$ROOT/missing-dir|99|1760000200
+$ROOT/a-file.txt|5|1760000300
+broken line without pipes

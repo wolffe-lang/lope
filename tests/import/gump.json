@@ -1,0 +1,5 @@
+[
+ {"path": "$ROOT/code/wolf", "score": 42.0, "age_s": 7200, "count": 42},
+ {"path": "$ROOT/code/gump", "score": 3.333333, "age_s": 900, "count": 9},
+ {"path": "$ROOT/gone-now", "score": 1.5, "age_s": 864000, "count": 2}
+]

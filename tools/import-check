@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""import-check — `import` on hand-written fixtures (tests/import/,
+FORMATS.md says where each format was read): autojump, z, fasd, zoxide
+(a stand-in `zoxide` on PATH prints `zoxide-query.txt`) and gump's own
+`db.bin`.
+
+    tools/import-check LOPE                 hold lope to tests/import/expected.txt
+    tools/import-check LOPE --gump GUMP     also run gump's own import on the
+                                            same files (kasumi), and print both
+
+The check: the summary lope prints, and `lope list -s` afterwards (the
+frecency each directory entered with), sorted, equal to expected.txt. With
+--gump, gump's summary and listing for the four other tools are printed
+beside lope's: the same entries at the same frecency (gump has no gump
+importer, so its listing lacks gump.json's rows).
+"""
+import json, os, shutil, stat, subprocess, sys, tempfile, time
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FIX = os.path.join(ROOT, "tests/import")
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import gumpdb  # noqa: E402
+
+
+def scratch():
+    d = tempfile.mkdtemp(prefix="lope-import-")
+    for p in ("code/wolf", "code/gump", "code/lope", "code/pax", "code", "Documents", "Downloads", "bin", "data", "home"):
+        os.makedirs(os.path.join(d, p), exist_ok=True)
+    open(os.path.join(d, "a-file.txt"), "w").close()
+    sub = lambda s: s.replace("$ROOT", d)
+    os.makedirs(os.path.join(d, "data/autojump"))
+    open(os.path.join(d, "data/autojump/autojump.txt"), "w").write(sub(open(os.path.join(FIX, "autojump.txt")).read()))
+    open(os.path.join(d, "home/.z"), "w").write(sub(open(os.path.join(FIX, "z.txt")).read()))
+    open(os.path.join(d, "home/.fasd"), "w").write(sub(open(os.path.join(FIX, "fasd.txt")).read()))
+    out = sub(open(os.path.join(FIX, "zoxide-query.txt")).read())
+    open(os.path.join(d, "zoxide-out.txt"), "w").write(out)
+    z = os.path.join(d, "bin/zoxide")
+    open(z, "w").write('#!/bin/sh\n[ "$1 $2 $3" = "query --list --score" ] || exit 2\nexec cat %s/zoxide-out.txt\n' % d)
+    os.chmod(z, 0o755)
+    return d, sub
+
+
+def run(tool, d, extra_env):
+    env = {"PATH": "%s/bin:/usr/bin:/bin" % d, "HOME": d + "/home", "XDG_DATA_HOME": d + "/data"}
+    env.update(extra_env)
+    p = subprocess.run([tool, "import"], env=env, cwd=d, capture_output=True, text=True)
+    q = subprocess.run([tool, "list", "-s"], env=env, cwd=d, capture_output=True, text=True)
+    norm = lambda s: s.replace(d, "$ROOT")
+    return p.returncode, norm(p.stdout), norm(p.stderr), sorted(norm(q.stdout).splitlines())
+
+
+def main():
+    lope = os.path.abspath(sys.argv[1])
+    d, sub = scratch()
+    try:
+        gdir = os.path.join(d, "data/gump")
+        os.makedirs(gdir)
+        rows = json.loads(sub(open(os.path.join(FIX, "gump.json")).read()))
+        gumpdb.write(rows, os.path.join(gdir, "db.bin"), now_ms=int(time.time() * 1000))
+        st, out, err, listing = run(lope, d, {})
+        text = "status %d\n--- import\n%s--- stderr\n%s--- list -s (sorted)\n%s\n" % (st, out, err, "\n".join(listing))
+        if "--gump" in sys.argv:
+            g = os.path.abspath(sys.argv[sys.argv.index("--gump") + 1])
+            shutil.rmtree(gdir)
+            os.remove(os.path.join(d, "data/lope/store"))
+            gst, gout, gerr, glist = run(g, d, {"GUMP_DATA_DIR": d + "/gumpstore"})
+            print("=== gump %d\n%s%s--- list -s (sorted)\n%s" % (gst, gout, gerr, "\n".join(glist)))
+            print("=== lope")
+        sys.stdout.write(text)
+        want = open(os.path.join(FIX, "expected.txt")).read() if os.path.exists(os.path.join(FIX, "expected.txt")) else None
+        if "--write" in sys.argv:
+            open(os.path.join(FIX, "expected.txt"), "w").write(text)
+            return 0
+        if want != text:
+            print("import-check: DIFFERS from tests/import/expected.txt")
+            return 1
+        print("import-check: as expected")
+        return 0
+    finally:
+        shutil.rmtree(d)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

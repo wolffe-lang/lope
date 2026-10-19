@@ -1,0 +1,5 @@
+48.989794855663561	$ROOT/code/wolf
+20	$ROOT/code/gump
+10.0	$ROOT/Documents
+3	$ROOT/missing-dir
+not-a-number	$ROOT/code

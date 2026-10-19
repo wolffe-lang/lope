@@ -1,0 +1,18 @@
+status 0
+--- import
+  gump: 3 entries (scores, visits and times kept)
+  zoxide: 3 entries
+  autojump: 3 entries
+  z/z.lua: 3 entries
+  fasd: 2 entries
+Found 11 entries, imported 11 (scores normalized to 1-100)
+--- stderr
+--- list -s (sorted)
+    0.38  $ROOT/gone-now
+   16.67  $ROOT/a-file.txt
+   33.33  $ROOT/Documents
+   41.67  $ROOT/Downloads
+   66.67  $ROOT/code/gump
+   83.33  $ROOT/code/lope
+  101.67  $ROOT/code/pax
+  200.00  $ROOT/code/wolf
