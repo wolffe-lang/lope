@@ -307,6 +307,9 @@ def main():
             key = (w[0], w[1], w[2])
             if key[1] not in a.shells.split(","):
                 continue
+            if key[2] == "fzf" and not a.fzf:
+                print("hook-sessions: %s/%s fzf not asked: no fzf on this host" % (key[0], key[1]))
+                continue
             if have.get(key) != w[3]:
                 bad += 1
                 print("hook-sessions: DIFFERS %s/%s %s: want %r, have %r" % (key + (w[3], have.get(key))))
