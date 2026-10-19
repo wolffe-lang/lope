@@ -1,0 +1,43 @@
+# tests/hooks/gump-record.tsv — the same sessions with gump 0.2.7's own hooks (the
+# black-box record of what gump does: bash's no-prefix jump stays put, gi has no
+# menu without fzf). Recorded on kasumi, 2026-10-19; not a gate.
+gump	bash	cd	3 of 3 recorded
+gump	bash	word	/home
+gump	bash	two	/home
+gump	bash	here	/t
+gump	bash	frag	/t
+gump	bash	real	ran /t 
+gump	bash	miss	status 127, said not found
+gump	bash	g	/t/alpha, back /home, alone /home
+gump	bash	menu	NO MENU, /home
+gump	bash	fzf	/t/beta/gamma
+gump	zsh	cd	3 of 3 recorded
+gump	zsh	word	/t/beta/gamma
+gump	zsh	two	/t/projects/myapp
+gump	zsh	here	/t/alpha
+gump	zsh	frag	/t/beta
+gump	zsh	real	ran /t 
+gump	zsh	miss	status 127, said not found
+gump	zsh	g	/t/alpha, back /home, alone /home
+gump	zsh	menu	NO MENU, /home
+gump	zsh	fzf	/t/beta/gamma
+gump	fish	cd	3 of 3 recorded
+gump	fish	word	/t/beta/gamma
+gump	fish	two	/t/projects/myapp
+gump	fish	here	/t/alpha
+gump	fish	frag	/t/beta
+gump	fish	real	ran /t 
+gump	fish	miss	status 127, said not found
+gump	fish	g	/t/alpha, back /home, alone /home
+gump	fish	menu	NO MENU, /home
+gump	fish	fzf	/t/beta/gamma
+gump	fortsh	cd	3 of 3 recorded
+gump	fortsh	word	/t/beta/gamma
+gump	fortsh	two	/t/projects/myapp
+gump	fortsh	here	/t/alpha
+gump	fortsh	frag	/t/beta
+gump	fortsh	real	ran /t 
+gump	fortsh	miss	status 127, said not found
+gump	fortsh	g	/t/alpha, back /home, alone /home
+gump	fortsh	menu	NO MENU, /home
+gump	fortsh	fzf	/t/beta/gamma

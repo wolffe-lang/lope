@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+"""hook-sessions — the shell hooks exercised in real interactive sessions
+on pseudo-terminals this tool starts, each with a scratch HOME, XDG
+directories and PATH of its own (never the user's shells' configuration
+or data).
+
+    tools/hook-sessions --tool lope=BIN [--tool gump=BIN]
+                        [--shells bash,zsh,fish,fortsh,pelt] [--pelt BIN]
+                        [--fzf BIN] [--report FILE] [--expect FILE]
+
+For every tool and shell, the session sources `TOOL init SHELL` from the
+shell's own startup file and then types, one line at a time:
+
+  cd  : `cd` into three directories, then `TOOL list`: each is recorded
+  word: from HOME, the bare word `gamma`: lands in t/beta/gamma
+  two : `proj my` (two words): lands in t/projects/myapp
+  here: in t/, `alpha` (a directory of the working directory)
+  frag: in t/, `bet` (a fragment of one: the cwd's own match)
+  real: in t/, which holds directories named `printf` and `ls`, the
+        commands `printf 'ok\\n'` and `ls -d alpha` run, and stay in t/
+  miss: `zzqqxx`, no directory anywhere: the shell's own not-found, 127
+  g   : `g alpha`, then `g -` (back), then `g` alone (HOME)
+  menu: `gi a` with no fzf on PATH, then `1`: the first match
+  fzf : `gi gam` with fzf on PATH (when --fzf names one), then Enter
+
+and records what each step answered (the working directory after it, the
+status). `--expect FILE` compares lope's rows with the file's
+(tests/hooks/expected.tsv) and exits 1 on a difference; gump's rows are
+the black-box record of what gump's own hooks do. Exit 2 on a tool error.
+"""
+import argparse
+import os
+import pty
+import re
+import select
+import shutil
+import signal
+import sys
+import tempfile
+import time
+
+ANSI = re.compile(rb"\x1b\[[0-9;?<=>]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)|\x1b[()][0-9A-Za-z]|\x1b[=>78DEHMNOZc]|\r")
+PROMPT = b"PROMPT> "
+
+
+class Session:
+    def __init__(self, argv, env, cwd, log):
+        self.log = log
+        pid, fd = pty.fork()
+        if pid == 0:
+            os.chdir(cwd)
+            os.execve(argv[0], argv, env)
+        self.pid, self.fd = pid, fd
+        self.buf = b""
+
+    def read(self, timeout):
+        end = time.time() + timeout
+        got = b""
+        while time.time() < end:
+            r, _, _ = select.select([self.fd], [], [], max(0.0, end - time.time()))
+            if not r:
+                break
+            try:
+                chunk = os.read(self.fd, 65536)
+            except OSError:
+                break
+            if not chunk:
+                break
+            got += chunk
+            # answer a terminal's cursor-position query, which some line
+            # editors (fish, fortsh) send before drawing
+            if b"\x1b[6n" in chunk:
+                os.write(self.fd, b"\x1b[1;1R")
+        self.buf += got
+        self.log.write(got)
+        return got
+
+    def wait_prompt(self, timeout=15.0):
+        """Read until the screen shows a prompt and the shell is quiet."""
+        end = time.time() + timeout
+        seen = b""
+        while time.time() < end:
+            got = self.read(0.3)
+            seen += got
+            if not got and PROMPT in ANSI.sub(b"", seen):
+                return ANSI.sub(b"", seen).decode("utf-8", "replace")
+        raise TimeoutError("no prompt after %.0fs; last output %r" % (timeout, ANSI.sub(b"", seen)[-300:]))
+
+    def send(self, data):
+        self.log.write(b"\n<<< " + data + b"\n")
+        os.write(self.fd, data)
+
+    def line(self, text, timeout=15.0):
+        self.send(text.encode() + b"\r")
+        return self.wait_prompt(timeout)
+
+    def close(self):
+        try:
+            os.kill(self.pid, signal.SIGHUP)
+        except ProcessLookupError:
+            pass
+        try:
+            os.waitpid(self.pid, 0)
+        except ChildProcessError:
+            pass
+        os.close(self.fd)
+
+
+def stat_var(shell):
+    return "$status" if shell == "fish" else "$?"
+
+
+def where(s, root, shell):
+    """The working directory a session reports, relative to the scratch root."""
+    out = s.line("echo \"@@$PWD@@%s@@\"" % stat_var(shell))
+    m = re.findall(r"@@(/[^@\n]*)@@(\d+)@@", out)
+    if not m:
+        return "?", "?"
+    d, st = m[-1]
+    return (d[len(root):] or "/") if d.startswith(root) else d, st
+
+
+def status(s, shell):
+    out = s.line("echo \"@@%s@@\"" % stat_var(shell))
+    m = re.findall(r"@@(\d+)@@", out)
+    return m[-1] if m else "?"
+
+
+def rc_for(shell, tool, home, cfg):
+    init = "%s init %s" % (tool, shell)
+    if shell == "bash":
+        path = os.path.join(home, ".bashrc")
+        text = "PS1='PROMPT> '\nPS2='> '\neval \"$(%s)\"\n" % init
+    elif shell == "zsh":
+        path = os.path.join(home, ".zshrc")
+        text = "PS1='PROMPT> '\nunsetopt BEEP\neval \"$(%s)\"\n" % init
+    elif shell == "fish":
+        path = os.path.join(cfg, "fish", "config.fish")
+        text = ("set -g fish_greeting ''\nfunction fish_prompt; echo -n 'PROMPT> '; end\n"
+                "function fish_right_prompt; end\n%s | source\n" % init)
+    elif shell == "fortsh":
+        path = os.path.join(home, ".fortshrc")
+        text = "PS1='PROMPT> '\neval \"$(%s)\"\n" % init
+    else:  # pelt
+        path = os.path.join(home, ".shrc")
+        text = "PS1='PROMPT> '\neval \"$(%s)\"\n" % init
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(text)
+
+
+def shell_argv(shell, bins):
+    b = bins[shell]
+    if shell == "bash":
+        return [b, "--noprofile", "-i"]
+    if shell == "zsh":
+        return [b, "-i"]
+    if shell == "fish":
+        return [b, "-i", "--no-config"] if False else [b, "-i"]
+    if shell == "fortsh":
+        return [b]
+    return [b, "-i"]
+
+
+def run_one(tool, binary, shell, bins, fzf, outdir):
+    root = tempfile.mkdtemp(prefix="lope-hook-%s-%s-" % (tool, shell))
+    home = os.path.join(root, "home")
+    cfg = os.path.join(home, ".config")
+    t = os.path.join(root, "t")
+    for d in ("alpha", "beta/gamma", "projects/myapp", "printf", "ls", "delta"):
+        os.makedirs(os.path.join(t, d))
+    os.makedirs(cfg)
+    bin_ = os.path.join(root, "bin")
+    fzfbin = os.path.join(root, "fzfbin")
+    os.makedirs(bin_)
+    os.makedirs(fzfbin)
+    os.symlink(os.path.abspath(binary), os.path.join(bin_, tool))
+    for exe in ("ls", "cat", "env", "true", "false", "head", "seq", "uname", "tput", "stty", "sed"):
+        p = shutil.which(exe)
+        if p:
+            os.symlink(p, os.path.join(bin_, exe))
+    if fzf:
+        os.symlink(os.path.abspath(fzf), os.path.join(fzfbin, "fzf"))
+    rc_for(shell, tool, home, cfg)
+    env = {
+        "HOME": home, "XDG_DATA_HOME": os.path.join(root, "data"), "XDG_CONFIG_HOME": cfg,
+        "XDG_CACHE_HOME": os.path.join(root, "cache"), "XDG_STATE_HOME": os.path.join(root, "state"),
+        "XDG_RUNTIME_DIR": os.path.join(root, "run"), "ZDOTDIR": home, "ENV": os.path.join(home, ".shrc"),
+        "PATH": bin_, "TERM": "xterm", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "SHELL": bins[shell],
+        "GUMP_DATA_DIR": os.path.join(root, "data", "gump"), "TMPDIR": os.path.join(root, "tmp"),
+    }
+    os.makedirs(env["TMPDIR"])
+    os.makedirs(env["XDG_RUNTIME_DIR"], mode=0o700)
+    rows = []
+    log = open(os.path.join(outdir, "%s-%s.log" % (tool, shell)), "wb")
+    s = Session(shell_argv(shell, bins), env, home, log)
+    try:
+        s.wait_prompt(30)
+        # cd: three directories visited, then listed
+        for d in ("alpha", "beta/gamma", "projects/myapp"):
+            s.line("cd %s/%s" % (t, d))
+        s.line("cd %s" % home)
+        out = s.line("%s list" % tool)
+        listed = [d for d in ("alpha", "beta/gamma", "projects/myapp") if "%s/%s\n" % (t, d) in out.replace("\r", "")]
+        rows.append(("cd", "%d of 3 recorded" % len(listed)))
+        # word, two
+        s.line("gamma")
+        rows.append(("word", "%s" % where(s, root, shell)[0]))
+        s.line("cd %s" % home)
+        s.line("proj my")
+        rows.append(("two", "%s" % where(s, root, shell)[0]))
+        # here, frag
+        s.line("cd %s" % t)
+        s.line("alpha")
+        rows.append(("here", where(s, root, shell)[0]))
+        s.line("cd %s" % t)
+        s.line("bet")
+        rows.append(("frag", where(s, root, shell)[0]))
+        # real
+        s.line("cd %s" % t)
+        out = s.line("printf 'ok\\n'")
+        ok1 = "\nok\n" in out.replace("\r", "")
+        out = s.line("ls -d alpha")
+        ok2 = re.search(r"\nalpha/?\n", out.replace("\r", "")) is not None
+        d, _ = where(s, root, shell)
+        rows.append(("real", "%s %s %s" % ("ran" if ok1 and ok2 else "SHADOWED", d, "")))
+        # miss
+        out = s.line("zzqqxx")
+        st = status(s, shell)
+        msg = "not found" in out or "Unknown command" in out
+        rows.append(("miss", "status %s%s" % (st, ", said not found" if msg else ", SILENT")))
+        # g
+        s.line("cd %s" % home)
+        s.line("g alpha")
+        a = where(s, root, shell)[0]
+        s.line("g -")
+        b = where(s, root, shell)[0]
+        s.line("cd %s" % t)
+        s.line("g")
+        c = where(s, root, shell)[0]
+        rows.append(("g", "%s, back %s, alone %s" % (a, b, c)))
+        # menu: gi with no fzf on PATH
+        s.line("cd %s" % home)
+        s.send(b"gi a\r")
+        got = s.read(3.0)
+        shown = ANSI.sub(b"", got).decode("utf-8", "replace")
+        menu = ("1) " + t) in shown
+        s.send(b"1\r")
+        s.wait_prompt()
+        rows.append(("menu", "%s%s" % ("menu, " if menu else "NO MENU, ", where(s, root, shell)[0])))
+        if fzf:
+            s.line("cd %s" % home)
+            s.line("PATH=%s:$PATH" % fzfbin if shell != "fish" else "set -gx PATH %s $PATH" % fzfbin)
+            s.send(b"gi gam\r")
+            s.read(3.0)
+            s.send(b"\r")
+            s.wait_prompt()
+            rows.append(("fzf", where(s, root, shell)[0]))
+    except TimeoutError as e:
+        rows.append(("ERROR", str(e)[:300].replace("\n", " ")))
+    finally:
+        s.close()
+        log.close()
+        shutil.rmtree(root, ignore_errors=True)
+    return rows
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tool", action="append", required=True)
+    ap.add_argument("--shells", default="bash,zsh,fish,fortsh,pelt")
+    ap.add_argument("--pelt")
+    ap.add_argument("--fzf", default=shutil.which("fzf"))
+    ap.add_argument("--report")
+    ap.add_argument("--expect")
+    ap.add_argument("--logs", default=tempfile.mkdtemp(prefix="lope-hook-logs-"))
+    a = ap.parse_args()
+    bins = {s: shutil.which(s) for s in ("bash", "zsh", "fish", "fortsh")}
+    bins["pelt"] = os.path.abspath(a.pelt) if a.pelt else None
+    os.makedirs(a.logs, exist_ok=True)
+    table = []
+    for spec in a.tool:
+        tool, binary = spec.split("=", 1)
+        for shell in a.shells.split(","):
+            if not bins.get(shell):
+                table.append((tool, shell, "SKIP", "no %s on this host" % shell))
+                continue
+            if shell == "pelt" and tool != "lope":
+                continue
+            for step, ans in run_one(tool, binary, shell, bins, a.fzf, a.logs):
+                table.append((tool, shell, step, ans))
+    text = "".join("%s\t%s\t%s\t%s\n" % r for r in table)
+    sys.stdout.write(text)
+    print("hook-sessions: logs in %s" % a.logs, file=sys.stderr)
+    if a.report:
+        open(a.report, "w").write(text)
+    if a.expect:
+        want = [l.rstrip("\n").split("\t") for l in open(a.expect) if l.strip() and not l.startswith("#")]
+        have = {(r[0], r[1], r[2]): r[3] for r in table}
+        bad = 0
+        for w in want:
+            key = (w[0], w[1], w[2])
+            if key[1] not in a.shells.split(","):
+                continue
+            if have.get(key) != w[3]:
+                bad += 1
+                print("hook-sessions: DIFFERS %s/%s %s: want %r, have %r" % (key + (w[3], have.get(key))))
+        print("hook-sessions: %d expected row(s) differ" % bad)
+        return 1 if bad else 0
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
