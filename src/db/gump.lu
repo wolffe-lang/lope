@@ -134,7 +134,12 @@ pub fn rfc3339_ms(s: str) -> int ! {format} {
     let h = two(s, 11)?
     let mi = two(s, 14)?
     let se = two(s, 17)?
-    if s[4..5] != "-" || s[7..8] != "-" || s[13..14] != ":" || s[16..17] != ":" {
+    let t = s[10..11]
+    if s[4..5] != "-" ||
+        s[7..8] != "-" ||
+        t != "T" && t != "t" ||
+        s[13..14] != ":" ||
+        s[16..17] != ":" {
         return format
     }
     var at = 19
