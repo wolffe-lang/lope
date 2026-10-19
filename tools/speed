@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""speed — lope against gump, timed (the contract's item 7): a store of
+10,000 directories that look like a real tree, written in both formats
+from the same rows, and three commands timed cold (a fresh process each
+run, as a shell hook starts one):
+
+  query  `query -- TERMS` for a mix of queries (the hook's store step)
+  init   `init bash`
+  list   `list`
+
+Each command runs WARMUP times untimed, then RUNS times; the number is the
+median wall time. Under `taskset -c 0-3` when the host has taskset (the
+house rule for timing). The gate: lope's query median no slower than
+gump's (ratio <= 1.00); init and list are reported, not gated.
+
+    tools/speed LOPE GUMP [--runs N] [--report FILE] [--zoxide ZOXIDE]
+"""
+import json, os, random, shutil, statistics, subprocess, sys, tempfile, time
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import gumpdb  # noqa: E402
+
+QUERIES = [["wolf"], ["src"], ["proj"], ["cfg"], ["gump", "src"], ["doc"], ["mtchr"], ["zzqx"]]
+
+
+def tree(n, r):
+    words = ["src", "lib", "cmd", "internal", "pkg", "docs", "tests", "core", "util", "net", "http", "db",
+             "store", "parser", "matcher", "config", "build", "web", "api", "ui", "assets", "tools", "scripts"]
+    projs = ["gump", "lope", "wolf", "pelt", "pax", "lobo", "yew", "muzzle", "boreutils", "notes", "blog",
+             "server", "client", "compiler", "kernel", "editor", "tracker", "infra", "dotfiles", "website"]
+    orgs = ["acme", "wolffe-lang", "tenseleyFlow", "globex", "initech", "hooli"]
+    out, seen = [], set()
+    while len(out) < n:
+        depth = r.choice([0, 1, 1, 2, 2, 3])
+        p = "/home/wolf/src/github.com/%s/%s" % (r.choice(orgs), r.choice(projs))
+        for _ in range(depth):
+            p += "/" + r.choice(words)
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return out
+
+
+def median_ms(argv, env, cwd, warm, runs):
+    tasks = ["taskset", "-c", "0-3"] if shutil.which("taskset") else []
+    for _ in range(warm):
+        subprocess.run(tasks + argv, env=env, cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    ts = []
+    for _ in range(runs):
+        t0 = time.perf_counter()
+        subprocess.run(tasks + argv, env=env, cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        ts.append((time.perf_counter() - t0) * 1000)
+    return statistics.median(ts)
+
+
+def main():
+    lope, gump = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
+    runs = int(sys.argv[sys.argv.index("--runs") + 1]) if "--runs" in sys.argv else 31
+    report = sys.argv[sys.argv.index("--report") + 1] if "--report" in sys.argv else None
+    r = random.Random(7)
+    paths = tree(10000, r)
+    now = int(time.time() * 1000)
+    rows = []
+    for p in paths:
+        score = round(r.uniform(1, 30), 3)
+        rows.append({"path": p, "score": score, "age_s": r.choice([600, 7200, 3 * 86400, 30 * 86400]), "count": int(score)})
+    d = tempfile.mkdtemp(prefix="lope-speed-")
+    try:
+        gumpdb.write(rows, os.path.join(d, "db.bin"), now_ms=now)
+        with open(os.path.join(d, "store"), "w") as f:
+            f.write("lope-store 1\ncleanup %d\n" % now)
+            for x in rows:
+                m = int(round(x["score"] * 1000000))
+                f.write("%d.%06d %d %d %s\n" % (m // 1000000, m % 1000000, now - x["age_s"] * 1000, x["count"], x["path"]))
+        env_l = {"PATH": "/usr/bin:/bin", "HOME": d, "LOPE_DATA_DIR": d}
+        env_g = {"PATH": "/usr/bin:/bin", "HOME": d, "GUMP_DATA_DIR": d}
+        res = {"entries": len(rows), "runs": runs, "taskset": bool(shutil.which("taskset")), "query": {}}
+        lq, gq = [], []
+        for q in QUERIES:
+            a = median_ms([lope, "query", "--"] + q, env_l, d, 3, runs)
+            b = median_ms([gump, "query", "--"] + q, env_g, d, 3, runs)
+            res["query"][" ".join(q)] = {"lope_ms": round(a, 3), "gump_ms": round(b, 3)}
+            lq.append(a)
+            gq.append(b)
+        res["query_lope_ms"] = round(statistics.median(lq), 3)
+        res["query_gump_ms"] = round(statistics.median(gq), 3)
+        for name, args in (("init", ["init", "bash"]), ("list", ["list"])):
+            a = median_ms([lope] + args, env_l, d, 3, runs)
+            b = median_ms([gump] + args, env_g, d, 3, runs)
+            res[name] = {"lope_ms": round(a, 3), "gump_ms": round(b, 3), "ratio": round(a / b, 3)}
+        if "--zoxide" in sys.argv:
+            res["zoxide"] = "measured by hand"
+        res["query_ratio"] = round(res["query_lope_ms"] / res["query_gump_ms"], 3)
+        print(json.dumps(res, indent=1))
+        if report:
+            open(report, "w").write(json.dumps(res, indent=1) + "\n")
+        ok = res["query_ratio"] <= 1.0
+        print("speed: query lope %.2f ms, gump %.2f ms, ratio %.3f (gate <= 1.000): %s" % (
+            res["query_lope_ms"], res["query_gump_ms"], res["query_ratio"], "ok" if ok else "SLOWER"))
+        print("speed: init ratio %.3f, list ratio %.3f (reported)" % (res["init"]["ratio"], res["list"]["ratio"]))
+        return 0 if ok else 1
+    finally:
+        shutil.rmtree(d)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
