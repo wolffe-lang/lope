@@ -1,0 +1,64 @@
+//! out — standard output and error, buffered: a `print` is one `write`,
+//! so a listing of ten thousand directories is written in 64 KiB chunks
+//! through descriptor 1 itself (`[os.fs.std]`).
+
+/// A buffer in front of a descriptor (1 or 2).
+pub struct Out {
+    fd: int,
+    buf: List[byte],
+}
+
+/// Standard output, buffered.
+pub fn stdout() -> Out {
+    Out { fd: 1, buf: List[byte]() }
+}
+
+/// Standard error, buffered.
+pub fn stderr() -> Out {
+    Out { fd: 2, buf: List[byte]() }
+}
+
+/// Write what is buffered. A write that fails is dropped: there is no
+/// one left to tell.
+pub fn flush(mut o: Out) {
+    if o.buf.len > 0 {
+        fs_write_chunk(o.fd, o.buf) else |_| {}
+        o.buf = List[byte]()
+    }
+}
+
+/// Append `s`.
+pub fn put(mut o: Out, s: str) {
+    for b in s.bytes() {
+        (mut o.buf).push(b)
+    }
+    if o.buf.len >= 65536 {
+        flush(mut o)
+    }
+}
+
+/// Append `s` and a newline.
+pub fn line(mut o: Out, s: str) {
+    put(mut o, s)
+    (mut o.buf).push(10 as byte)
+    if o.buf.len >= 65536 {
+        flush(mut o)
+    }
+}
+
+/// `x` (a value scaled by `den`) as text with two decimals, right-aligned
+/// in eight columns, as gump's `{:>8.2}` prints it; the exact quotient is
+/// rounded half to even, which is what correct rounding of the f64 gump
+/// prints gives for every value a store can hold.
+pub fn score_cell(x: int, den: int) -> str {
+    let scaled = x * 100
+    var q = scaled / den
+    let r = scaled % den
+    if r * 2 > den || r * 2 == den && q % 2 == 1 {
+        q += 1
+    }
+    let ip = q / 100
+    let fp = q % 100
+    let t = "{ip}.{fp:02}"
+    "{t:>8}"
+}
