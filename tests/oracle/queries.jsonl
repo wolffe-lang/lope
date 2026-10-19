@@ -1,0 +1,654 @@
+{"store": "a-small", "kind": "whole", "terms": ["garedit"]}
+{"store": "a-small", "kind": "prefix", "terms": ["rec"]}
+{"store": "a-small", "kind": "fragment", "terms": ["s43"]}
+{"store": "a-small", "kind": "abbrev", "terms": ["dtfls"]}
+{"store": "a-small", "kind": "typo", "terms": ["reesume"]}
+{"store": "a-small", "kind": "two", "terms": ["wolf", "work"]}
+{"store": "a-small", "kind": "two_rev", "terms": ["sagi", "code"]}
+{"store": "a-small", "kind": "three", "terms": ["wol", "cod", "lop"]}
+{"store": "a-small", "kind": "upper", "terms": ["YEW"]}
+{"store": "a-small", "kind": "slash", "terms": ["olf/sch"]}
+{"store": "a-small", "kind": "span", "terms": ["howo.c"]}
+{"store": "a-small", "kind": "spaced", "terms": ["cod not"]}
+{"store": "a-small", "kind": "parent", "terms": ["wolf"]}
+{"store": "a-small", "kind": "suffix", "terms": ["zle"]}
+{"store": "a-small", "kind": "whole", "terms": ["Downloads"]}
+{"store": "a-small", "kind": "prefix", "terms": ["Te"]}
+{"store": "a-small", "kind": "fragment", "terms": ["ump"]}
+{"store": "a-small", "kind": "abbrev", "terms": ["nvm"]}
+{"store": "a-small", "kind": "typo", "terms": ["wollf"]}
+{"store": "a-small", "kind": "two", "terms": ["taxe", "2025"]}
+{"store": "a-small", "kind": "two_rev", "terms": ["Pict", "wolf"]}
+{"store": "a-small", "kind": "three", "terms": ["hom", "wol", ".ss"]}
+{"store": "a-small", "kind": "upper", "terms": ["PELT"]}
+{"store": "a-small", "kind": "slash", "terms": ["olf/cod"]}
+{"store": "a-small", "kind": "span", "terms": ["howoVi"]}
+{"store": "a-small", "kind": "spaced", "terms": ["wol Doc"]}
+{"store": "a-small", "kind": "parent", "terms": ["wolf"]}
+{"store": "a-small", "kind": "suffix", "terms": ["tty"]}
+{"store": "a-small", "kind": "whole", "terms": ["wolf"]}
+{"store": "a-small", "kind": "prefix", "terms": ["tmp"]}
+{"store": "a-small", "kind": "fragment", "terms": ["in"]}
+{"store": "a-small", "kind": "abbrev", "terms": ["alcrt"]}
+{"store": "a-small", "kind": "typo", "terms": ["loo"]}
+{"store": "a-small", "kind": "two", "terms": ["Docu", "cont"]}
+{"store": "a-small", "kind": "two_rev", "terms": ["lett", "Docu"]}
+{"store": "a-small", "kind": "three", "terms": ["wol", "cod", "pax"]}
+{"store": "a-small", "kind": "upper", "terms": ["ZSH"]}
+{"store": "a-small", "kind": "slash", "terms": ["ode/fac"]}
+{"store": "a-small", "kind": "span", "terms": ["wo.lsh"]}
+{"store": "a-small", "kind": "spaced", "terms": ["cod bor"]}
+{"store": "a-small", "kind": "parent", "terms": [".config"]}
+{"store": "a-small", "kind": "suffix", "terms": ["lic"]}
+{"store": "a-small", "kind": "whole", "terms": ["fish"]}
+{"store": "a-small", "kind": "prefix", "terms": ["wayb"]}
+{"store": "a-small", "kind": "fragment", "terms": ["rc"]}
+{"store": "a-small", "kind": "abbrev", "terms": ["wztrm"]}
+{"store": "a-small", "kind": "typo", "terms": ["gitt"]}
+{"store": "a-small", "kind": "two", "terms": ["taxe", "2024"]}
+{"store": "a-small", "kind": "two_rev", "terms": ["hypr", ".con"]}
+{"store": "a-small", "kind": "three", "terms": ["hom", "wol", "Des"]}
+{"store": "a-small", "kind": "none", "terms": ["zzqx"]}
+{"store": "a-small", "kind": "none", "terms": ["qqqq"]}
+{"store": "a-small", "kind": "none", "terms": ["xyzzy-404"]}
+{"store": "a-small", "kind": "short", "terms": ["a"]}
+{"store": "a-small", "kind": "short", "terms": ["s"]}
+{"store": "a-small", "kind": "short", "terms": ["e"]}
+{"store": "a-small", "kind": "short", "terms": ["co"]}
+{"store": "a-small", "kind": "short", "terms": ["src"]}
+{"store": "a-small", "kind": "short", "terms": ["doc"]}
+{"store": "b-dev", "kind": "whole", "terms": ["fixtures"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["con"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["sse"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["fxtrs"]}
+{"store": "b-dev", "kind": "typo", "terms": ["heilx"]}
+{"store": "b-dev", "kind": "two", "terms": ["lib", "logg"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["jobs", "lib"]}
+{"store": "b-dev", "kind": "three", "terms": ["cod", "rec", "tem"]}
+{"store": "b-dev", "kind": "upper", "terms": ["SPEC"]}
+{"store": "b-dev", "kind": "slash", "terms": ["elt/api"]}
+{"store": "b-dev", "kind": "span", "terms": ["cosave"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["pel lib"]}
+{"store": "b-dev", "kind": "parent", "terms": ["code"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["top"]}
+{"store": "b-dev", "kind": "whole", "terms": ["vendor"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["te"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["rc"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["mgrtn"]}
+{"store": "b-dev", "kind": "typo", "terms": ["inclue"]}
+{"store": "b-dev", "kind": "two", "terms": ["home", "note"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["scri", "comp"]}
+{"store": "b-dev", "kind": "three", "terms": ["cod", "blo", "tem"]}
+{"store": "b-dev", "kind": "upper", "terms": ["BUILD"]}
+{"store": "b-dev", "kind": "slash", "terms": ["ckr/api"]}
+{"store": "b-dev", "kind": "span", "terms": ["coyedi"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["cod com"]}
+{"store": "b-dev", "kind": "parent", "terms": ["tracker"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["hub"]}
+{"store": "b-dev", "kind": "whole", "terms": ["build"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["tmu"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["olf"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["trckr"]}
+{"store": "b-dev", "kind": "typo", "terms": ["dotfiiles"]}
+{"store": "b-dev", "kind": "two", "terms": ["lope", "ci"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["shel", "code"]}
+{"store": "b-dev", "kind": "three", "terms": ["ans", "lib", "cod"]}
+{"store": "b-dev", "kind": "upper", "terms": ["PORTU"]}
+{"store": "b-dev", "kind": "slash", "terms": ["elt/pub"]}
+{"store": "b-dev", "kind": "span", "terms": ["hosrst"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["lop cmd"]}
+{"store": "b-dev", "kind": "parent", "terms": ["lib"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["pkg"]}
+{"store": "b-dev", "kind": "whole", "terms": ["fortsh"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["no"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["pec"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["nts"]}
+{"store": "b-dev", "kind": "typo", "terms": ["receips"]}
+{"store": "b-dev", "kind": "two", "terms": ["home", "cmd"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["ci", "pars"]}
+{"store": "b-dev", "kind": "three", "terms": ["cod", "ser", "ben"]}
+{"store": "b-dev", "kind": "upper", "terms": ["UI"]}
+{"store": "b-dev", "kind": "slash", "terms": ["ble/bui"]}
+{"store": "b-dev", "kind": "span", "terms": ["conoli"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["ser ci"]}
+{"store": "b-dev", "kind": "parent", "terms": ["website"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["dor"]}
+{"store": "b-dev", "kind": "whole", "terms": ["public"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["mat"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["tes"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["incld"]}
+{"store": "b-dev", "kind": "typo", "terms": [".igthub"]}
+{"store": "b-dev", "kind": "two", "terms": ["muzz", "conf"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["vend", "sche"]}
+{"store": "b-dev", "kind": "three", "terms": ["cod", "dot", "ven"]}
+{"store": "b-dev", "kind": "upper", "terms": ["GIT"]}
+{"store": "b-dev", "kind": "slash", "terms": ["src/sto"]}
+{"store": "b-dev", "kind": "span", "terms": ["cogaas"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["gum ven"]}
+{"store": "b-dev", "kind": "parent", "terms": ["pelt"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["fig"]}
+{"store": "b-dev", "kind": "whole", "terms": ["tools"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["test"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["md"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["lib"]}
+{"store": "b-dev", "kind": "typo", "terms": ["exmaples"]}
+{"store": "b-dev", "kind": "two", "terms": ["pax", "note"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["bore", "code"]}
+{"store": "b-dev", "kind": "three", "terms": ["wol", ".co", "fis"]}
+{"store": "b-dev", "kind": "upper", "terms": ["TESTS"]}
+{"store": "b-dev", "kind": "slash", "terms": ["nts/res"]}
+{"store": "b-dev", "kind": "span", "terms": ["comuli"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["inf .gi"]}
+{"store": "b-dev", "kind": "parent", "terms": ["code"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["lab"]}
+{"store": "b-dev", "kind": "whole", "terms": ["cmd"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["con"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["md"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["web"]}
+{"store": "b-dev", "kind": "typo", "terms": ["disst"]}
+{"store": "b-dev", "kind": "two", "terms": ["sagi", "targ"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["note", "blog"]}
+{"store": "b-dev", "kind": "three", "terms": ["cod", "pax", "ci"]}
+{"store": "b-dev", "kind": "upper", "terms": ["CONFI"]}
+{"store": "b-dev", "kind": "slash", "terms": ["dit/cmd"]}
+{"store": "b-dev", "kind": "span", "terms": ["wocoap"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["cod ans"]}
+{"store": "b-dev", "kind": "parent", "terms": ["homelab"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["dor"]}
+{"store": "b-dev", "kind": "whole", "terms": ["tools"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["migr"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["ude"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["web"]}
+{"store": "b-dev", "kind": "typo", "terms": ["csripts"]}
+{"store": "b-dev", "kind": "two", "terms": ["clie", "cmd"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["manu", "Docu"]}
+{"store": "b-dev", "kind": "three", "terms": ["cod", "ter", "src"]}
+{"store": "b-dev", "kind": "upper", "terms": [".GITH"]}
+{"store": "b-dev", "kind": "slash", "terms": ["get/tar"]}
+{"store": "b-dev", "kind": "span", "terms": ["coedve"]}
+{"store": "b-dev", "kind": "spaced", "terms": ["lob scr"]}
+{"store": "b-dev", "kind": "parent", "terms": ["scheduler"]}
+{"store": "b-dev", "kind": "suffix", "terms": ["tta"]}
+{"store": "b-dev", "kind": "whole", "terms": ["docs"]}
+{"store": "b-dev", "kind": "prefix", "terms": ["ven"]}
+{"store": "b-dev", "kind": "fragment", "terms": ["ore"]}
+{"store": "b-dev", "kind": "abbrev", "terms": ["cs430"]}
+{"store": "b-dev", "kind": "typo", "terms": ["webb"]}
+{"store": "b-dev", "kind": "two", "terms": ["lope", "bin"]}
+{"store": "b-dev", "kind": "two_rev", "terms": ["benc", "lope"]}
+{"store": "b-dev", "kind": "three", "terms": ["wol", ".co", "sta"]}
+{"store": "b-dev", "kind": "none", "terms": ["zzqx"]}
+{"store": "b-dev", "kind": "none", "terms": ["qqqq"]}
+{"store": "b-dev", "kind": "none", "terms": ["xyzzy-404"]}
+{"store": "b-dev", "kind": "short", "terms": ["a"]}
+{"store": "b-dev", "kind": "short", "terms": ["s"]}
+{"store": "b-dev", "kind": "short", "terms": ["e"]}
+{"store": "b-dev", "kind": "short", "terms": ["co"]}
+{"store": "b-dev", "kind": "short", "terms": ["src"]}
+{"store": "b-dev", "kind": "short", "terms": ["doc"]}
+{"store": "c-mono", "kind": "whole", "terms": ["import"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["log"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["rvi"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["mgrtn"]}
+{"store": "c-mono", "kind": "typo", "terms": ["paymennts"]}
+{"store": "c-mono", "kind": "two", "terms": ["libs", "mode"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["src", "util"]}
+{"store": "c-mono", "kind": "three", "terms": ["ser", "ind", "int"]}
+{"store": "c-mono", "kind": "upper", "terms": ["BILLI"]}
+{"store": "c-mono", "kind": "slash", "terms": ["pkg/met"]}
+{"store": "c-mono", "kind": "span", "terms": ["secami"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["job src"]}
+{"store": "c-mono", "kind": "parent", "terms": ["services"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["ocs"]}
+{"store": "c-mono", "kind": "whole", "terms": ["components"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["ma"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["iew"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["cch"]}
+{"store": "c-mono", "kind": "typo", "terms": ["meddia"]}
+{"store": "c-mono", "kind": "two", "terms": ["matc", "src"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["net", "inte"]}
+{"store": "c-mono", "kind": "three", "terms": ["ser", "sea", "doc"]}
+{"store": "c-mono", "kind": "upper", "terms": ["DEPLO"]}
+{"store": "c-mono", "kind": "slash", "terms": ["pkg/met"]}
+{"store": "c-mono", "kind": "span", "terms": ["moliha"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["int mat"]}
+{"store": "c-mono", "kind": "parent", "terms": ["pkg"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["xer"]}
+{"store": "c-mono", "kind": "whole", "terms": ["src"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["mode"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["onf"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["mtrcs"]}
+{"store": "c-mono", "kind": "typo", "terms": ["apii"]}
+{"store": "c-mono", "kind": "two", "terms": ["thum", "api"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["anal", "serv"]}
+{"store": "c-mono", "kind": "three", "terms": ["ser", "shi", "doc"]}
+{"store": "c-mono", "kind": "upper", "terms": ["COMMO"]}
+{"store": "c-mono", "kind": "slash", "terms": ["nal/cod"]}
+{"store": "c-mono", "kind": "span", "terms": ["seanmi"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["lib sto"]}
+{"store": "c-mono", "kind": "parent", "terms": ["pkg"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["tes"]}
+{"store": "c-mono", "kind": "whole", "terms": ["config"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["doc"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["pi"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["src"]}
+{"store": "c-mono", "kind": "typo", "terms": ["cmdd"]}
+{"store": "c-mono", "kind": "two", "terms": ["pkg", "queu"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["src", "stor"]}
+{"store": "c-mono", "kind": "three", "terms": ["ser", "aut", "int"]}
+{"store": "c-mono", "kind": "upper", "terms": ["UTILS"]}
+{"store": "c-mono", "kind": "slash", "terms": ["ler/dep"]}
+{"store": "c-mono", "kind": "span", "terms": ["molico"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["bil tes"]}
+{"store": "c-mono", "kind": "parent", "terms": ["pkg"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["nal"]}
+{"store": "c-mono", "kind": "whole", "terms": ["ui"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["cli"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["nal"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["lggng"]}
+{"store": "c-mono", "kind": "typo", "terms": ["migrattions"]}
+{"store": "c-mono", "kind": "two", "terms": ["bill", "depl"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["src", "hand"]}
+{"store": "c-mono", "kind": "three", "terms": ["ser", "exp", "tes"]}
+{"store": "c-mono", "kind": "upper", "terms": ["MIGRA"]}
+{"store": "c-mono", "kind": "slash", "terms": ["pkg/han"]}
+{"store": "c-mono", "kind": "span", "terms": ["thpkco"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["imp mig"]}
+{"store": "c-mono", "kind": "parent", "terms": ["pkg"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["ils"]}
+{"store": "c-mono", "kind": "whole", "terms": ["import"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["http"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["che"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["src"]}
+{"store": "c-mono", "kind": "typo", "terms": ["cmdd"]}
+{"store": "c-mono", "kind": "two", "terms": ["libs", "metr"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["comm", "libs"]}
+{"store": "c-mono", "kind": "three", "terms": ["ser", "med", "int"]}
+{"store": "c-mono", "kind": "upper", "terms": ["MIGRA"]}
+{"store": "c-mono", "kind": "slash", "terms": ["net/src"]}
+{"store": "c-mono", "kind": "span", "terms": ["acinui"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["mat src"]}
+{"store": "c-mono", "kind": "parent", "terms": ["pkg"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["src"]}
+{"store": "c-mono", "kind": "whole", "terms": ["payments"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["hook"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["plo"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["src"]}
+{"store": "c-mono", "kind": "typo", "terms": ["apii"]}
+{"store": "c-mono", "kind": "two", "terms": ["inte", "work"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["cmd", "medi"]}
+{"store": "c-mono", "kind": "three", "terms": ["lib", "cac", "src"]}
+{"store": "c-mono", "kind": "upper", "terms": ["API"]}
+{"store": "c-mono", "kind": "slash", "terms": ["ler/cmd"]}
+{"store": "c-mono", "kind": "span", "terms": ["seinde"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["ser cat"]}
+{"store": "c-mono", "kind": "parent", "terms": ["pkg"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["obs"]}
+{"store": "c-mono", "kind": "whole", "terms": ["worker"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["sr"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["els"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["src"]}
+{"store": "c-mono", "kind": "typo", "terms": ["ruuntime"]}
+{"store": "c-mono", "kind": "two", "terms": ["sync", "docs"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["stor", "pkg"]}
+{"store": "c-mono", "kind": "three", "terms": ["ser", "sch", "int"]}
+{"store": "c-mono", "kind": "upper", "terms": ["UTIL"]}
+{"store": "c-mono", "kind": "slash", "terms": ["ces/sch"]}
+{"store": "c-mono", "kind": "span", "terms": ["acinwo"]}
+{"store": "c-mono", "kind": "spaced", "terms": ["ser pay"]}
+{"store": "c-mono", "kind": "parent", "terms": ["libs"]}
+{"store": "c-mono", "kind": "suffix", "terms": ["db"]}
+{"store": "c-mono", "kind": "whole", "terms": ["events"]}
+{"store": "c-mono", "kind": "prefix", "terms": ["mode"]}
+{"store": "c-mono", "kind": "fragment", "terms": ["mmo"]}
+{"store": "c-mono", "kind": "abbrev", "terms": ["mgrtn"]}
+{"store": "c-mono", "kind": "typo", "terms": ["http"]}
+{"store": "c-mono", "kind": "two", "terms": ["impo", "depl"]}
+{"store": "c-mono", "kind": "two_rev", "terms": ["src", "mode"]}
+{"store": "c-mono", "kind": "three", "terms": ["bil", "pkg", "sto"]}
+{"store": "c-mono", "kind": "none", "terms": ["zzqx"]}
+{"store": "c-mono", "kind": "none", "terms": ["qqqq"]}
+{"store": "c-mono", "kind": "none", "terms": ["xyzzy-404"]}
+{"store": "c-mono", "kind": "short", "terms": ["a"]}
+{"store": "c-mono", "kind": "short", "terms": ["s"]}
+{"store": "c-mono", "kind": "short", "terms": ["e"]}
+{"store": "c-mono", "kind": "short", "terms": ["co"]}
+{"store": "c-mono", "kind": "short", "terms": ["src"]}
+{"store": "c-mono", "kind": "short", "terms": ["doc"]}
+{"store": "d-mix", "kind": "whole", "terms": ["routes"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["util"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["ook"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["net"]}
+{"store": "d-mix", "kind": "typo", "terms": ["edtior"]}
+{"store": "d-mix", "kind": "two", "terms": ["test", "stor"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["auth", "cmd"]}
+{"store": "d-mix", "kind": "three", "terms": ["sha", "doc", "pel"]}
+{"store": "d-mix", "kind": "upper", "terms": ["MODEL"]}
+{"store": "d-mix", "kind": "slash", "terms": ["ols/cor"]}
+{"store": "d-mix", "kind": "span", "terms": ["fadoru"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["sta aut"]}
+{"store": "d-mix", "kind": "parent", "terms": [".github"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["02"]}
+{"store": "d-mix", "kind": "whole", "terms": ["auth"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["mo"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["ild"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["06"]}
+{"store": "d-mix", "kind": "typo", "terms": ["commn"]}
+{"store": "d-mix", "kind": "two", "terms": ["conf", "comm"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["api", "wolf"]}
+{"store": "d-mix", "kind": "three", "terms": ["tra", "too", "con"]}
+{"store": "d-mix", "kind": "upper", "terms": ["LOBO"]}
+{"store": "d-mix", "kind": "slash", "terms": ["nal/run"]}
+{"store": "d-mix", "kind": "span", "terms": ["recico"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["etc etc"]}
+{"store": "d-mix", "kind": "parent", "terms": ["api"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["-ui"]}
+{"store": "d-mix", "kind": "whole", "terms": ["utils"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["core"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["pec"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["cr"]}
+{"store": "d-mix", "kind": "typo", "terms": ["viiews"]}
+{"store": "d-mix", "kind": "two", "terms": ["web", "conf"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["auth", "fixt"]}
+{"store": "d-mix", "kind": "three", "terms": ["Pic", "201", "11"]}
+{"store": "d-mix", "kind": "upper", "terms": ["MODEL"]}
+{"store": "d-mix", "kind": "slash", "terms": ["nal/eve"]}
+{"store": "d-mix", "kind": "span", "terms": ["edtaev"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["ven hoo"]}
+{"store": "d-mix", "kind": "parent", "terms": ["node_modules"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["sis"]}
+{"store": "d-mix", "kind": "whole", "terms": ["photo-sorter"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["comp"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["ars"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["utls"]}
+{"store": "d-mix", "kind": "typo", "terms": ["utl"]}
+{"store": "d-mix", "kind": "two", "terms": ["bin", "note"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["mode", "pkg"]}
+{"store": "d-mix", "kind": "three", "terms": ["pel", "lib", "uti"]}
+{"store": "d-mix", "kind": "upper", "terms": ["WORKE"]}
+{"store": "d-mix", "kind": "slash", "terms": ["pkg/log"]}
+{"store": "d-mix", "kind": "span", "terms": ["bunoco"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["spe uti"]}
+{"store": "d-mix", "kind": "parent", "terms": ["doc"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["her"]}
+{"store": "d-mix", "kind": "whole", "terms": ["public"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["comp"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["tri"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["mtchr"]}
+{"store": "d-mix", "kind": "typo", "terms": ["moedl"]}
+{"store": "d-mix", "kind": "two", "terms": ["test", "core"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["metr", "temp"]}
+{"store": "d-mix", "kind": "three", "terms": ["cod", "lob", "too"]}
+{"store": "d-mix", "kind": "upper", "terms": ["JOBS"]}
+{"store": "d-mix", "kind": "slash", "terms": ["sts/ui"]}
+{"store": "d-mix", "kind": "span", "terms": ["bomico"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["bin ast"]}
+{"store": "d-mix", "kind": "parent", "terms": ["tests"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["net"]}
+{"store": "d-mix", "kind": "whole", "terms": ["handlers"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["stor"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["li"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["cnfg"]}
+{"store": "d-mix", "kind": "typo", "terms": ["handers"]}
+{"store": "d-mix", "kind": "two", "terms": ["scri", "work"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["pars", "web"]}
+{"store": "d-mix", "kind": "three", "terms": ["cod", "bor", "api"]}
+{"store": "d-mix", "kind": "upper", "terms": ["EVENT"]}
+{"store": "d-mix", "kind": "slash", "terms": ["pts/eve"]}
+{"store": "d-mix", "kind": "span", "terms": ["hoapme"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["exa uti"]}
+{"store": "d-mix", "kind": "parent", "terms": ["recipes"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["ckr"]}
+{"store": "d-mix", "kind": "whole", "terms": ["vendor"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["ha"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["5"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["cmmn"]}
+{"store": "d-mix", "kind": "typo", "terms": ["compnoents"]}
+{"store": "d-mix", "kind": "two", "terms": ["docs", "comm"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["cach", "stat"]}
+{"store": "d-mix", "kind": "three", "terms": ["dat", "pub", "que"]}
+{"store": "d-mix", "kind": "upper", "terms": ["DOCS"]}
+{"store": "d-mix", "kind": "slash", "terms": ["ent/spe"]}
+{"store": "d-mix", "kind": "span", "terms": ["snbiwo"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["tra ben"]}
+{"store": "d-mix", "kind": "parent", "terms": ["code"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["ump"]}
+{"store": "d-mix", "kind": "whole", "terms": ["worker"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["lo"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["ite"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["rntm"]}
+{"store": "d-mix", "kind": "typo", "terms": ["confg"]}
+{"store": "d-mix", "kind": "two", "terms": ["exam", "queu"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["cli", "targ"]}
+{"store": "d-mix", "kind": "three", "terms": ["ker", "not", "com"]}
+{"store": "d-mix", "kind": "upper", "terms": ["UTILS"]}
+{"store": "d-mix", "kind": "slash", "terms": ["pkg/han"]}
+{"store": "d-mix", "kind": "span", "terms": ["fainmo"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["pub job"]}
+{"store": "d-mix", "kind": "parent", "terms": ["benches"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["xer"]}
+{"store": "d-mix", "kind": "whole", "terms": ["playground"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["com"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["nti"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["cmmn"]}
+{"store": "d-mix", "kind": "typo", "terms": ["cmomon"]}
+{"store": "d-mix", "kind": "two", "terms": ["fixt", "cach"]}
+{"store": "d-mix", "kind": "two_rev", "terms": ["musi", "doc"]}
+{"store": "d-mix", "kind": "three", "terms": ["lop", "doc", "cli"]}
+{"store": "d-mix", "kind": "upper", "terms": ["NET"]}
+{"store": "d-mix", "kind": "slash", "terms": ["are/not"]}
+{"store": "d-mix", "kind": "span", "terms": ["shasco"]}
+{"store": "d-mix", "kind": "spaced", "terms": ["201 09"]}
+{"store": "d-mix", "kind": "parent", "terms": [".cache"]}
+{"store": "d-mix", "kind": "suffix", "terms": ["tes"]}
+{"store": "d-mix", "kind": "whole", "terms": ["common"]}
+{"store": "d-mix", "kind": "prefix", "terms": ["conf"]}
+{"store": "d-mix", "kind": "fragment", "terms": ["8"]}
+{"store": "d-mix", "kind": "abbrev", "terms": ["jbs"]}
+{"store": "d-mix", "kind": "none", "terms": ["zzqx"]}
+{"store": "d-mix", "kind": "none", "terms": ["qqqq"]}
+{"store": "d-mix", "kind": "none", "terms": ["xyzzy-404"]}
+{"store": "d-mix", "kind": "short", "terms": ["a"]}
+{"store": "d-mix", "kind": "short", "terms": ["s"]}
+{"store": "d-mix", "kind": "short", "terms": ["e"]}
+{"store": "d-mix", "kind": "short", "terms": ["co"]}
+{"store": "d-mix", "kind": "short", "terms": ["src"]}
+{"store": "d-mix", "kind": "short", "terms": ["doc"]}
+{"store": "e-large", "kind": "whole", "terms": ["cmd"]}
+{"store": "e-large", "kind": "prefix", "terms": ["stor"]}
+{"store": "e-large", "kind": "fragment", "terms": ["nts"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["ltcd"]}
+{"store": "e-large", "kind": "typo", "terms": ["runime"]}
+{"store": "e-large", "kind": "two", "terms": ["asse", "cach"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["mode", "conf"]}
+{"store": "e-large", "kind": "three", "terms": ["fac", "tar", "db"]}
+{"store": "e-large", "kind": "upper", "terms": ["CODEG"]}
+{"store": "e-large", "kind": "slash", "terms": ["her/not"]}
+{"store": "e-large", "kind": "span", "terms": ["chstjo"]}
+{"store": "e-large", "kind": "spaced", "terms": ["not con"]}
+{"store": "e-large", "kind": "parent", "terms": ["worker"]}
+{"store": "e-large", "kind": "suffix", "terms": ["ore"]}
+{"store": "e-large", "kind": "whole", "terms": ["tools"]}
+{"store": "e-large", "kind": "prefix", "terms": ["lex"]}
+{"store": "e-large", "kind": "fragment", "terms": ["dge"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["rts"]}
+{"store": "e-large", "kind": "typo", "terms": ["cahce"]}
+{"store": "e-large", "kind": "two", "terms": ["infr", ".git"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["ui", "spec"]}
+{"store": "e-large", "kind": "three", "terms": ["wol", "blo", "ben"]}
+{"store": "e-large", "kind": "upper", "terms": ["WEB"]}
+{"store": "e-large", "kind": "slash", "terms": ["ble/fix"]}
+{"store": "e-large", "kind": "span", "terms": ["pisein"]}
+{"store": "e-large", "kind": "spaced", "terms": ["com bin"]}
+{"store": "e-large", "kind": "parent", "terms": ["docs"]}
+{"store": "e-large", "kind": "suffix", "terms": ["tes"]}
+{"store": "e-large", "kind": "whole", "terms": ["pkg"]}
+{"store": "e-large", "kind": "prefix", "terms": ["cli"]}
+{"store": "e-large", "kind": "fragment", "terms": ["ude"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["bld"]}
+{"store": "e-large", "kind": "typo", "terms": ["fixturres"]}
+{"store": "e-large", "kind": "two", "terms": ["bin", "stor"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["incl", "adve"]}
+{"store": "e-large", "kind": "three", "terms": ["ci", "uti", "sto"]}
+{"store": "e-large", "kind": "upper", "terms": ["PARSE"]}
+{"store": "e-large", "kind": "slash", "terms": ["les/web"]}
+{"store": "e-large", "kind": "span", "terms": ["glfate"]}
+{"store": "e-large", "kind": "spaced", "terms": ["che exa"]}
+{"store": "e-large", "kind": "parent", "terms": ["parser"]}
+{"store": "e-large", "kind": "suffix", "terms": ["ols"]}
+{"store": "e-large", "kind": "whole", "terms": ["spec"]}
+{"store": "e-large", "kind": "prefix", "terms": ["she"]}
+{"store": "e-large", "kind": "fragment", "terms": ["ode"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["http"]}
+{"store": "e-large", "kind": "typo", "terms": ["paser"]}
+{"store": "e-large", "kind": "two", "terms": ["spec", "mode"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["matc", "hook"]}
+{"store": "e-large", "kind": "three", "terms": ["che", "lib", "vie"]}
+{"store": "e-large", "kind": "upper", "terms": ["UI"]}
+{"store": "e-large", "kind": "slash", "terms": ["dit/inc"]}
+{"store": "e-large", "kind": "span", "terms": ["pirebe"]}
+{"store": "e-large", "kind": "spaced", "terms": ["db com"]}
+{"store": "e-large", "kind": "parent", "terms": ["compiler"]}
+{"store": "e-large", "kind": "suffix", "terms": ["del"]}
+{"store": "e-large", "kind": "whole", "terms": ["ui"]}
+{"store": "e-large", "kind": "prefix", "terms": ["au"]}
+{"store": "e-large", "kind": "fragment", "terms": ["pec"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["wb"]}
+{"store": "e-large", "kind": "typo", "terms": ["clii"]}
+{"store": "e-large", "kind": "two", "terms": ["bin", "mode"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["matc", "publ"]}
+{"store": "e-large", "kind": "three", "terms": ["nod", "log", "eve"]}
+{"store": "e-large", "kind": "upper", "terms": ["DIST"]}
+{"store": "e-large", "kind": "slash", "terms": ["ckr/cmd"]}
+{"store": "e-large", "kind": "span", "terms": ["dihama"]}
+{"store": "e-large", "kind": "spaced", "terms": ["bui met"]}
+{"store": "e-large", "kind": "parent", "terms": [".github"]}
+{"store": "e-large", "kind": "suffix", "terms": ["uth"]}
+{"store": "e-large", "kind": "whole", "terms": ["worker"]}
+{"store": "e-large", "kind": "prefix", "terms": ["sc"]}
+{"store": "e-large", "kind": "fragment", "terms": ["les"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["ui"]}
+{"store": "e-large", "kind": "typo", "terms": ["stre"]}
+{"store": "e-large", "kind": "two", "terms": ["musi", "lib"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["publ", "lope"]}
+{"store": "e-large", "kind": "three", "terms": ["ten", "she", "exa"]}
+{"store": "e-large", "kind": "upper", "terms": ["CODEG"]}
+{"store": "e-large", "kind": "slash", "terms": ["pkg/cli"]}
+{"store": "e-large", "kind": "span", "terms": ["inevma"]}
+{"store": "e-large", "kind": "spaced", "terms": ["pla ben"]}
+{"store": "e-large", "kind": "parent", "terms": ["cli"]}
+{"store": "e-large", "kind": "suffix", "terms": ["ump"]}
+{"store": "e-large", "kind": "whole", "terms": ["spec"]}
+{"store": "e-large", "kind": "prefix", "terms": ["cmd"]}
+{"store": "e-large", "kind": "fragment", "terms": ["in"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["mtchr"]}
+{"store": "e-large", "kind": "typo", "terms": ["data-ppeline"]}
+{"store": "e-large", "kind": "two", "terms": ["sagi", "note"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["code", "core"]}
+{"store": "e-large", "kind": "three", "terms": ["acm", "blo", "src"]}
+{"store": "e-large", "kind": "upper", "terms": ["ML-MO"]}
+{"store": "e-large", "kind": "slash", "terms": ["les/eve"]}
+{"store": "e-large", "kind": "span", "terms": ["phpkjo"]}
+{"store": "e-large", "kind": "spaced", "terms": ["pho .gi"]}
+{"store": "e-large", "kind": "parent", "terms": ["metrics"]}
+{"store": "e-large", "kind": "suffix", "terms": ["src"]}
+{"store": "e-large", "kind": "whole", "terms": ["parser"]}
+{"store": "e-large", "kind": "prefix", "terms": ["rou"]}
+{"store": "e-large", "kind": "fragment", "terms": ["ars"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["api"]}
+{"store": "e-large", "kind": "typo", "terms": ["moedls"]}
+{"store": "e-large", "kind": "two", "terms": ["web", "code"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["view", "hook"]}
+{"store": "e-large", "kind": "three", "terms": ["mus", "nod", "sto"]}
+{"store": "e-large", "kind": "upper", "terms": ["UTILS"]}
+{"store": "e-large", "kind": "slash", "terms": ["ine/ben"]}
+{"store": "e-large", "kind": "span", "terms": ["sa.gne"]}
+{"store": "e-large", "kind": "spaced", "terms": ["muz sta"]}
+{"store": "e-large", "kind": "parent", "terms": ["spec"]}
+{"store": "e-large", "kind": "suffix", "terms": ["src"]}
+{"store": "e-large", "kind": "whole", "terms": ["cache"]}
+{"store": "e-large", "kind": "prefix", "terms": ["dist"]}
+{"store": "e-large", "kind": "fragment", "terms": ["rna"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["vws"]}
+{"store": "e-large", "kind": "typo", "terms": ["componnets"]}
+{"store": "e-large", "kind": "two", "terms": ["fixt", "ast"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["spec", "webs"]}
+{"store": "e-large", "kind": "three", "terms": ["acm", "gum", "web"]}
+{"store": "e-large", "kind": "upper", "terms": ["HTTP"]}
+{"store": "e-large", "kind": "slash", "terms": ["zle/.gi"]}
+{"store": "e-large", "kind": "span", "terms": ["tetame"]}
+{"store": "e-large", "kind": "spaced", "terms": ["dis job"]}
+{"store": "e-large", "kind": "parent", "terms": ["common"]}
+{"store": "e-large", "kind": "suffix", "terms": ["ews"]}
+{"store": "e-large", "kind": "whole", "terms": ["api"]}
+{"store": "e-large", "kind": "prefix", "terms": ["matc"]}
+{"store": "e-large", "kind": "fragment", "terms": ["mpl"]}
+{"store": "e-large", "kind": "abbrev", "terms": ["mdl"]}
+{"store": "e-large", "kind": "typo", "terms": ["pblic"]}
+{"store": "e-large", "kind": "two", "terms": ["myAp", "bin"]}
+{"store": "e-large", "kind": "two_rev", "terms": ["comp", "tool"]}
+{"store": "e-large", "kind": "three", "terms": ["git", "ten", "gum"]}
+{"store": "e-large", "kind": "upper", "terms": ["UTIL"]}
+{"store": "e-large", "kind": "slash", "terms": ["low/pel"]}
+{"store": "e-large", "kind": "span", "terms": ["acpl.g"]}
+{"store": "e-large", "kind": "spaced", "terms": ["mig sto"]}
+{"store": "e-large", "kind": "parent", "terms": ["tenseleyFlow"]}
+{"store": "e-large", "kind": "suffix", "terms": ["ews"]}
+{"store": "e-large", "kind": "none", "terms": ["zzqx"]}
+{"store": "e-large", "kind": "none", "terms": ["qqqq"]}
+{"store": "e-large", "kind": "none", "terms": ["xyzzy-404"]}
+{"store": "e-large", "kind": "short", "terms": ["a"]}
+{"store": "e-large", "kind": "short", "terms": ["s"]}
+{"store": "e-large", "kind": "short", "terms": ["e"]}
+{"store": "e-large", "kind": "short", "terms": ["co"]}
+{"store": "e-large", "kind": "short", "terms": ["src"]}
+{"store": "e-large", "kind": "short", "terms": ["doc"]}
+{"store": "cwd", "kind": "whole", "terms": ["dist"]}
+{"store": "cwd", "kind": "prefix", "terms": ["dotf"]}
+{"store": "cwd", "kind": "fragment", "terms": ["tta"]}
+{"store": "cwd", "kind": "abbrev", "terms": ["Pctrs"]}
+{"store": "cwd", "kind": "typo", "terms": ["eaxmples"]}
+{"store": "cwd", "kind": "two", "terms": ["x", "Musi"]}
+{"store": "cwd", "kind": "two_rev", "terms": ["test", "x"]}
+{"store": "cwd", "kind": "three", "terms": ["x", "x", "bui"]}
+{"store": "cwd", "kind": "upper", "terms": ["VIDEO"]}
+{"store": "cwd", "kind": "slash", "terms": ["x/doc"]}
+{"store": "cwd", "kind": "span", "terms": ["xlo"]}
+{"store": "cwd", "kind": "spaced", "terms": ["x pax"]}
+{"store": "cwd", "kind": "parent", "terms": ["x"]}
+{"store": "cwd", "kind": "suffix", "terms": ["cli"]}
+{"store": "cwd", "kind": "whole", "terms": ["client"]}
+{"store": "cwd", "kind": "prefix", "terms": ["pelt"]}
+{"store": "cwd", "kind": "fragment", "terms": ["tes"]}
+{"store": "cwd", "kind": "abbrev", "terms": ["brtls"]}
+{"store": "cwd", "kind": "typo", "terms": ["oDcuments"]}
+{"store": "cwd", "kind": "two", "terms": ["x", "api"]}
+{"store": "cwd", "kind": "two_rev", "terms": ["benc", "x"]}
+{"store": "cwd", "kind": "three", "terms": ["x", "x", "Tem"]}
+{"store": "cwd", "kind": "upper", "terms": ["BLOG"]}
+{"store": "cwd", "kind": "slash", "terms": ["x/web"]}
+{"store": "cwd", "kind": "span", "terms": ["xsr"]}
+{"store": "cwd", "kind": "spaced", "terms": ["x too"]}
+{"store": "cwd", "kind": "parent", "terms": ["x"]}
+{"store": "cwd", "kind": "suffix", "terms": ["get"]}
+{"store": "cwd", "kind": "whole", "terms": ["muzzle"]}
+{"store": "cwd", "kind": "prefix", "terms": ["sc"]}
+{"store": "cwd", "kind": "fragment", "terms": ["own"]}
+{"store": "cwd", "kind": "abbrev", "terms": ["Pblc"]}
+{"store": "cwd", "kind": "typo", "terms": ["afckr"]}
+{"store": "cwd", "kind": "two", "terms": ["x", "yew"]}
+{"store": "cwd", "kind": "two_rev", "terms": ["lope", "x"]}
+{"store": "cwd", "kind": "three", "terms": ["x", "x", "ass"]}
+{"store": "cwd", "kind": "upper", "terms": ["GUMP"]}
+{"store": "cwd", "kind": "slash", "terms": ["x/gar"]}
+{"store": "cwd", "kind": "span", "terms": ["xwo"]}
+{"store": "cwd", "kind": "spaced", "terms": ["x Des"]}
+{"store": "cwd", "kind": "none", "terms": ["zzqx"]}
+{"store": "cwd", "kind": "none", "terms": ["qqqq"]}
+{"store": "cwd", "kind": "none", "terms": ["xyzzy-404"]}
+{"store": "cwd", "kind": "short", "terms": ["a"]}
+{"store": "cwd", "kind": "short", "terms": ["s"]}
+{"store": "cwd", "kind": "short", "terms": ["e"]}
+{"store": "cwd", "kind": "short", "terms": ["co"]}
+{"store": "cwd", "kind": "short", "terms": ["src"]}
+{"store": "cwd", "kind": "short", "terms": ["doc"]}

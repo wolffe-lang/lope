@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+"""oracle-gen — the oracle corpus's stores and queries, made from a fixed
+seed so the corpus is the same on every run (ruling #91 R3).
+
+    tools/oracle-gen     writes tests/oracle/stores/*.tsv and
+                         tests/oracle/queries.jsonl
+
+Five synthetic stores that look like real trees (a small home, a
+developer's home, a monorepo, a system-and-home mix, a large org
+checkout), 50 to 5,000 paths each. A store row is
+`SCORE<TAB>AGE_SECONDS<TAB>COUNT<TAB>PATH`; ages sit well inside gump's
+frecency buckets (minutes, hours, days, weeks) so a replay hours or
+months later lands every entry in the same bucket. The queries are
+derived from the stores' own paths: a last component whole, its prefix,
+a fragment, an abbreviation, a typo (a letter dropped, two swapped, one
+doubled), two and three terms in order and out of it, upper case, a
+fragment with a slash, and words no path holds. tools/oracle-record asks
+gump; tools/oracle-check asks lope.
+"""
+import json
+import os
+import random
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+H = "/home/wolf"
+
+LANGS = ["rust", "go", "python", "wolf", "zig", "c", "ts", "lua"]
+PROJECTS = ["gump", "lope", "wolf", "pelt", "boreutils", "lobo", "pax", "muzzle", "yew", "sagitta", "fackr",
+            "garedit", "dotfiles", "notes", "blog", "website", "api", "server", "client", "cli", "parser",
+            "compiler", "kernel", "shell", "editor", "matcher", "scheduler", "tracker", "budget", "recipes",
+            "thesis", "homework", "homelab", "infra", "terraform", "ansible", "scripts", "playground", "scratch",
+            "advent-of-code", "leetcode", "my-app", "my_app", "myApp", "web-ui", "data-pipeline", "ml-models",
+            "photo-sorter", "music-library", "chess-engine", "raytracer", "emulator", "tetris", "snake-game"]
+SUB = ["src", "tests", "docs", "examples", "benches", "scripts", "tools", "assets", "config", "build", "dist",
+       "target", "vendor", "include", "lib", "bin", "cmd", "internal", "pkg", "api", "web", "static",
+       "templates", "migrations", "fixtures", "notes", "spec", "ci", ".github", "node_modules", "public"]
+DEEP = ["core", "util", "utils", "common", "model", "models", "views", "handlers", "routes", "db", "store",
+        "matcher", "parser", "lexer", "ast", "codegen", "runtime", "net", "http", "auth", "cache", "queue",
+        "worker", "jobs", "events", "metrics", "logging", "config", "cli", "ui", "components", "hooks"]
+HOMEDIRS = ["Documents", "Downloads", "Desktop", "Pictures", "Music", "Videos", "Public", "Templates",
+            ".config", ".local/share", ".cache", ".ssh", "code", "src", "work", "school", "tmp", "bin"]
+CONFIGS = ["fish", "nvim", "zsh", "git", "kitty", "alacritty", "wezterm", "sway", "hypr", "waybar", "tmux",
+           "helix", "fortsh", "starship", "btop", "mpv", "fontconfig", "gtk-3.0", "systemd/user"]
+DOCS = ["taxes/2024", "taxes/2025", "receipts", "contracts", "resume", "letters", "school/cs430",
+        "school/math241", "recipes", "travel/japan", "travel/portugal", "manuals", "scans"]
+SYSTEM = ["/etc", "/etc/nginx", "/etc/systemd/system", "/etc/ssh", "/usr/share/doc", "/usr/share/fonts",
+          "/usr/local/bin", "/usr/local/share", "/usr/lib/systemd", "/usr/include", "/var/log", "/var/log/nginx",
+          "/var/lib/docker", "/var/www/html", "/opt", "/opt/homebrew", "/srv/backups", "/tmp", "/mnt/usb",
+          "/media/photos", "/boot/efi"]
+ORGS = ["acme", "initech", "globex", "umbrella", "hooli", "wolffe-lang", "tenseleyFlow", "piedpiper"]
+SERVICES = ["billing", "payments", "accounts", "search", "indexer", "gateway", "notifier", "scheduler",
+            "reports", "analytics", "inventory", "shipping", "catalog", "auth-service", "user-service",
+            "media", "thumbnails", "export", "import", "sync"]
+
+
+def uniq(xs):
+    seen, out = set(), []
+    for x in xs:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+
+
+def store_small(r):
+    p = [H] + ["%s/%s" % (H, d) for d in HOMEDIRS]
+    p += ["%s/.config/%s" % (H, c) for c in CONFIGS[:10]]
+    p += ["%s/code/%s" % (H, x) for x in PROJECTS[:14]]
+    p += ["%s/Documents/%s" % (H, d) for d in DOCS[:8]]
+    return uniq(p)[:50]
+
+
+def store_dev(r):
+    p = [H, H + "/code", H + "/Downloads", H + "/Documents", H + "/.config"]
+    p += ["%s/.config/%s" % (H, c) for c in CONFIGS]
+    for proj in PROJECTS[:36]:
+        base = "%s/code/%s" % (H, proj)
+        p.append(base)
+        for s in r.sample(SUB, 5):
+            p.append("%s/%s" % (base, s))
+            if s in ("src", "internal", "lib", "pkg") and r.random() < 0.7:
+                for d in r.sample(DEEP, 3):
+                    p.append("%s/%s/%s" % (base, s, d))
+    p += ["%s/Documents/%s" % (H, d) for d in DOCS]
+    return uniq(p)[:300]
+
+
+def store_mono(r):
+    p = [H, H + "/work"]
+    for org in ORGS[:3]:
+        mono = "%s/work/%s/monorepo" % (H, org)
+        p.append(mono)
+        for svc in SERVICES:
+            base = "%s/services/%s" % (mono, svc)
+            p.append(base)
+            for s in r.sample(["cmd", "internal", "pkg", "api", "migrations", "deploy", "docs", "tests"], 5):
+                p.append("%s/%s" % (base, s))
+                if s in ("internal", "pkg"):
+                    for d in r.sample(DEEP, 4):
+                        p.append("%s/%s/%s" % (base, s, d))
+        for lib in ["libs/" + d for d in DEEP]:
+            p.append("%s/%s" % (mono, lib))
+            p.append("%s/%s/src" % (mono, lib))
+    return uniq(p)[:1000]
+
+
+def store_mix(r):
+    p = list(SYSTEM)
+    for s in SYSTEM:
+        for k in range(r.randint(3, 12)):
+            p.append("%s/%s" % (s, r.choice(DEEP + PROJECTS + CONFIGS[:8]).replace("/", "-")))
+    p += store_dev(random.Random(11))
+    for proj in PROJECTS:
+        p.append("/usr/share/doc/%s" % proj)
+        p.append("%s/.cache/%s" % (H, proj))
+        p.append("%s/.local/share/%s" % (H, proj))
+    for y in range(2015, 2027):
+        for m in range(1, 13):
+            p.append("%s/Pictures/%d/%02d" % (H, y, m))
+    while len(uniq(p)) < 2500:
+        a, b, c = r.choice(SUB), r.choice(DEEP), r.choice(PROJECTS)
+        p.append("%s/code/%s/%s/%s" % (H, c, a, b))
+    return uniq(p)[:2500]
+
+
+def store_large(r):
+    p = [H, H + "/src"]
+    for org in ORGS:
+        for proj in PROJECTS:
+            base = "%s/src/github.com/%s/%s" % (H, org, proj)
+            p.append(base)
+    while len(uniq(p)) < 5000:
+        org, proj = r.choice(ORGS), r.choice(PROJECTS)
+        depth = r.choice([1, 1, 2, 2, 3])
+        parts = [r.choice(SUB)] + [r.choice(DEEP) for _ in range(depth - 1)]
+        p.append("%s/src/github.com/%s/%s/%s" % (H, org, proj, "/".join(parts)))
+    return uniq(p)[:5000]
+
+
+AGES = [600, 1800, 3 * 3600, 10 * 3600, 2 * 86400, 4 * 86400, 20 * 86400, 120 * 86400]
+
+
+def frecency_rows(paths, r):
+    """Scores mostly below the frecency cap (gump weighs frecency only up
+    to 40), with three decimals, so a ranking turns on both the match and
+    the frecency and few bests are shared; a tenth are heavy (capped)."""
+    rows = []
+    for path in paths:
+        u = r.random()
+        if u < 0.7:
+            score = round(r.uniform(0.5, 9.5), 3)
+        elif u < 0.9:
+            score = r.choice([1, 2, 3, 4, 5])
+        else:
+            score = r.choice([20, 35, 60, 100, 180])
+        age = r.choice(AGES)
+        rows.append((score, age, max(1, int(score)), path))
+    return rows
+
+
+def last(path):
+    return path.rstrip("/").rsplit("/", 1)[-1]
+
+
+def typo(word, r):
+    if len(word) < 4:
+        return word + word[-1]
+    k = r.randrange(3)
+    i = r.randrange(1, len(word) - 1)
+    if k == 0:
+        return word[:i] + word[i + 1:]
+    if k == 1:
+        return word[:i - 1] + word[i] + word[i - 1] + word[i + 1:]
+    return word[:i] + word[i] + word[i:]
+
+
+def abbrev(word):
+    letters = [c for c in word if c.isalnum()]
+    if len(letters) <= 3:
+        return word
+    cons = [c for c in letters[1:] if c.lower() not in "aeiou"]
+    return (letters[0] + "".join(cons))[:5]
+
+
+def queries_for(paths, r, n):
+    qs = []
+    picks = r.sample(paths, min(len(paths), n))
+    kinds = ["whole", "prefix", "fragment", "abbrev", "typo", "two", "two_rev", "three", "upper", "slash",
+             "span", "spaced", "parent", "suffix"]
+    for i, path in enumerate(picks):
+        comps = [c for c in path.split("/") if c]
+        leaf = comps[-1]
+        parent = comps[-2] if len(comps) > 1 else leaf
+        kind = kinds[i % len(kinds)]
+        if kind == "whole":
+            q = [leaf]
+        elif kind == "prefix":
+            q = [leaf[:max(1, min(len(leaf), r.randint(2, 4)))]]
+        elif kind == "fragment":
+            if len(leaf) > 4:
+                a = r.randrange(1, len(leaf) - 2)
+                q = [leaf[a:a + 3]]
+            else:
+                q = [leaf[1:]]
+        elif kind == "abbrev":
+            q = [abbrev(leaf)]
+        elif kind == "typo":
+            q = [typo(leaf, r)]
+        elif kind == "two":
+            q = [parent[:4], leaf[:4]]
+        elif kind == "two_rev":
+            q = [leaf[:4], parent[:4]]
+        elif kind == "three":
+            g = comps[-3] if len(comps) > 2 else parent
+            q = [g[:3], parent[:3], leaf[:3]]
+        elif kind == "upper":
+            q = [leaf[:5].upper()]
+        elif kind == "slash":
+            q = ["%s/%s" % (parent[-3:], leaf[:3])]
+        elif kind == "span":
+            q = ["".join(c[:2] for c in comps[-3:])]
+        elif kind == "spaced":
+            q = ["%s %s" % (parent[:3], leaf[:3])]
+        elif kind == "parent":
+            q = [parent]
+        else:
+            q = [leaf[-3:]]
+        qs.append({"kind": kind, "terms": q})
+    for w in ["zzqx", "qqqq", "xyzzy-404"]:
+        qs.append({"kind": "none", "terms": [w]})
+    for w in ["a", "s", "e", "co", "src", "doc"]:
+        qs.append({"kind": "short", "terms": [w]})
+    return qs
+
+
+def main():
+    r = random.Random(91)
+    makers = [("a-small", store_small, 50), ("b-dev", store_dev, 120), ("c-mono", store_mono, 120),
+              ("d-mix", store_mix, 130), ("e-large", store_large, 140)]
+    os.makedirs(os.path.join(ROOT, "tests/oracle/stores"), exist_ok=True)
+    allq = []
+    for name, make, n in makers:
+        paths = make(random.Random(name))
+        rows = frecency_rows(paths, random.Random(name + "-f"))
+        with open(os.path.join(ROOT, "tests/oracle/stores", name + ".tsv"), "w", encoding="utf-8") as f:
+            f.write("# score\tage_seconds\tcount\tpath  (tools/oracle-gen)\n")
+            for s, a, c, p in rows:
+                f.write("%s\t%d\t%d\t%s\n" % (s, a, c, p))
+        for q in queries_for(paths, random.Random(name + "-q"), n):
+            q["store"] = name
+            allq.append(q)
+        print("oracle-gen: %s %d paths" % (name, len(rows)))
+    # the working directory's own step (`query --cwd`): one directory of
+    # forty subdirectories, matched by name
+    names = uniq(PROJECTS[:20] + SUB[:12] + HOMEDIRS[:8])[:40]
+    names = [n.replace("/", "-") for n in names]
+    with open(os.path.join(ROOT, "tests/oracle/cwd-names.txt"), "w", encoding="utf-8") as f:
+        f.write("".join(n + "\n" for n in names))
+    rc = random.Random("cwd-q")
+    for q in queries_for(["/x/" + n for n in names], rc, 60):
+        q["store"] = "cwd"
+        allq.append(q)
+    with open(os.path.join(ROOT, "tests/oracle/queries.jsonl"), "w", encoding="utf-8") as f:
+        for q in allq:
+            f.write(json.dumps({"store": q["store"], "kind": q["kind"], "terms": q["terms"]}, ensure_ascii=False) + "\n")
+    print("oracle-gen: %d queries" % len(allq))
+
+
+if __name__ == "__main__":
+    main()
