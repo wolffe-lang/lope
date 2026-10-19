@@ -1,0 +1,284 @@
+//! rank — the query's rules above one atom (docs/MATCHER.md, "Terms",
+//! "Order", "The last component", "Frecency"): a term is atoms split at
+//! unescaped spaces, a path's score is the sum over every atom of every
+//! term, quartered when the terms' first characters are out of order,
+//! plus 100 when the last term matches the path's last component and 50
+//! more when it IS that component; the combined score weighs that by
+//! frecency, capped. Each rule was observed in the gump binary's answers
+//! (tests/oracle/probes/); none was read.
+
+/// A query made once from the command line's terms.
+pub struct Query {
+    atoms: List[List[int]],
+    ascii: List[bool],
+    firsts: List[int],
+    last_atoms: List[int],
+    last_lower: List[int],
+    nterms: int,
+}
+
+/// The atoms of one term: split at each space not escaped by a
+/// backslash (`a\ b` is one atom holding a space), empties dropped, each
+/// lowered to code points.
+fn atoms_of(term: str) -> List[List[int]] {
+    var out = List[List[int]]()
+    var cur = List[int]()
+    var esc = false
+    for ch in term.chars() {
+        let c = ch as int
+        if esc {
+            if c != 32 {
+                (mut cur).push(92)
+            }
+            (mut cur).push(lower(c))
+            esc = false
+            continue
+        }
+        if c == 92 {
+            esc = true
+            continue
+        }
+        if c == 32 {
+            if cur.len > 0 {
+                (mut out).push(cur)
+                cur = List[int]()
+            }
+            continue
+        }
+        (mut cur).push(lower(c))
+    }
+    if esc {
+        (mut cur).push(92)
+    }
+    if cur.len > 0 {
+        (mut out).push(cur)
+    }
+    out
+}
+
+fn all_ascii(xs: List[int]) -> bool {
+    for c in xs {
+        if c >= 128 {
+            return false
+        }
+    }
+    true
+}
+
+/// The query for `terms`, as the command line gave them.
+pub fn query_of(terms: List[str]) -> Query {
+    var atoms = List[List[int]]()
+    var ascii = List[bool]()
+    var firsts = List[int]()
+    var last_atoms = List[int]()
+    var last_lower = List[int]()
+    var t = 0
+    while t < terms.len {
+        let term = terms[t]
+        var first = -1
+        for ch in term.chars() {
+            first = lower(ch as int)
+            break
+        }
+        (mut firsts).push(first)
+        let these = atoms_of(term)
+        if t == terms.len - 1 {
+            for ch in term.chars() {
+                (mut last_lower).push(lower(ch as int))
+            }
+        }
+        for a in these {
+            if t == terms.len - 1 {
+                (mut last_atoms).push(atoms.len)
+            }
+            (mut ascii).push(all_ascii(a))
+            (mut atoms).push(a)
+        }
+        t += 1
+    }
+    Query {
+        atoms: atoms,
+        ascii: ascii,
+        firsts: firsts,
+        last_atoms: last_atoms,
+        last_lower: last_lower,
+        nterms: terms.len,
+    }
+}
+
+/// Whether the ASCII `atom` occurs in `text`'s bytes, case folded.
+fn bytes_occur(atom: List[int], text: str) -> bool {
+    let m = atom.len
+    if m == 0 {
+        return true
+    }
+    var i = 0
+    for b in text.bytes() {
+        var c = b as int
+        if c >= 65 && c <= 90 {
+            c += 32
+        }
+        if c == atom[i] {
+            i += 1
+            if i == m {
+                return true
+            }
+        }
+    }
+    false
+}
+
+/// Whether every atom can occur in `text` at all: the cheap test before
+/// any score, on bytes, so most of a store is passed over without a
+/// single allocation. A text holding a non-ASCII byte, or an atom holding
+/// a non-ASCII code point, is let through to the full match.
+pub fn may_match(q: Query, text: str) -> bool {
+    for b in text.bytes() {
+        if b as int >= 128 {
+            return true
+        }
+    }
+    var a = 0
+    while a < q.atoms.len {
+        if !q.ascii[a] {
+            return true
+        }
+        if !bytes_occur(q.atoms[a], text) {
+            return false
+        }
+        a += 1
+    }
+    true
+}
+
+/// Where the last component of `text` starts and ends (`[a, b)`), as
+/// Rust's `Path::file_name` reads it: trailing slashes dropped, none for
+/// the root or for `..`. (-1, -1) when there is none.
+pub fn last_component(h: Hay) -> (int, int) {
+    var end = h.n
+    while end > 0 && h.low[end - 1] == 47 {
+        end -= 1
+    }
+    if end == 0 {
+        return (-1, -1)
+    }
+    var start = end
+    while start > 0 && h.low[start - 1] != 47 {
+        start -= 1
+    }
+    if end - start == 2 && h.low[start] == 46 && h.low[start + 1] == 46 {
+        return (-1, -1)
+    }
+    (start, end)
+}
+
+fn sub_hay(h: Hay, a: int, b: int) -> Hay {
+    var low = List[int]()
+    var fl = List[int]()
+    var bo = List[int]()
+    var j = a
+    while j < b {
+        (mut low).push(h.low[j])
+        (mut fl).push(h.fold[j])
+        (mut bo).push(h.bonus[j])
+        j += 1
+    }
+    Hay { low: low, fold: fl, bonus: bo, n: b - a }
+}
+
+/// Whether the terms' first characters occur in order in the lowered
+/// text, each found after the one before it.
+fn in_order(q: Query, h: Hay) -> bool {
+    var pos = -1
+    for f in q.firsts {
+        if f < 0 {
+            continue
+        }
+        var j = pos + 1
+        var found = -1
+        while j < h.n {
+            if h.low[j] == f {
+                found = j
+                break
+            }
+            j += 1
+        }
+        if found < 0 {
+            return false
+        }
+        pos = found
+    }
+    true
+}
+
+/// The score of the prepared text `h` for `q`, or -1 when some atom does
+/// not occur in it.
+pub fn score(q: Query, h: Hay) -> int {
+    var total = 0
+    var a = 0
+    while a < q.atoms.len {
+        let s = atom_score(q.atoms[a], q.ascii[a], h)
+        if s < 0 {
+            return -1
+        }
+        total += s
+        a += 1
+    }
+    if q.nterms >= 2 && !in_order(q, h) {
+        total = total / 4
+    }
+    if q.nterms == 0 {
+        return total
+    }
+    let (ca, cb) = last_component(h)
+    if ca < 0 {
+        return total
+    }
+    let comp = sub_hay(h, ca, cb)
+    var hit = true
+    for k in q.last_atoms {
+        if !occurs(q.atoms[k], q.ascii[k], comp, 0) {
+            hit = false
+            break
+        }
+    }
+    if !hit {
+        return total
+    }
+    total += 100
+    if q.last_lower.len == comp.n {
+        var same = true
+        var j = 0
+        while j < comp.n {
+            if q.last_lower[j] != comp.low[j] {
+                same = false
+                break
+            }
+            j += 1
+        }
+        if same {
+            total += 50
+        }
+    }
+    total
+}
+
+/// The weight frecency adds, in quarter-millionths: a frecency of `f` is
+/// `4,000,000 f` quarter-micros, and it counts up to 40.
+pub fn weight_cap() -> int {
+    160000000
+}
+
+/// The combined key ranking a match: `score × (640,000,000 + min(fq,
+/// 160,000,000))`, which is `score × (1 + min(f, 40) / 160)` scaled by
+/// 640,000,000 with no rounding (`fq`: frecency in quarter-micros).
+pub fn key_of(s: int, fq: int) -> int {
+    var w = fq
+    if w > weight_cap() {
+        w = weight_cap()
+    }
+    if w < 0 {
+        w = 0
+    }
+    s * (640000000 + w)
+}
