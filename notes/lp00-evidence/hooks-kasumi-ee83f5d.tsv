@@ -1,0 +1,90 @@
+lope	bash	cd	3 of 3 recorded
+lope	bash	word	/t/beta/gamma
+lope	bash	two	/t/projects/myapp
+lope	bash	here	/t/alpha
+lope	bash	frag	/t/beta
+lope	bash	real	ran /t 
+lope	bash	miss	status 127, said not found
+lope	bash	g	/t/alpha, back /home, alone /home
+lope	bash	menu	menu, /t/alpha
+lope	bash	fzf	/t/beta/gamma
+lope	zsh	cd	3 of 3 recorded
+lope	zsh	word	/t/beta/gamma
+lope	zsh	two	/t/projects/myapp
+lope	zsh	here	/t/alpha
+lope	zsh	frag	/t/beta
+lope	zsh	real	ran /t 
+lope	zsh	miss	status 127, said not found
+lope	zsh	g	/t/alpha, back /home, alone /home
+lope	zsh	menu	menu, /t/alpha
+lope	zsh	fzf	/t/beta/gamma
+lope	fish	cd	3 of 3 recorded
+lope	fish	word	/t/beta/gamma
+lope	fish	two	/t/projects/myapp
+lope	fish	here	/t/alpha
+lope	fish	frag	/t/beta
+lope	fish	real	ran /t 
+lope	fish	miss	status 127, said not found
+lope	fish	g	/t/alpha, back /home, alone /home
+lope	fish	menu	menu, /t/alpha
+lope	fish	fzf	/t/beta/gamma
+lope	fortsh	cd	3 of 3 recorded
+lope	fortsh	word	/t/beta/gamma
+lope	fortsh	two	/t/projects/myapp
+lope	fortsh	here	/t/alpha
+lope	fortsh	frag	/t/beta
+lope	fortsh	real	ran /t 
+lope	fortsh	miss	status 127, said not found
+lope	fortsh	g	/t/alpha, back /home, alone /home
+lope	fortsh	menu	menu, /t/alpha
+lope	fortsh	fzf	/t/beta/gamma
+lope	pelt	cd	3 of 3 recorded
+lope	pelt	word	/home
+lope	pelt	two	/home
+lope	pelt	here	/t
+lope	pelt	frag	/t
+lope	pelt	real	ran /t 
+lope	pelt	miss	status 127, said not found
+lope	pelt	g	/t/alpha, back /home, alone /home
+lope	pelt	menu	menu, /t/alpha
+lope	pelt	fzf	/t/beta/gamma
+gump	bash	cd	3 of 3 recorded
+gump	bash	word	/home
+gump	bash	two	/home
+gump	bash	here	/t
+gump	bash	frag	/t
+gump	bash	real	ran /t 
+gump	bash	miss	status 127, said not found
+gump	bash	g	/t/alpha, back /home, alone /home
+gump	bash	menu	NO MENU, /home
+gump	bash	fzf	/t/beta/gamma
+gump	zsh	cd	3 of 3 recorded
+gump	zsh	word	/t/beta/gamma
+gump	zsh	two	/t/projects/myapp
+gump	zsh	here	/t/alpha
+gump	zsh	frag	/t/beta
+gump	zsh	real	ran /t 
+gump	zsh	miss	status 127, said not found
+gump	zsh	g	/t/alpha, back /home, alone /home
+gump	zsh	menu	NO MENU, /home
+gump	zsh	fzf	/t/beta/gamma
+gump	fish	cd	3 of 3 recorded
+gump	fish	word	/t/beta/gamma
+gump	fish	two	/t/projects/myapp
+gump	fish	here	/t/alpha
+gump	fish	frag	/t/beta
+gump	fish	real	ran /t 
+gump	fish	miss	status 127, said not found
+gump	fish	g	/t/alpha, back /home, alone /home
+gump	fish	menu	NO MENU, /home
+gump	fish	fzf	/t/beta/gamma
+gump	fortsh	cd	3 of 3 recorded
+gump	fortsh	word	/t/beta/gamma
+gump	fortsh	two	/t/projects/myapp
+gump	fortsh	here	/t/alpha
+gump	fortsh	frag	/t/beta
+gump	fortsh	real	ran /t 
+gump	fortsh	miss	status 127, said not found
+gump	fortsh	g	/t/alpha, back /home, alone /home
+gump	fortsh	menu	NO MENU, /home
+gump	fortsh	fzf	/t/beta/gamma
