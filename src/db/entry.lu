@@ -38,7 +38,7 @@ pub fn quarters(hours: int) -> int {
         return 16
     }
     if hours < 24 {
-        return 8
+        return 12
     }
     if hours < 24 * 7 {
         return 2

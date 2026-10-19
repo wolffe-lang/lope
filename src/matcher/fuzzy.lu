@@ -249,8 +249,8 @@ pub fn atom_score(atom: List[int], ascii: bool, h: Hay, mut sc: Scratch) -> int 
                             if b > eff {
                                 eff = b
                             }
-                            if eff < 4 {
-                                eff = 4
+                            if eff < 5 {
+                                eff = 5
                             }
                             var r2 = r
                             if b >= 8 && b > r2 {

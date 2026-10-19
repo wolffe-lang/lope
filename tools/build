@@ -39,7 +39,7 @@ for tier in $tiers; do
     if [ "$tier" = static ]; then
         real=$(command -v cc)
         mkdir -p target/static/bin
-        printf '#!/bin/sh\nexec %s -static "$@"\n' "$real" >target/static/bin/cc
+        printf '#!/bin/sh\nexec %s "$@"\n' "$real" >target/static/bin/cc
         chmod +x target/static/bin/cc
         PATH="$LOPE_ROOT/target/static/bin:$PATH" \
             "$WOLF" build --release --no-cache --deny-warnings src/lope.lu -o target/static/lope

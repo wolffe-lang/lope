@@ -45,7 +45,7 @@ pub fn autojump_line(line: str) -> (f64, str) ! {none} {
     if t.len == 0 {
         return none
     }
-    let tab = t.find("\t") else |_| {
+    let tab = t.find(" ") else |_| {
         return none
     }
     let score = decimal.parse_float(t[0..tab]) else |_| {

@@ -31,8 +31,6 @@ if [[ $- == *i* ]] && ((BASH_VERSINFO[0] >= 4)); then
     for __lope_map in emacs vi-insert vi-command; do
         bind -m "$__lope_map" -x '"\C-x\C-_": __lope_accept_line'
         bind -m "$__lope_map" '"\C-x\C-^": accept-line'
-        bind -m "$__lope_map" '"\C-m": "\C-x\C-_\C-x\C-^"'
-        bind -m "$__lope_map" '"\C-j": "\C-x\C-_\C-x\C-^"'
     done
     unset __lope_map
 fi
