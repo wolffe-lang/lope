@@ -256,7 +256,7 @@ jobs:
             echo "::error::a tier now builds on linux aarch64 (native $n, release $r); widen the matrix"
             exit 1
           fi
-          grep -q "this host cannot run the native tier" native.log
+          grep -q "this host cannot run the NATIVE tier" native.log
           grep -q "this host cannot run the release tier" release.log
 
       - name: the unit tests on the reference interpreter

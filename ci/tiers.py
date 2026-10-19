@@ -47,7 +47,7 @@ FULL_LABEL = "full-matrix"
 NOT_SELECTABLE = ("plan", "tier")
 # The jobs of a pull-request run. A job the workflow gains is the full
 # tier's alone until it is named here.
-PR_JOBS = ("plan-test", "linux")
+PR_JOBS = ("plan-test", "linux", "macos")
 TIERS = ("full", "pr", "noop", "partial")
 
 PROSE, PR, FULL = "prose", "pr", "full"

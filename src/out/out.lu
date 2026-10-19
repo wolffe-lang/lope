@@ -57,7 +57,7 @@ pub fn score_cell(x: int, den: int) -> str {
     if r * 2 > den || r * 2 == den && q % 2 == 1 {
         q += 1
     }
-    let ip = q / 100
+    let ip = q  /  100
     let fp = q % 100
     let t = "{ip}.{fp:02}"
     "{t:>8}"

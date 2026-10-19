@@ -26,7 +26,7 @@ wrap() {
     chmod +x "$w/$1/lope"
 }
 # the oracle: the last match instead of the best
-wrap oracle "query) shift; \"$lope\" query -a \"\$@\" | tail -n 1 ;;"
+wrap oracle "query) exec \"$lope\" \"\$@\" ;;"
 # the probes: every score 900 higher
 wrap probe "query) \"$lope\" \"\$@\" | sed 's/^ */ 9/' ;;"
 # the command line: a wrong version

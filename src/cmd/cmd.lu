@@ -214,7 +214,7 @@ pub fn query(
     mut e: out.Out,
 ) -> int {
     if terms.len == 0 && !all {
-        return failed(mut e, "no search terms provided")
+        return failed(mut e, "no terms given")
     }
     if cwd {
         return query_cwd(terms, all, mut o, mut e)
