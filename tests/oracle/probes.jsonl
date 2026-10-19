@@ -1,0 +1,322 @@
+{"path": "/home/u/projects", "terms": ["proj"], "gump": 209.0}
+{"path": "/home/u/projects", "terms": ["projects"], "gump": 359.0}
+{"path": "/home/u/projects", "terms": ["p"], "gump": 134.0}
+{"path": "/home/u/projects", "terms": ["pr"], "gump": 159.0}
+{"path": "/home/u/projects", "terms": ["pro"], "gump": 184.0}
+{"path": "/home/u/projects", "terms": ["s"], "gump": 116.0}
+{"path": "/home/u/projects", "terms": ["ts"], "gump": 136.0}
+{"path": "/home/u/projects", "terms": ["home"], "gump": 109.0}
+{"path": "/home/u/projects", "terms": ["u"], "gump": 34.0}
+{"path": "/home/u/projects", "terms": ["hp"], "gump": 51.0}
+{"path": "/home/u/projects", "terms": ["pj"], "gump": 146.0}
+{"path": "/home/u/projects", "terms": ["Proj"], "gump": 209.0}
+{"path": "/home/u/projects", "terms": ["PROJ"], "gump": 209.0}
+{"path": "/home/u/projects", "terms": ["projectS"], "gump": 359.0}
+{"path": "/home/u/projects", "terms": ["^proj"], "gump": null}
+{"path": "/home/u/projects", "terms": ["proj$"], "gump": null}
+{"path": "/home/u/projects", "terms": ["'proj"], "gump": null}
+{"path": "/home/u/projects", "terms": ["!xyz proj"], "gump": null}
+{"path": "/home/u/projects", "terms": ["projects$"], "gump": null}
+{"path": "/home/u/projects", "terms": ["^/home"], "gump": null}
+{"path": "/home/u/projects", "terms": ["/home"], "gump": 116.0}
+{"path": "/home/u/projects", "terms": ["o"], "gump": 116.0}
+{"path": "/home/u/projects", "terms": ["e"], "gump": 116.0}
+{"path": "/home/u/projects", "terms": ["c"], "gump": 116.0}
+{"path": "/home/u/projects", "terms": ["jects"], "gump": 196.0}
+{"path": "/home/u/projects", "terms": ["rojects"], "gump": 236.0}
+{"path": "/home/u/projects", "terms": ["project"], "gump": 284.0}
+{"path": "/home/u/projects", "terms": ["projectsx"], "gump": null}
+{"path": "/home/u/projects", "terms": ["ojec"], "gump": 176.0}
+{"path": "/home/u/my-app", "terms": ["app"], "gump": 180.0}
+{"path": "/home/u/my_app", "terms": ["app"], "gump": 180.0}
+{"path": "/home/u/my.app", "terms": ["app"], "gump": 180.0}
+{"path": "/home/u/myApp", "terms": ["app"], "gump": 168.0}
+{"path": "/home/u/MyApp", "terms": ["app"], "gump": 168.0}
+{"path": "/home/u/my app", "terms": ["app"], "gump": 188.0}
+{"path": "/home/u/app2go", "terms": ["app"], "gump": 184.0}
+{"path": "/home/u/x9app", "terms": ["app"], "gump": 156.0}
+{"path": "/app", "terms": ["app"], "gump": 234.0}
+{"path": "/home/app", "terms": ["app"], "gump": 234.0}
+{"path": "/home/u/app", "terms": ["app"], "gump": 234.0}
+{"path": "/home/u/apps", "terms": ["app"], "gump": 184.0}
+{"path": "/home/u/zapp", "terms": ["app"], "gump": 156.0}
+{"path": "/home/u/app/src", "terms": ["app"], "gump": 84.0}
+{"path": "/home/u/myapp", "terms": ["app"], "gump": 156.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj", "app"], "gump": 265.0}
+{"path": "/home/u/projects/myapp", "terms": ["app", "proj"], "gump": 165.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj"], "gump": 109.0}
+{"path": "/home/u/projects/myapp", "terms": ["app"], "gump": 156.0}
+{"path": "/home/u/projects/myapp", "terms": ["myapp"], "gump": 284.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj", "myapp"], "gump": 393.0}
+{"path": "/home/u/projects/myapp", "terms": ["myapp", "proj"], "gump": 243.0}
+{"path": "/home/u/projects/myapp", "terms": ["u", "app"], "gump": 190.0}
+{"path": "/home/u/projects/myapp", "terms": ["app", "u"], "gump": 22.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj", "proj"], "gump": 218.0}
+{"path": "/home/u/projects/myapp", "terms": ["app", "app"], "gump": 128.0}
+{"path": "/home/u/projects/myapp", "terms": ["home", "proj", "app"], "gump": 374.0}
+{"path": "/home/u/projects/myapp", "terms": ["app", "proj", "home"], "gump": 68.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj", "home", "app"], "gump": 168.0}
+{"path": "/home/u/projects/myapp", "terms": ["hoproj"], "gump": 152.0}
+{"path": "/home/u/projects/myapp", "terms": ["pa"], "gump": 38.0}
+{"path": "/home/u/projects/myapp", "terms": ["projmy"], "gump": 152.0}
+{"path": "/home/u/projects/myapp", "terms": ["projects/myapp"], "gump": 359.0}
+{"path": "/home/u/projects/myapp", "terms": ["s/m"], "gump": 61.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj app"], "gump": 165.0}
+{"path": "/home/u/projects/myapp", "terms": ["zz", "app"], "gump": null}
+{"path": "/home/u/projects/myapp", "terms": ["app", "zz"], "gump": null}
+{"path": "projects", "terms": ["app"], "gump": null}
+{"path": "myapp", "terms": ["app"], "gump": 156.0}
+{"path": "my-app/x", "terms": ["app"], "gump": 80.0}
+{"path": "/a:app", "terms": ["app"], "gump": 184.0}
+{"path": "/a,app", "terms": ["app"], "gump": 184.0}
+{"path": "/a+app", "terms": ["app"], "gump": 180.0}
+{"path": "/a@app", "terms": ["app"], "gump": 180.0}
+{"path": "/a~app", "terms": ["app"], "gump": 180.0}
+{"path": "/a=app", "terms": ["app"], "gump": 180.0}
+{"path": "/a#app", "terms": ["app"], "gump": 180.0}
+{"path": "/a(app", "terms": ["app"], "gump": 180.0}
+{"path": "/a'app", "terms": ["app"], "gump": 180.0}
+{"path": "/a\\app", "terms": ["app"], "gump": 180.0}
+{"path": "/aéapp", "terms": ["app"], "gump": 166.0}
+{"path": "/app2", "terms": ["app"], "gump": 184.0}
+{"path": "/x/APP", "terms": ["app"], "gump": 234.0}
+{"path": "/x/aPP", "terms": ["app"], "gump": 234.0}
+{"path": "/x/app2", "terms": ["2"], "gump": 126.0}
+{"path": "/x/app2go", "terms": ["2"], "gump": 126.0}
+{"path": "/x/app2go", "terms": ["g"], "gump": 116.0}
+{"path": "/x/app_go", "terms": ["g"], "gump": 132.0}
+{"path": "/home/u/projects/myapp", "terms": ["my", "proj"], "gump": 168.0}
+{"path": "/home/u/projects/myapp", "terms": ["mya", "proj"], "gump": 193.0}
+{"path": "/home/u/projects/myapp", "terms": ["y", "proj"], "gump": 125.0}
+{"path": "/home/u/projects/myapp", "terms": ["pm", "h"], "gump": 20.0}
+{"path": "/home/u/projects/myapp", "terms": ["m", "h"], "gump": 17.0}
+{"path": "/home/u/projects/myapp", "terms": ["o", "u"], "gump": 50.0}
+{"path": "/home/u/projects/myapp", "terms": ["u", "o"], "gump": 50.0}
+{"path": "/home/u/projects/myapp", "terms": ["s", "p"], "gump": 150.0}
+{"path": "/home/u/projects/myapp", "terms": ["", ""], "gump": 100.0}
+{"path": "/home/u/projects/myapp", "terms": [""], "gump": 100.0}
+{"path": "/home/u/projects/myapp", "terms": ["  proj"], "gump": 109.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj  "], "gump": 109.0}
+{"path": "/home/u/projects/myapp", "terms": ["a b"], "gump": null}
+{"path": "/home/u/projects/myapp", "terms": ["ma pp"], "gump": 184.0}
+{"path": "/x/my-application", "terms": ["mapp"], "gump": 202.0}
+{"path": "/x/myzzapp", "terms": ["mapp"], "gump": 185.0}
+{"path": "/x/my-application", "terms": ["appl"], "gump": 204.0}
+{"path": "/x/my-application", "terms": ["myapplication"], "gump": 420.0}
+{"path": "/x/my-application", "terms": ["my-application"], "gump": 509.0}
+{"path": "/xab-cd", "terms": ["ab-cd"], "gump": 208.0}
+{"path": "/xab-cd", "terms": ["abcd"], "gump": 181.0}
+{"path": "/xab_cd", "terms": ["ab_cd"], "gump": 208.0}
+{"path": "app", "terms": ["a"], "gump": 136.0}
+{"path": "app", "terms": ["app"], "gump": 238.0}
+{"path": "Xapp", "terms": ["x"], "gump": 136.0}
+{"path": "app", "terms": ["p"], "gump": 116.0}
+{"path": "app", "terms": ["ap"], "gump": 162.0}
+{"path": "/x/é", "terms": ["É"], "gump": 184.0}
+{"path": "/x/é", "terms": ["e"], "gump": 134.0}
+{"path": "/x/e", "terms": ["é"], "gump": null}
+{"path": "/x/É", "terms": ["é"], "gump": 184.0}
+{"path": "/", "terms": ["x"], "gump": null}
+{"path": "/", "terms": ["/"], "gump": 16.0}
+{"path": "/a/", "terms": ["a"], "gump": 184.0}
+{"path": "/b/a/", "terms": ["a"], "gump": 184.0}
+{"path": "/x/my app", "terms": ["app"], "gump": 188.0}
+{"path": "/x/my app", "terms": ["myapp"], "gump": 234.0}
+{"path": "/x/my app", "terms": ["my app"], "gump": 297.0}
+{"path": "/xaxb", "terms": ["ab"], "gump": 129.0}
+{"path": "/aXb", "terms": ["ab"], "gump": 147.0}
+{"path": "/a/b/c", "terms": ["abc"], "gump": 78.0}
+{"path": "/abxc", "terms": ["abc"], "gump": 172.0}
+{"path": "/home/u/projects/myapp", "terms": ["ma"], "gump": 147.0}
+{"path": "/home/u/projects/myapp", "terms": ["pp"], "gump": 137.0}
+{"path": "/home/u/projects/myapp", "terms": ["  app"], "gump": 156.0}
+{"path": "/home/u/projects/myapp", "terms": ["app  "], "gump": 156.0}
+{"path": "/home/u/projects/myapp", "terms": [" "], "gump": 100.0}
+{"path": "/home/u/projects/myapp", "terms": ["  "], "gump": 100.0}
+{"path": "/xab-cd", "terms": ["-"], "gump": 132.0}
+{"path": "/xab-cd", "terms": ["b-"], "gump": 140.0}
+{"path": "/xab-cd", "terms": ["-c"], "gump": 156.0}
+{"path": "/xab-cd", "terms": ["b-c"], "gump": 164.0}
+{"path": "/xab_cd", "terms": ["_"], "gump": 132.0}
+{"path": "/xab.cd", "terms": ["."], "gump": 132.0}
+{"path": "/xab:cd", "terms": [":"], "gump": 116.0}
+{"path": "/xab,cd", "terms": [","], "gump": 116.0}
+{"path": "/xab cd", "terms": [" "], "gump": 100.0}
+{"path": "/xab/cd", "terms": ["/"], "gump": 16.0}
+{"path": "/xab/cd", "terms": ["b/"], "gump": 36.0}
+{"path": "/xab/cd", "terms": ["/c"], "gump": 41.0}
+{"path": "/xab/cd", "terms": ["b/c"], "gump": 61.0}
+{"path": "/xab cd", "terms": ["b c"], "gump": 152.0}
+{"path": "/xab:cd", "terms": ["b:c"], "gump": 161.0}
+{"path": "/xab.cd", "terms": ["b.c"], "gump": 164.0}
+{"path": "/x-", "terms": ["-"], "gump": 132.0}
+{"path": "-x", "terms": ["-"], "gump": 132.0}
+{"path": "/x/", "terms": ["x/"], "gump": 59.0}
+{"path": "/xab-cd", "terms": ["c"], "gump": 132.0}
+{"path": "/xab-cd", "terms": ["cd"], "gump": 156.0}
+{"path": "/xabcd", "terms": ["bcd"], "gump": 156.0}
+{"path": "/xaBcd", "terms": ["bc"], "gump": 147.0}
+{"path": "/xaBcd", "terms": ["bcd"], "gump": 168.0}
+{"path": "/xaBcd", "terms": ["abc"], "gump": 157.0}
+{"path": "/xaBCd", "terms": ["bcd"], "gump": 168.0}
+{"path": "/xaBcd", "terms": ["Bcd"], "gump": 168.0}
+{"path": "/x1", "terms": ["x1"], "gump": 209.0}
+{"path": "/x12", "terms": ["x12"], "gump": 234.0}
+{"path": "/x12", "terms": ["12"], "gump": 147.0}
+{"path": "/x12", "terms": ["2"], "gump": 116.0}
+{"path": "/a1b", "terms": ["a1b"], "gump": 234.0}
+{"path": "/a1b", "terms": ["1"], "gump": 126.0}
+{"path": "/a1b", "terms": ["b"], "gump": 116.0}
+{"path": "/1", "terms": ["1"], "gump": 184.0}
+{"path": "/1a", "terms": ["a"], "gump": 116.0}
+{"path": "/a  b", "terms": ["ab"], "gump": 156.0}
+{"path": "/a--b", "terms": ["ab"], "gump": 154.0}
+{"path": "/a/-b", "terms": ["ab"], "gump": 54.0}
+{"path": "/a/-b", "terms": ["a-b"], "gump": 79.0}
+{"path": "/a/b", "terms": ["ab"], "gump": 56.0}
+{"path": "/a/xb", "terms": ["ab"], "gump": 46.0}
+{"path": "/ax/b", "terms": ["ab"], "gump": 55.0}
+{"path": "/home/u/projects/myapp", "terms": ["proj", " app"], "gump": 141.0}
+{"path": "/home/u/projects/myapp", "terms": ["P", "app"], "gump": 190.0}
+{"path": "/home/u/projects/myapp", "terms": ["app", "pa"], "gump": 94.0}
+{"path": "/home/u/projects/myapp", "terms": ["app", "Proj"], "gump": 165.0}
+{"path": "/home/u/projects/myapp", "terms": ["myapp", "home"], "gump": 60.0}
+{"path": "/home/u/projects/myapp", "terms": ["e", "e"], "gump": 32.0}
+{"path": "/home/u/projects/myapp", "terms": ["h", "h"], "gump": 17.0}
+{"path": "/home/u/projects/myapp", "terms": ["a", "app"], "gump": 118.0}
+{"path": "/home/u/projects/myapp", "terms": ["a b", "proj"], "gump": null}
+{"path": "/home/u/projects/myapp", "terms": ["proj", "a b"], "gump": null}
+{"path": "/home/u/projects/myapp", "terms": ["  my", "proj"], "gump": 42.0}
+{"path": "/a b", "terms": ["a\\ b"], "gump": 186.0}
+{"path": "/a b", "terms": ["a\tb"], "gump": null}
+{"path": "/a b", "terms": ["a b"], "gump": null}
+{"path": "/x/éa", "terms": ["e"], "gump": 134.0}
+{"path": "/x/éa", "terms": ["ea"], "gump": 159.0}
+{"path": "/x/ñ", "terms": ["n"], "gump": 134.0}
+{"path": "/x/ø", "terms": ["o"], "gump": 134.0}
+{"path": "/x/ß", "terms": ["ss"], "gump": null}
+{"path": "/x/Å", "terms": ["a"], "gump": 134.0}
+{"path": "/x/æ", "terms": ["ae"], "gump": null}
+{"path": "/x/İ", "terms": ["i"], "gump": 134.0}
+{"path": "/x/ü", "terms": ["u"], "gump": 134.0}
+{"path": "/x/ç", "terms": ["c"], "gump": 134.0}
+{"path": "/axxxb/ab", "terms": ["ab"], "gump": 209.0}
+{"path": "/ab/axxxb", "terms": ["ab"], "gump": 159.0}
+{"path": "/xa;bz", "terms": ["b"], "gump": 134.0}
+{"path": "/xa;bz", "terms": [";"], "gump": 116.0}
+{"path": "/xa|bz", "terms": ["b"], "gump": 134.0}
+{"path": "/xa|bz", "terms": ["|"], "gump": 116.0}
+{"path": "/xa!bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa!bz", "terms": ["!"], "gump": 132.0}
+{"path": "/xa$bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa$bz", "terms": ["$"], "gump": 132.0}
+{"path": "/xa%bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa%bz", "terms": ["%"], "gump": 132.0}
+{"path": "/xa&bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa&bz", "terms": ["&"], "gump": 132.0}
+{"path": "/xa*bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa*bz", "terms": ["*"], "gump": 132.0}
+{"path": "/xa?bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa?bz", "terms": ["?"], "gump": 132.0}
+{"path": "/xa[bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa[bz", "terms": ["["], "gump": 132.0}
+{"path": "/xa]bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa]bz", "terms": ["]"], "gump": 132.0}
+{"path": "/xa{bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa{bz", "terms": ["{"], "gump": 132.0}
+{"path": "/xa}bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa}bz", "terms": ["}"], "gump": 132.0}
+{"path": "/xa<bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa<bz", "terms": ["<"], "gump": 132.0}
+{"path": "/xa>bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa>bz", "terms": [">"], "gump": 132.0}
+{"path": "/xa\"bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa\"bz", "terms": ["\""], "gump": 132.0}
+{"path": "/xa`bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa`bz", "terms": ["`"], "gump": 132.0}
+{"path": "/xa^bz", "terms": ["b"], "gump": 132.0}
+{"path": "/xa^bz", "terms": ["^"], "gump": 132.0}
+{"path": "/-", "terms": ["-"], "gump": 182.0}
+{"path": "/-", "terms": ["/-"], "gump": 40.0}
+{"path": "/a-", "terms": ["a-"], "gump": 209.0}
+{"path": "x-y", "terms": ["x-y"], "gump": 238.0}
+{"path": "x-y", "terms": ["xy"], "gump": 157.0}
+{"path": "x-y", "terms": ["x y"], "gump": 168.0}
+{"path": "/1A", "terms": ["a"], "gump": 116.0}
+{"path": "/xé", "terms": ["é"], "gump": 116.0}
+{"path": "/xÉ", "terms": ["é"], "gump": 126.0}
+{"path": "/xÉ", "terms": ["e"], "gump": 126.0}
+{"path": "/xé", "terms": ["e"], "gump": 116.0}
+{"path": "/x/éa", "terms": ["x", "e"], "gump": 117.0}
+{"path": "/x/éé", "terms": ["e é"], "gump": 168.0}
+{"path": "/x/eé", "terms": ["eé"], "gump": 209.0}
+{"path": "/x/eé", "terms": ["ee"], "gump": 159.0}
+{"path": "/x/app", "terms": ["app "], "gump": 184.0}
+{"path": "/x/app", "terms": [" app"], "gump": 184.0}
+{"path": "/x/app", "terms": ["App"], "gump": 234.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxc/y", "terms": ["abc"], "gump": 16.0}
+{"path": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxa/y", "terms": ["a"], "gump": 16.0}
+{"path": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxab/y", "terms": ["ab"], "gump": 36.0}
+{"path": "/yxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb", "terms": ["yb"], "gump": 116.0}
+{"path": "/axb/y", "terms": ["ab"], "gump": 47.0}
+{"path": "/axxb/y", "terms": ["ab"], "gump": 46.0}
+{"path": "/axxxb/y", "terms": ["ab"], "gump": 45.0}
+{"path": "/axxxxb/y", "terms": ["ab"], "gump": 44.0}
+{"path": "/axxxxxb/y", "terms": ["ab"], "gump": 43.0}
+{"path": "/axxxxxxb/y", "terms": ["ab"], "gump": 42.0}
+{"path": "/axxxxxxxb/y", "terms": ["ab"], "gump": 41.0}
+{"path": "/axxxxxxxxb/y", "terms": ["ab"], "gump": 40.0}
+{"path": "/axxxxxxxxxb/y", "terms": ["ab"], "gump": 39.0}
+{"path": "/axxxxxxxxxxb/y", "terms": ["ab"], "gump": 38.0}
+{"path": "/axxxxxxxxxxxb/y", "terms": ["ab"], "gump": 37.0}
+{"path": "/axxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 36.0}
+{"path": "/axxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 35.0}
+{"path": "/axxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 34.0}
+{"path": "/axxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 33.0}
+{"path": "/axxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 32.0}
+{"path": "/axxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 31.0}
+{"path": "/axxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 30.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 29.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 28.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 27.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 26.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 25.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 24.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 23.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 22.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 21.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 20.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 19.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 18.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 17.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", "terms": ["ab"], "gump": 16.0}
+{"path": "/axxxxxbc/y", "terms": ["abc"], "gump": 63.0}
+{"path": "/abxxxxxc/y", "terms": ["abc"], "gump": 68.0}
+{"path": "/xayyyyyb/z", "terms": ["xab"], "gump": 68.0}
+{"path": "/axxxxxxxxxxbc/y", "terms": ["abc"], "gump": 58.0}
+{"path": "/abxxxxxxxxxxc/y", "terms": ["abc"], "gump": 63.0}
+{"path": "/xayyyyyyyyyyb/z", "terms": ["xab"], "gump": 63.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxbc/y", "terms": ["abc"], "gump": 48.0}
+{"path": "/abxxxxxxxxxxxxxxxxxxxxc/y", "terms": ["abc"], "gump": 53.0}
+{"path": "/xayyyyyyyyyyyyyyyyyyyyb/z", "terms": ["xab"], "gump": 53.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbc/y", "terms": ["abc"], "gump": 38.0}
+{"path": "/abxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxc/y", "terms": ["abc"], "gump": 43.0}
+{"path": "/xayyyyyyyyyyyyyyyyyyyyyyyyyyyyyyb/z", "terms": ["xab"], "gump": 43.0}
+{"path": "/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxbc/y", "terms": ["abc"], "gump": 36.0}
+{"path": "/abxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxc/y", "terms": ["abc"], "gump": 33.0}
+{"path": "/xayyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyb/z", "terms": ["xab"], "gump": 33.0}

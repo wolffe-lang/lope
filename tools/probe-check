@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""probe-check — every probe row the matcher's constants were fixed from,
+asked of lope: tests/oracle/probes.jsonl holds (path, terms, the score
+the gump binary printed with `query -a -s` for a store of that one path
+at frecency 0, or null when gump found no match). At frecency 0 the
+combined score IS the match score, so each row pins one number.
+
+    tools/probe-check LOPE        exit 0 when every row agrees
+
+The rows were recorded by tools/oracle-record's probe mode on kasumi
+(notes/lp00-the-port.md). Exit 1 on a disagreement, 2 on a tool error.
+"""
+import json, os, subprocess, sys, tempfile, shutil
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def main():
+    if len(sys.argv) != 2:
+        print("usage: tools/probe-check LOPE", file=sys.stderr)
+        return 2
+    lope = os.path.abspath(sys.argv[1])
+    rows = [json.loads(l) for l in open(os.path.join(ROOT, "tests/oracle/probes.jsonl"), encoding="utf-8") if l.strip()]
+    d = tempfile.mkdtemp(prefix="lope-probe-")
+    bad = 0
+    try:
+        for r in rows:
+            esc = r["path"].replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+            with open(os.path.join(d, "store"), "w", encoding="utf-8") as f:
+                f.write("lope-store 1\ncleanup 0\n0.000000 0 1 %s\n" % esc)
+            env = {"PATH": "/usr/bin:/bin", "HOME": d, "LOPE_DATA_DIR": d}
+            p = subprocess.run([lope, "query", "-a", "-s", "--"] + r["terms"], env=env, cwd=d,
+                               capture_output=True, text=True)
+            got = None
+            if p.returncode == 0:
+                got = float(p.stdout.split()[0])
+            elif p.returncode != 1 or p.stdout or p.stderr:
+                print("probe-check: TOOL lope answered %d (%r %r) for %r" % (p.returncode, p.stdout, p.stderr, r))
+                bad += 1
+                continue
+            if got != r["gump"]:
+                bad += 1
+                print("probe-check: DIFFERS %s %s: gump %s, lope %s" % (json.dumps(r["path"], ensure_ascii=False),
+                                                                      json.dumps(r["terms"], ensure_ascii=False), r["gump"], got))
+    finally:
+        shutil.rmtree(d)
+    print("probe-check: %d of %d rows agree" % (len(rows) - bad, len(rows)))
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
