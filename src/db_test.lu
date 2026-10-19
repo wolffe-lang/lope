@@ -1,0 +1,108 @@
+//! The store's rows: gump's frecency buckets at frozen times, the
+//! staleness rule, aging, the codec both ways, gump's db.bin and its
+//! RFC 3339 times.
+
+use db
+
+fn at(hours_ago: int) -> int {
+    let now: int = 1760900000000
+    db.frecency_of(3000000, now - hours_ago * 3600000, now)
+}
+
+fn main() {
+    // gump entry.rs:50: within the hour x4, the day x2, the week x1/2,
+    // after that x1/4; in quarter-millionths of a raw score of 3
+    assert(at(0) == 3000000 * 16, "this hour")
+    assert(db.frecency_of(3000000, 1000 - 3599999, 1000) == 3000000 * 16, "59m59s: still this hour")
+    assert(at(1) == 3000000 * 8, "an hour ago")
+    assert(at(23) == 3000000 * 8, "23 hours")
+    assert(at(24) == 3000000 * 2, "a day")
+    assert(at(24 * 7 - 1) == 3000000 * 2, "just inside the week")
+    assert(at(24 * 7) == 3000000, "a week")
+    assert(at(24 * 400) == 3000000, "long ago")
+    assert(at(-5) == 3000000 * 16, "a visit in the future counts as now")
+    // stale: more than 90 whole days
+    let now: int = 1760900000000
+    let e90 = db.Entry { path: "/x", score: 1000000, last: now - 91 * 86400000 + 1, count: 1 }
+    let e91 = db.Entry { path: "/x", score: 1000000, last: now - 91 * 86400000, count: 1 }
+    assert(!db.is_stale(e90, now), "90 days and change")
+    assert(db.is_stale(e91, now), "91 days")
+    // the codec
+    assert(db.micros_text(2500000) == "2.500000", "micros out")
+    assert((db.micros_of("2.5") else -1) == 2500000, "micros in, short")
+    assert((db.micros_of("12") else -1) == 12000000, "a whole score")
+    assert((db.micros_of("1.0000001") else -1) == -1, "seven decimals")
+    assert((db.micros_of("-1") else -1) == -1, "no sign")
+    var buf = List[byte]()
+    db.put_path(mut buf, "/a\\b\nc")
+    let enc = str_from_utf8(buf) else ""
+    assert(enc == "/a\\\\b\\nc", "a path escaped")
+    assert((db.unescape(enc) else "") == "/a\\b\nc", "and back")
+    var s = db.empty("/tmp/x", 5)
+    db.visit(mut s, "/a b", 10)
+    db.visit(mut s, "/a b", 20)
+    db.visit(mut s, "/c", 30)
+    let text = str_from_utf8(db.encode(s)) else ""
+    assert(
+        text == "lope-store 1\ncleanup 5\n2.000000 20 2 /a b\n1.000000 30 1 /c\n",
+        "a store written",
+    )
+    let back = db.decode(text, "/tmp/x", 0) else |_| {
+        assert(false, "a store read back")
+        return
+    }
+    assert(
+        back.entries.len == 2 && back.entries[0].path == "/a b" && back.entries[0].count == 2,
+        "read back",
+    )
+    assert(db.bad_line("lope-store 2\n") == 1, "another version is refused")
+    assert(db.bad_line("lope-store 1\ncleanup 0\n1.0 x 1 /a\n") == 3, "a bad line is named")
+    // aging: past the maximum every score is divided by total / (max x 0.9)
+    var big = db.empty("/tmp/x", 0)
+    db.visit(mut big, "/a", 1)
+    db.visit(mut big, "/a", 1)
+    db.visit(mut big, "/a", 1)
+    db.visit(mut big, "/b", 1)
+    db.age(mut big, 3.0)
+    assert(big.entries.len == 1, "an entry below one dropped")
+    assert(big.entries[0].score == 2025000, "3 / (4 / 2.7) = 2.025")
+    // RFC 3339, as chrono writes it
+    assert((db.rfc3339_ms("1970-01-01T00:00:00Z") else -1) == 0, "the epoch")
+    assert(
+        (db.rfc3339_ms("2026-10-19T19:36:39.698721253Z") else -1) == 1792438599698,
+        "gump's own time",
+    )
+    assert((db.rfc3339_ms("2026-10-19T21:36:39.5+02:00") else -1) == 1792438599500, "an offset")
+    assert((db.rfc3339_ms("2026-10-19 19:36:39Z") else -1) == -1, "a space is not a T")
+    assert(db.days_from_civil(2000, 3, 1) == 11017, "a leap year's March")
+    // gump's db.bin: one entry, scored 2.5, written by hand from the layout
+    var g = List[byte]()
+    for b in [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0] {
+        (mut g).push(b as byte)
+    }
+    for b in "/x".bytes() {
+        (mut g).push(b)
+    }
+    for b in [0, 0, 0, 0, 0, 0, 4, 64, 20, 0, 0, 0, 0, 0, 0, 0] {
+        (mut g).push(b as byte)
+    }
+    for b in "1970-01-01T00:00:01Z".bytes() {
+        (mut g).push(b)
+    }
+    for b in [7, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0] {
+        (mut g).push(b as byte)
+    }
+    for b in "1970-01-01T00:00:02Z".bytes() {
+        (mut g).push(b)
+    }
+    let gd = db.read_gump(take g) else |_| {
+        assert(false, "gump's db.bin read")
+        return
+    }
+    assert(gd.entries.len == 1, "one entry")
+    assert(gd.entries[0].path == "/x" && gd.entries[0].score == 2500000, "its path and score")
+    assert(
+        gd.entries[0].last == 1000 && gd.entries[0].count == 7 && gd.cleanup == 2000,
+        "its times and count",
+    )
+}
