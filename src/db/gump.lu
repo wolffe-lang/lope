@@ -1,0 +1,207 @@
+//! gump — a reader for gump's own `db.bin`, so `lope import` moves a gump
+//! user over in one step with every score, visit time and count kept.
+//!
+//! The layout is bincode 1's default encoding (documented: fixed-width
+//! little-endian integers, a `u64` length before every string and map)
+//! of gump's `DatabaseFile` (`store.rs:35`) and `DirEntry`
+//! (`entry.rs:6`), and was checked against a file gump 0.2.7 wrote:
+//!
+//!     u32 version (1)
+//!     u64 count, then per entry:
+//!         u64 len, path bytes       (a PathBuf, serialized as a str)
+//!         f64 score                 (IEEE-754, little-endian)
+//!         u64 len, RFC 3339 time    (chrono's DateTime<Utc>, `…Z`)
+//!         u64 access_count
+//!     u64 len, RFC 3339 time        (last_cleanup)
+
+use std.math.float
+
+/// What `db.bin` held: the entries (scores in millionths, times in Unix
+/// milliseconds) and the last cleanup.
+pub struct GumpDb {
+    entries: List[Entry],
+    cleanup: int,
+}
+
+struct Cursor {
+    b: List[byte],
+    at: int,
+}
+
+fn u64_at(mut c: Cursor) -> int ! {format} {
+    if c.at + 8 > c.b.len {
+        return format
+    }
+    if c.b[c.at + 7] as int >= 128 {
+        return format
+    }
+    var v: int = 0
+    var k = 7
+    while k >= 0 {
+        v = v * 256 + c.b[c.at + k] as int
+        k -= 1
+    }
+    c.at += 8
+    v
+}
+
+fn u32_at(mut c: Cursor) -> int ! {format} {
+    if c.at + 4 > c.b.len {
+        return format
+    }
+    var v: int = 0
+    var k = 3
+    while k >= 0 {
+        v = v * 256 + c.b[c.at + k] as int
+        k -= 1
+    }
+    c.at += 4
+    v
+}
+
+fn text_at(mut c: Cursor) -> str ! {format} {
+    let n = u64_at(mut c)?
+    if n < 0 || c.at + n > c.b.len {
+        return format
+    }
+    let s = str_from_utf8(c.b[c.at..c.at + n]) else |_| {
+        return format
+    }
+    c.at += n
+    s
+}
+
+/// An f64 read as millionths, rounded; `format` for a negative score,
+/// a NaN or an infinity.
+fn micros_at(mut c: Cursor) -> int ! {format} {
+    if c.at + 8 > c.b.len {
+        return format
+    }
+    if c.b[c.at + 7] as int >= 128 {
+        return format
+    }
+    var bits: int = 0
+    var k = 7
+    while k >= 0 {
+        bits = bits * 256 + c.b[c.at + k] as int
+        k -= 1
+    }
+    c.at += 8
+    let v = float.from_bits(bits)
+    if !(v >= 0.0) || v > 1.0e12 {
+        return format
+    }
+    (v * 1000000.0 + 0.5) as int
+}
+
+fn two(s: str, at: int) -> int ! {format} {
+    let t = s.get(at..at + 2) else |_| {
+        return format
+    }
+    var v = 0
+    for b in t.bytes() {
+        let d = b as int - 48
+        if d < 0 || d > 9 {
+            return format
+        }
+        v = v * 10 + d
+    }
+    v
+}
+
+/// Days from 1970-01-01 to the proleptic Gregorian date `y-m-d` (the
+/// civil-from-days inverse, with the year shifted to start in March).
+pub fn days_from_civil(y0: int, m: int, d: int) -> int {
+    let y = if m <= 2 then y0 - 1 else y0
+    let era = if y >= 0 then y / 400 else (y - 399) / 400
+    let yoe = y - era * 400
+    let mp = if m > 2 then m - 3 else m + 9
+    let doy = (153 * mp + 2) / 5 + d - 1
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
+    era * 146097 + doe - 719468
+}
+
+/// An RFC 3339 time (`2026-10-19T19:36:39.698721253Z`, or with a
+/// `+hh:mm`/`-hh:mm` offset) as Unix milliseconds, the fraction
+/// truncated to the millisecond.
+pub fn rfc3339_ms(s: str) -> int ! {format} {
+    if s.len < 20 {
+        return format
+    }
+    let y = two(s, 0)? * 100 + two(s, 2)?
+    let mo = two(s, 5)?
+    let d = two(s, 8)?
+    let h = two(s, 11)?
+    let mi = two(s, 14)?
+    let se = two(s, 17)?
+    if s[4..5] != "-" || s[7..8] != "-" || s[13..14] != ":" || s[16..17] != ":" {
+        return format
+    }
+    var at = 19
+    var ms = 0
+    if s[at..at + 1] == "." {
+        at += 1
+        var digits = 0
+        while at < s.len {
+            let b = s[at..at + 1].bytes()[0] as int
+            if b < 48 || b > 57 {
+                break
+            }
+            if digits < 3 {
+                ms = ms * 10 + (b - 48)
+            }
+            digits += 1
+            at += 1
+        }
+        while digits < 3 {
+            ms = ms * 10
+            digits += 1
+        }
+    }
+    var offset = 0
+    let zone = s[at..s.len]
+    if zone == "Z" || zone == "z" {
+        offset = 0
+    } else if zone.len == 6 && (zone[0..1] == "+" || zone[0..1] == "-") {
+        let oh = two(zone, 1)?
+        let om = two(zone, 4)?
+        offset = (oh * 60 + om) * 60000
+        if zone[0..1] == "-" {
+            offset = 0 - offset
+        }
+    } else {
+        return format
+    }
+    let days = days_from_civil(y, mo, d)
+    (days * 86400 + h * 3600 + mi * 60 + se) * 1000 + ms - offset
+}
+
+/// gump's `db.bin` bytes read; `format` when they are not version 1 of
+/// its layout, or anything is left over.
+pub fn read_gump(take bytes: List[byte]) -> GumpDb ! {format} {
+    let total = bytes.len
+    var out = GumpDb { entries: List[Entry](), cleanup: 0 }
+    if total == 0 {
+        return out
+    }
+    var c = Cursor { b: bytes, at: 0 }
+    let version = u32_at(mut c)?
+    if version != 1 {
+        return format
+    }
+    let n = u64_at(mut c)?
+    var i = 0
+    while i < n {
+        let path = text_at(mut c)?
+        let score = micros_at(mut c)?
+        let last = rfc3339_ms(text_at(mut c)?)?
+        let count = u64_at(mut c)?
+        (mut out.entries).push(Entry { path: path, score: score, last: last, count: count })
+        i += 1
+    }
+    out.cleanup = rfc3339_ms(text_at(mut c)?)?
+    if c.at != total {
+        return format
+    }
+    out
+}
