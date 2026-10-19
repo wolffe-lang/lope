@@ -144,6 +144,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: tools/import-check target/release/lope
 
+      - name: edit, and its refusals (no editor at all, as on PAX)
+        if: ${{ !cancelled() }}
+        run: tools/edit-check target/release/lope
+
       - name: the shells for the hook sessions
         if: ${{ !cancelled() }}
         run: |
@@ -199,11 +203,12 @@ jobs:
           tools/oracle-check target/release/lope
           tools/fold-check target/release/lope
 
-      - name: gump's command lines, import
+      - name: gump's command lines, import, edit
         if: ${{ !cancelled() }}
         run: |
           tools/cli-check target/release/lope
           tools/import-check target/release/lope
+          tools/edit-check target/release/lope
 
       # macOS's own bash is 3.2, which has no READLINE_LINE (the bash hook
       # leaves the jump out there, by its version check); zsh is the

@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""edit-check — `lope edit` with an editor this tool writes (a script
+that deletes one line, re-weighs one and adds one), and the refusals: an
+editor that fails, one that is not there, and no `$EDITOR`, `$VISUAL` or
+`vi` at all (PAX's case, ruling #91 R4).
+
+    tools/edit-check LOPE        exit 0 when every row holds
+"""
+import os, shutil, subprocess, sys, tempfile, time
+
+fails = 0
+
+
+def say(ok, what):
+    global fails
+    print("edit-check: %s %s" % ("ok  " if ok else "FAIL", what))
+    fails += not ok
+
+
+def main():
+    lope = os.path.abspath(sys.argv[1])
+    d = os.path.realpath(tempfile.mkdtemp(prefix="lope-edit-"))
+    try:
+        for p in ("a", "b", "c", "bin", "tmp"):
+            os.makedirs(os.path.join(d, p))
+        now = int(time.time() * 1000)
+        with open(os.path.join(d, "store"), "w") as f:
+            f.write("lope-store 1\ncleanup %d\n" % now)
+            f.write("3.000000 %d 3 %s/a\n" % (now - 2 * 86400000, d))
+            f.write("1.000000 %d 1 %s/b\n" % (now - 2 * 86400000, d))
+        ed = os.path.join(d, "bin", "fake-editor")
+        with open(ed, "w") as f:
+            f.write("#!/bin/sh\nset -e\nf=\"$1\"\n"
+                    "grep -v '/b$' \"$f\" | sed 's#^3.000000 #8.500000 #' > \"$f.new\"\n"
+                    "echo '2 %s/c' >> \"$f.new\"\nmv \"$f.new\" \"$f\"\n" % d)
+        os.chmod(ed, 0o755)
+        base = {"HOME": d, "LOPE_DATA_DIR": d, "TMPDIR": os.path.join(d, "tmp")}
+        env = dict(base, PATH="/usr/bin:/bin", EDITOR=ed)
+        p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        say(p.returncode == 0 and p.stdout == "Database updated\n", "an edit is written back (%d %r %r)" % (p.returncode, p.stdout, p.stderr))
+        text = open(os.path.join(d, "store")).read()
+        say(("8.500000 %d 3 %s/a\n" % (now - 2 * 86400000, d)) in text, "a re-weighed path keeps its time and count")
+        say("%s/b\n" % d not in text, "a deleted line forgets its directory")
+        say(" 1 %s/c\n" % d in text and text.count("\n") == 4, "a new line enters with one visit now")
+        say(os.listdir(os.path.join(d, "tmp")) == [], "the text file is removed")
+        env = dict(base, PATH="/usr/bin:/bin", EDITOR="/bin/false")
+        p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        say(p.returncode == 1 and p.stderr == "lope: Editor exited with error\n", "an editor that fails (%r)" % p.stderr)
+        env = dict(base, PATH="/usr/bin:/bin", EDITOR="no-such-editor-xyz")
+        p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        say(p.returncode == 1 and p.stderr == "lope: editor 'no-such-editor-xyz' not found. Set $EDITOR or $VISUAL to an installed editor\n",
+            "an editor that is not there (%r)" % p.stderr)
+        env = dict(base, PATH=os.path.join(d, "bin"))
+        p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        say(p.returncode == 1 and p.stderr == "lope: editor 'vi' not found. Set $EDITOR or $VISUAL to an installed editor\n",
+            "no $EDITOR, no $VISUAL, no vi (%r)" % p.stderr)
+    finally:
+        shutil.rmtree(d)
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
