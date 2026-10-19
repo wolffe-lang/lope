@@ -1,0 +1,8 @@
+# gump.pin — the oracle (ruling #91 R3). The gump binary built from this
+# commit is the black box every matcher, store and CLI expectation under
+# tests/ was recorded from (tools/oracle-record, tools/cli-record). gump
+# is the maintainer's (MIT); its source is read and cited, its matcher's
+# function bodies are not (src/matcher/fuzzy.rs wraps nucleo).
+GUMP_REPO=https://github.com/tenseleyFlow/gump
+GUMP_REV=43c114d071754a1d2fdac810fd11f7c7132d7164
+GUMP_VERSION=0.2.7
