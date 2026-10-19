@@ -1,0 +1,19 @@
+pkgbase = lope
+	pkgdesc = A frecency directory jumper in wolf: type a fragment, land where you meant
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/wolffe-lang/lope
+	arch = x86_64
+	license = GPL-3.0-or-later
+	makedepends = clang
+	checkdepends = python
+	depends = glibc
+	optdepends = fzf: gi picks with fzf (a numbered menu without it)
+	source = lope-0.1.0.tar.gz::https://github.com/wolffe-lang/lope/archive/refs/tags/v0.1.0.tar.gz
+	source = wolf-0.2.33-x86_64-unknown-linux-gnu.tar.gz::https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.33/wolf-0.2.33-x86_64-unknown-linux-gnu.tar.gz
+	source = wolf-std-cceda63151430eac07df895fdfffddfa4a0b92c1.tar.gz::https://github.com/wolffe-lang/wolf-std/archive/cceda63151430eac07df895fdfffddfa4a0b92c1.tar.gz
+	sha256sums = RELEASE-LANE-FILLS-THIS
+	sha256sums = 4f955e8dfe6eaafa441903eeba43c009c4ec2b45a8da09fe13431e8b12340af8
+	sha256sums = RELEASE-LANE-FILLS-THIS
+
+pkgname = lope
