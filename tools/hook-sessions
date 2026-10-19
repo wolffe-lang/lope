@@ -130,7 +130,10 @@ def rc_for(shell, tool, home, cfg):
     init = "%s init %s" % (tool, shell)
     if shell == "bash":
         path = os.path.join(home, ".bashrc")
-        text = "PS1='PROMPT> '\nPS2='> '\neval \"$(%s)\"\n" % init
+        # a distribution's /etc/bash.bashrc may define its own not-found
+        # handler (Ubuntu's); the session measures bash's own
+        text = ("unset -f command_not_found_handle 2>/dev/null\nPS1='PROMPT> '\nPS2='> '\n"
+                "eval \"$(%s)\"\n" % init)
     elif shell == "zsh":
         path = os.path.join(home, ".zshrc")
         text = "PS1='PROMPT> '\nunsetopt BEEP\neval \"$(%s)\"\n" % init
@@ -149,10 +152,10 @@ def rc_for(shell, tool, home, cfg):
         f.write(text)
 
 
-def shell_argv(shell, bins):
+def shell_argv(shell, bins, home):
     b = bins[shell]
     if shell == "bash":
-        return [b, "--noprofile", "-i"]
+        return [b, "--noprofile", "--rcfile", os.path.join(home, ".bashrc"), "-i"]
     if shell == "zsh":
         # -d: no global startup files (Ubuntu's /etc/zsh/zshrc runs
         # compinit, which stops to ask about insecure directories)
@@ -195,7 +198,7 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
     os.makedirs(env["XDG_RUNTIME_DIR"], mode=0o700)
     rows = []
     log = open(os.path.join(outdir, "%s-%s.log" % (tool, shell)), "wb")
-    s = Session(shell_argv(shell, bins), env, home, log)
+    s = Session(shell_argv(shell, bins, home), env, home, log)
     try:
         s.wait_prompt(30)
         # cd: three directories visited, then listed
