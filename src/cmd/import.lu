@@ -252,7 +252,7 @@ pub fn import_all(mut o: out.Out, mut e: out.Out) -> int {
     var imported = 0
     var skipped = 0
     for f in found {
-        var v = if top > 0.0 then (f.score / top) * 100.0 else 1.0
+        var v = if top > 0.0 then f.score / top * 100.0 else 1.0
         if v < 1.0 {
             v = 1.0
         }

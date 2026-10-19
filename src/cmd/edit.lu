@@ -97,7 +97,8 @@ pub fn reread(text: str, old: db.Store, now: int) -> Edited {
         if was >= 0 {
             let last = old.entries[was].last
             let count = old.entries[was].count
-            (mut s.entries).push(db.Entry { path: copy path, score: score, last: last, count: count })
+            (mut s.entries).push(db.
+                Entry { path: copy path, score: score, last: last, count: count })
         } else {
             (mut s.entries).push(db.Entry { path: copy path, score: score, last: now, count: 1 })
         }
@@ -115,7 +116,10 @@ pub fn edit(mut o: out.Out, mut e: out.Out) -> int {
     let words = editor_words()
     let exe = on_path(words[0])
     if exe.len == 0 {
-        return failed(mut e, "editor '{words[0]}' not found. Set $EDITOR or $VISUAL to an installed editor")
+        return failed(
+            mut e,
+            "editor '{words[0]}' not found. Set $EDITOR or $VISUAL to an installed editor",
+        )
     }
     var tmpdir = env_get("TMPDIR") else ""
     if tmpdir.len == 0 {
