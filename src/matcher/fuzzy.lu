@@ -6,7 +6,9 @@
 
 /// A text prepared for matching: its code points lowered (`low`), the
 /// same with Latin diacritics stripped (`fold`, what an ASCII atom
-/// compares against), and the bonus a match at each position earns.
+/// compares against), and the bonus a match at each position earns. The
+/// lists are reused from text to text (`hay_into`); `n` says how much of
+/// them is this text's.
 pub struct Hay {
     low: List[int],
     fold: List[int],
@@ -14,11 +16,22 @@ pub struct Hay {
     n: int,
 }
 
-/// `text` prepared for matching (one pass; one list of each kind).
-pub fn hay_of(text: str) -> Hay {
-    var low = List[int]()
-    var fl = List[int]()
-    var bo = List[int]()
+/// An empty hay, to be filled by `hay_into`.
+pub fn hay_new() -> Hay {
+    Hay { low: List[int](), fold: List[int](), bonus: List[int](), n: 0 }
+}
+
+fn set_at(mut xs: List[int], i: int, v: int) {
+    if i < xs.len {
+        xs[i] = v
+    } else {
+        (mut xs).push(v)
+    }
+}
+
+/// Fill `h` with `text` (one pass; no allocation once `h` has grown to
+/// the longest text it has held).
+pub fn hay_into(mut h: Hay, text: str) {
     var prev = c_white()
     var ascii = true
     for b in text.bytes() {
@@ -27,38 +40,47 @@ pub fn hay_of(text: str) -> Hay {
             break
         }
     }
+    var j = 0
     if ascii {
         for b in text.bytes() {
             let c = b as int
             let k = class_of(c)
             let l = if c >= 65 && c <= 90 then c + 32 else c
-            (mut low).push(l)
-            (mut fl).push(l)
-            (mut bo).push(bonus(prev, k))
+            set_at(mut h.low, j, l)
+            set_at(mut h.fold, j, l)
+            set_at(mut h.bonus, j, bonus(prev, k))
             prev = k
+            j += 1
         }
     } else {
         for ch in text.chars() {
             let c = ch as int
             let k = class_of(c)
             let l = lower(c)
-            (mut low).push(l)
-            (mut fl).push(fold(l))
-            (mut bo).push(bonus(prev, k))
+            set_at(mut h.low, j, l)
+            set_at(mut h.fold, j, fold(l))
+            set_at(mut h.bonus, j, bonus(prev, k))
             prev = k
+            j += 1
         }
     }
-    let n = low.len
-    Hay { low: low, fold: fl, bonus: bo, n: n }
+    h.n = j
+}
+
+/// `text` prepared for matching, in lists of its own.
+pub fn hay_of(text: str) -> Hay {
+    var h = hay_new()
+    hay_into(mut h, text)
+    h
 }
 
 /// Whether `atom` occurs in `h` as a subsequence (`ascii`: against the
-/// folded text, else the lowered one), at or after position `from`.
-pub fn occurs(atom: List[int], ascii: bool, h: Hay, from: int) -> bool {
+/// folded text, else the lowered one) within positions `[from, to)`.
+pub fn occurs_in(atom: List[int], ascii: bool, h: Hay, from: int, to: int) -> bool {
     var i = 0
     var j = from
     let m = atom.len
-    while i < m && j < h.n {
+    while i < m && j < to {
         let c = if ascii then h.fold[j] else h.low[j]
         if c == atom[i] {
             i += 1
@@ -66,6 +88,56 @@ pub fn occurs(atom: List[int], ascii: bool, h: Hay, from: int) -> bool {
         j += 1
     }
     i == m
+}
+
+/// Whether `atom` occurs in `h` as a subsequence, at or after `from`.
+pub fn occurs(atom: List[int], ascii: bool, h: Hay, from: int) -> bool {
+    occurs_in(atom, ascii, h, from, h.n)
+}
+
+/// The dynamic programme's rows, reused from atom to atom: two rows of
+/// five run states per position (`cells`), each position's best (`best`)
+/// and a stamp saying which row of which call wrote it (`stamp`), so no
+/// row is ever cleared.
+pub struct Scratch {
+    cells: List[int],
+    best: List[int],
+    stamp: List[int],
+    cap: int,
+    gen: int,
+}
+
+/// Rows for texts of any length (they grow on demand).
+pub fn scratch_new() -> Scratch {
+    Scratch { cells: List[int](), best: List[int](), stamp: List[int](), cap: 0, gen: 0 }
+}
+
+fn grow(mut s: Scratch, n: int) {
+    if n <= s.cap {
+        return
+    }
+    var cap = if s.cap == 0 then 64 else s.cap
+    while cap < n {
+        cap *= 2
+    }
+    var cells = List[int]()
+    var best = List[int]()
+    var stamp = List[int]()
+    var k = 0
+    while k < 2 * cap * 5 {
+        (mut cells).push(0)
+        k += 1
+    }
+    k = 0
+    while k < 2 * cap {
+        (mut best).push(0)
+        (mut stamp).push(-1)
+        k += 1
+    }
+    s.cells = cells
+    s.best = best
+    s.stamp = stamp
+    s.cap = cap
 }
 
 fn neg() -> int {
@@ -100,16 +172,6 @@ fn value_of(s: int) -> int {
     }
 }
 
-fn filled(n: int, v: int) -> List[int] {
-    var xs = List[int]()
-    var i = 0
-    while i < n {
-        (mut xs).push(v)
-        i += 1
-    }
-    xs
-}
-
 /// The best score of `atom` (lowered code points; `ascii` when every one
 /// is ASCII, which folds the text) against `h`, or -1 when it does not
 /// occur. Per matched position: 16, plus the position's bonus (doubled
@@ -117,8 +179,8 @@ fn filled(n: int, v: int) -> List[int] {
 /// takes the largest of its own bonus, the run's bonus and 4, and a
 /// bonus of 8 or more raises the run's; a match after a gap of `k`
 /// skipped positions takes its own bonus and pays `k + 2`, never below
-/// zero for what came before (`[matcher.gap]`).
-pub fn atom_score(atom: List[int], ascii: bool, h: Hay) -> int {
+/// zero for what came before (docs/MATCHER.md, "The recurrence").
+pub fn atom_score(atom: List[int], ascii: bool, h: Hay, mut sc: Scratch) -> int {
     let m = atom.len
     let n = h.n
     if m == 0 {
@@ -127,64 +189,84 @@ pub fn atom_score(atom: List[int], ascii: bool, h: Hay) -> int {
     if m > n || !occurs(atom, ascii, h, 0) {
         return -1
     }
+    grow(mut sc, n)
+    sc.gen += 1
+    let base = sc.gen * 1048576
+    let cap = sc.cap
     let lo = neg()
-    var prev = filled(n * 5, lo)
-    var pmax = filled(n, lo)
+    // row 0, in half 0
     var j = 0
     while j < n {
         let c = if ascii then h.fold[j] else h.low[j]
         if c == atom[0] {
             let b = h.bonus[j]
             let v = 16 + 2 * b
-            prev[j * 5 + state_of(b)] = v
-            pmax[j] = v
+            var s = 0
+            while s < 5 {
+                sc.cells[j * 5 + s] = lo
+                s += 1
+            }
+            sc.cells[j * 5 + state_of(b)] = v
+            sc.best[j] = v
+            sc.stamp[j] = base
         }
         j += 1
     }
     var i = 1
     while i < m {
-        var cur = filled(n * 5, lo)
-        var cmax = filled(n, lo)
+        let ph = (i - 1) % 2
+        let ch = i % 2
+        let pstamp = base + i - 1
+        let cstamp = base + i
         var gap = lo
         let want = atom[i]
         j = i
         while j < n {
-            if j >= 2 {
-                let t = pmax[j - 2]
-                if t > lo && t + j - 2 > gap {
-                    gap = t + j - 2
+            if j >= 2 && sc.stamp[ph * cap + j - 2] == pstamp {
+                let t = sc.best[ph * cap + j - 2] + j - 2
+                if t > gap {
+                    gap = t
                 }
             }
             let c = if ascii then h.fold[j] else h.low[j]
             if c == want {
                 let b = h.bonus[j]
-                var best = lo
+                let row = (ch * cap + j) * 5
                 var s = 0
                 while s < 5 {
-                    let p = prev[(j - 1) * 5 + s]
-                    if p > lo {
-                        let r = value_of(s)
-                        var eff = r
-                        if b > eff {
-                            eff = b
-                        }
-                        if eff < 4 {
-                            eff = 4
-                        }
-                        var r2 = r
-                        if b >= 8 && b > r2 {
-                            r2 = b
-                        }
-                        let v = p + 16 + eff
-                        let k = j * 5 + state_of(r2)
-                        if v > cur[k] {
-                            cur[k] = v
-                        }
-                        if v > best {
-                            best = v
-                        }
-                    }
+                    sc.cells[row + s] = lo
                     s += 1
+                }
+                var top = lo
+                if sc.stamp[ph * cap + j - 1] == pstamp {
+                    let prow = (ph * cap + j - 1) * 5
+                    s = 0
+                    while s < 5 {
+                        let p = sc.cells[prow + s]
+                        if p > lo {
+                            let r = value_of(s)
+                            var eff = r
+                            if b > eff {
+                                eff = b
+                            }
+                            if eff < 4 {
+                                eff = 4
+                            }
+                            var r2 = r
+                            if b >= 8 && b > r2 {
+                                r2 = b
+                            }
+                            let v = p + 16 + eff
+                            let k = row + state_of(r2)
+                            if v > sc.cells[k] {
+                                sc.cells[k] = v
+                            }
+                            if v > top {
+                                top = v
+                            }
+                        }
+                        s += 1
+                    }
                 }
                 if gap > lo {
                     var carried = gap - j - 1
@@ -192,32 +274,35 @@ pub fn atom_score(atom: List[int], ascii: bool, h: Hay) -> int {
                         carried = 0
                     }
                     let v = carried + 16 + b
-                    let k = j * 5 + state_of(b)
-                    if v > cur[k] {
-                        cur[k] = v
+                    let k = row + state_of(b)
+                    if v > sc.cells[k] {
+                        sc.cells[k] = v
                     }
-                    if v > best {
-                        best = v
+                    if v > top {
+                        top = v
                     }
                 }
-                cmax[j] = best
+                if top > lo {
+                    sc.best[ch * cap + j] = top
+                    sc.stamp[ch * cap + j] = cstamp
+                }
             }
             j += 1
         }
-        prev = cur
-        pmax = cmax
         i += 1
     }
-    var top = lo
+    let lh = (m - 1) % 2
+    let last = base + m - 1
+    var answer = lo
     j = 0
     while j < n {
-        if pmax[j] > top {
-            top = pmax[j]
+        if sc.stamp[lh * cap + j] == last && sc.best[lh * cap + j] > answer {
+            answer = sc.best[lh * cap + j]
         }
         j += 1
     }
-    if top <= lo {
+    if answer <= lo {
         return -1
     }
-    top
+    answer
 }

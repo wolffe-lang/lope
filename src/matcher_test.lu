@@ -6,7 +6,7 @@
 use matcher
 
 fn sc(text: str, terms: List[str]) -> int {
-    matcher.score(matcher.query_of(terms), matcher.hay_of(text))
+    matcher.score(matcher.query_of(terms), text)
 }
 
 fn main() {

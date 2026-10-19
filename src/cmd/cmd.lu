@@ -236,6 +236,8 @@ pub fn query(
         return 0
     }
     let q = matcher.query_of(terms)
+    var hay = matcher.hay_new()
+    var rows = matcher.scratch_new()
     var keys = List[int]()
     var fqs = List[int]()
     var paths = List[str]()
@@ -261,10 +263,7 @@ pub fn query(
         if !matcher.may_match(q, path) {
             continue
         }
-        var s = -1
-        region scratch {
-            s = matcher.score(q, matcher.hay_of(path))
-        }
+        let s = matcher.score_with(q, mut hay, path, mut rows)
         if s < 0 {
             continue
         }
@@ -329,13 +328,12 @@ fn query_cwd(terms: List[str], all: bool, mut o: out.Out, mut e: out.Out) -> int
         return 1
     }
     let q = matcher.query_of(terms)
+    var hay = matcher.hay_new()
+    var rows = matcher.scratch_new()
     var keys = List[int]()
     var hits = List[str]()
     for name in names {
-        var s = -1
-        region scratch {
-            s = matcher.score(q, matcher.hay_of(name))
-        }
+        let s = matcher.score_with(q, mut hay, name, mut rows)
         if s >= 0 {
             (mut keys).push(matcher.key_of(s, 4000000))
             (mut hits).push(name)

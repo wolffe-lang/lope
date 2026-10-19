@@ -172,20 +172,6 @@ pub fn last_component(h: Hay) -> (int, int) {
     (start, end)
 }
 
-fn sub_hay(h: Hay, a: int, b: int) -> Hay {
-    var low = List[int]()
-    var fl = List[int]()
-    var bo = List[int]()
-    var j = a
-    while j < b {
-        (mut low).push(h.low[j])
-        (mut fl).push(h.fold[j])
-        (mut bo).push(h.bonus[j])
-        j += 1
-    }
-    Hay { low: low, fold: fl, bonus: bo, n: b - a }
-}
-
 /// Whether the terms' first characters occur in order in the lowered
 /// text, each found after the one before it.
 fn in_order(q: Query, h: Hay) -> bool {
@@ -211,13 +197,22 @@ fn in_order(q: Query, h: Hay) -> bool {
     true
 }
 
-/// The score of the prepared text `h` for `q`, or -1 when some atom does
-/// not occur in it.
-pub fn score(q: Query, h: Hay) -> int {
+/// The score of `text` for `q`, or -1 when some atom does not occur in
+/// it (its own hay and rows: for a test or a single text).
+pub fn score(q: Query, text: str) -> int {
+    var h = hay_of(text)
+    var sc = scratch_new()
+    score_with(q, mut h, text, mut sc)
+}
+
+/// The score of `text` for `q`, or -1, with `h` and `sc` reused (the
+/// query loop's form: nothing is allocated once they have grown).
+pub fn score_with(q: Query, mut h: Hay, text: str, mut sc: Scratch) -> int {
+    hay_into(mut h, text)
     var total = 0
     var a = 0
     while a < q.atoms.len {
-        let s = atom_score(q.atoms[a], q.ascii[a], h)
+        let s = atom_score(q.atoms[a], q.ascii[a], h, mut sc)
         if s < 0 {
             return -1
         }
@@ -234,10 +229,9 @@ pub fn score(q: Query, h: Hay) -> int {
     if ca < 0 {
         return total
     }
-    let comp = sub_hay(h, ca, cb)
     var hit = true
     for k in q.last_atoms {
-        if !occurs(q.atoms[k], q.ascii[k], comp, 0) {
+        if !occurs_in(q.atoms[k], q.ascii[k], h, ca, cb) {
             hit = false
             break
         }
@@ -246,11 +240,11 @@ pub fn score(q: Query, h: Hay) -> int {
         return total
     }
     total += 100
-    if q.last_lower.len == comp.n {
+    if q.last_lower.len == cb - ca {
         var same = true
         var j = 0
-        while j < comp.n {
-            if q.last_lower[j] != comp.low[j] {
+        while j < cb - ca {
+            if q.last_lower[j] != h.low[ca + j] {
                 same = false
                 break
             }
