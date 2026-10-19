@@ -154,7 +154,9 @@ def shell_argv(shell, bins):
     if shell == "bash":
         return [b, "--noprofile", "-i"]
     if shell == "zsh":
-        return [b, "-i"]
+        # -d: no global startup files (Ubuntu's /etc/zsh/zshrc runs
+        # compinit, which stops to ask about insecure directories)
+        return [b, "-d", "-i"]
     if shell == "fish":
         return [b, "-i", "--no-config"] if False else [b, "-i"]
     if shell == "fortsh":
