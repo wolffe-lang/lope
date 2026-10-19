@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""oracle-check — lope against the recorded oracle (ruling #91 R3): every
+case of tests/oracle/corpus.jsonl (a store, a query, and where the gump
+binary landed) asked of lope, its store materialized from the same rows
+with the same ages before now.
+
+A case AGREES when lope lands where gump landed, or both find nothing;
+when gump's best score was shared (its tie set, recorded), any path of the
+tie set agrees, since gump's own answer there changes from run to run.
+Every disagreement is printed with gump's answer and lope's. The rate is
+held to the floor in tests/oracle/FLOOR (set from the measurement, never
+lowered).
+
+    tools/oracle-check LOPE [--report FILE]     exit 1 below the floor
+"""
+import json, os, shutil, subprocess, sys, tempfile, time
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def store_text(name, now_ms):
+    lines = ["lope-store 1", "cleanup %d" % now_ms]
+    for line in open(os.path.join(ROOT, "tests/oracle/stores", name + ".tsv"), encoding="utf-8"):
+        if line.startswith("#") or not line.strip():
+            continue
+        s, a, c, p = line.rstrip("\n").split("\t", 3)
+        micros = int(round(float(s) * 1000000))
+        esc = p.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+        lines.append("%d.%06d %d %s %s" % (micros // 1000000, micros % 1000000, now_ms - int(a) * 1000, c, esc))
+    return "\n".join(lines) + "\n"
+
+
+def main():
+    lope = os.path.abspath(sys.argv[1])
+    report = sys.argv[sys.argv.index("--report") + 1] if "--report" in sys.argv else None
+    cases = [json.loads(l) for l in open(os.path.join(ROOT, "tests/oracle/corpus.jsonl"), encoding="utf-8")]
+    floor = float(open(os.path.join(ROOT, "tests/oracle/FLOOR")).read().split()[0])
+    d = tempfile.mkdtemp(prefix="lope-oracle-")
+    agree, ties, diffs = 0, 0, []
+    try:
+        current = None
+        names = [n for n in open(os.path.join(ROOT, "tests/oracle/cwd-names.txt"), encoding="utf-8").read().split("\n") if n]
+        cwd = os.path.join(d, "cwd")
+        os.makedirs(cwd)
+        for n in names:
+            os.makedirs(os.path.join(cwd, n))
+        for c in cases:
+            if c["store"] == "cwd":
+                env = {"PATH": "/usr/bin:/bin", "HOME": d, "LOPE_DATA_DIR": d}
+                p = subprocess.run([lope, "query", "--cwd", "--"] + c["terms"], env=env, cwd=cwd, capture_output=True, text=True)
+                got = p.stdout.strip()[len(cwd) + 1:] if p.returncode == 0 else None
+                ok = got == c["gump"] or (c["ties"] and got in c["ties"])
+                if ok:
+                    agree += 1
+                    ties += 1 if c["ties"] else 0
+                else:
+                    diffs.append({"store": "cwd", "kind": c["kind"], "terms": c["terms"], "gump": c["gump"],
+                                  "gump_top": c["top"], "lope": got})
+                continue
+            if c["store"] != current:
+                current = c["store"]
+                with open(os.path.join(d, "store"), "w", encoding="utf-8") as f:
+                    f.write(store_text(current, int(time.time() * 1000)))
+            env = {"PATH": "/usr/bin:/bin", "HOME": d, "LOPE_DATA_DIR": d}
+            p = subprocess.run([lope, "query", "--"] + c["terms"], env=env, cwd=d, capture_output=True, text=True)
+            if p.returncode not in (0, 1) or p.stderr:
+                print("oracle-check: TOOL lope answered %d %r for %r" % (p.returncode, p.stderr, c))
+                return 2
+            got = p.stdout.strip() if p.returncode == 0 else None
+            ok = got == c["gump"] or (c["ties"] and got in c["ties"])
+            if ok:
+                agree += 1
+                ties += 1 if c["ties"] else 0
+            else:
+                diffs.append({"store": c["store"], "kind": c["kind"], "terms": c["terms"], "gump": c["gump"],
+                              "gump_top": c["top"], "lope": got})
+    finally:
+        shutil.rmtree(d)
+    rate = agree / len(cases)
+    strict = sum(1 for c in cases if not c["ties"])
+    lines = ["oracle-check: %d of %d cases agree (%.2f%%), floor %.2f%%: %d of %d with one best answer, "
+             "%d of %d where gump's best is shared (its tie set)" % (
+                 agree, len(cases), 100 * rate, 100 * floor, agree - ties, strict, ties, len(cases) - strict)]
+    for x in diffs:
+        lines.append("oracle-check: DIFFERS %s %s %s: gump %s (%s), lope %s" % (
+            x["store"], x["kind"], json.dumps(x["terms"], ensure_ascii=False), x["gump"], x["gump_top"], x["lope"]))
+    print("\n".join(lines))
+    if report:
+        with open(report, "w", encoding="utf-8") as f:
+            json.dump({"agree": agree, "cases": len(cases), "ties": ties, "differs": diffs}, f, indent=1, ensure_ascii=False)
+    return 0 if rate >= floor else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
