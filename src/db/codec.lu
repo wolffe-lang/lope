@@ -1,0 +1,159 @@
+//! codec — lope's store on disk (docs/STORE.md): text, one directory per
+//! line, versioned by its first line.
+//!
+//!     lope-store 1
+//!     cleanup 1760900000000
+//!     12.500000 1760899000000 13 /home/u/code/projects
+//!
+//! A line is the raw score (six decimals), the last visit (Unix
+//! milliseconds), the visit count and the path, separated by single
+//! spaces; the path is last, so it may hold spaces. A backslash, a
+//! newline and a carriage return in a path are written `\\`, `\n` and
+//! `\r`. A store whose first line is not `lope-store 1` is refused, never
+//! guessed at.
+
+/// The first line of every version-1 store.
+pub fn magic() -> str {
+    "lope-store 1"
+}
+
+/// `x` millionths as text with six decimals (`2500000` → `2.500000`).
+pub fn micros_text(x: int) -> str {
+    let ip = x / 1000000
+    let fp = x % 1000000
+    "{ip}.{fp:06}"
+}
+
+fn digits_value(s: str) -> int ! {parse} {
+    if s.len == 0 {
+        return parse
+    }
+    var v: int = 0
+    for b in s.bytes() {
+        let d = b as int - 48
+        if d < 0 || d > 9 {
+            return parse
+        }
+        v = v * 10 + d
+    }
+    v
+}
+
+/// The text `micros_text` writes, read back as millionths. Up to six
+/// decimals are read; no sign, no exponent.
+pub fn micros_of(s: str) -> int ! {parse} {
+    let dot = s.find(".") else -1
+    if dot < 0 {
+        return digits_value(s)? * 1000000
+    }
+    let ip = digits_value(s[0..dot])?
+    let frac = s[dot + 1..s.len]
+    if frac.len == 0 || frac.len > 6 {
+        return parse
+    }
+    var fp = digits_value(frac)?
+    var k = frac.len
+    while k < 6 {
+        fp = fp * 10
+        k += 1
+    }
+    ip * 1000000 + fp
+}
+
+/// Append `s`'s bytes to `buf`.
+pub fn put(mut buf: List[byte], s: str) {
+    for b in s.bytes() {
+        (mut buf).push(b)
+    }
+}
+
+/// Append `path` to `buf`, escaped as the store writes it.
+pub fn put_path(mut buf: List[byte], path: str) {
+    for b in path.bytes() {
+        let c = b as int
+        if c == 92 {
+            (mut buf).push(92 as byte)
+            (mut buf).push(92 as byte)
+        } else if c == 10 {
+            (mut buf).push(92 as byte)
+            (mut buf).push(110 as byte)
+        } else if c == 13 {
+            (mut buf).push(92 as byte)
+            (mut buf).push(114 as byte)
+        } else {
+            (mut buf).push(b)
+        }
+    }
+}
+
+/// A stored path, unescaped.
+pub fn unescape(s: str) -> str ! {parse} {
+    if (s.find("\\") else -1) < 0 {
+        return s
+    }
+    var out = List[byte]()
+    var esc = false
+    for b in s.bytes() {
+        let c = b as int
+        if esc {
+            if c == 92 {
+                (mut out).push(92 as byte)
+            } else if c == 110 {
+                (mut out).push(10 as byte)
+            } else if c == 114 {
+                (mut out).push(13 as byte)
+            } else {
+                return parse
+            }
+            esc = false
+        } else if c == 92 {
+            esc = true
+        } else {
+            (mut out).push(b)
+        }
+    }
+    if esc {
+        return parse
+    }
+    str_from_utf8(out) else |_| {
+        return parse
+    }
+}
+
+/// Where a store line's path starts (after its third space), or -1.
+pub fn path_start(line: str) -> int {
+    var spaces = 0
+    var i = 0
+    for b in line.bytes() {
+        if b as int == 32 {
+            spaces += 1
+            if spaces == 3 {
+                return i + 1
+            }
+        }
+        i += 1
+    }
+    -1
+}
+
+/// One store line: (score, last, count, path start), or `parse`.
+pub fn fields_of(line: str) -> (int, int, int, int) ! {parse} {
+    let p = path_start(line)
+    if p < 0 || p >= line.len {
+        return parse
+    }
+    let head = line[0..p - 1]
+    let a = head.find(" ") else -1
+    if a < 0 {
+        return parse
+    }
+    let rest = head[a + 1..head.len]
+    let b = rest.find(" ") else -1
+    if b < 0 {
+        return parse
+    }
+    let score = micros_of(head[0..a])?
+    let last = digits_value(rest[0..b])?
+    let count = digits_value(rest[b + 1..rest.len])?
+    (score, last, count, p)
+}
