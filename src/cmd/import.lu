@@ -1,0 +1,275 @@
+//! import — other jumpers' directories brought in (gump
+//! `src/cmd/import.rs`), and gump's own database moved over whole.
+//!
+//! Each format is read from its DATA, never from the tool's source:
+//! zoxide through its command line (`zoxide query --list --score`:
+//! `SCORE PATH` per line), autojump's `autojump.txt` (`SCORE<tab>PATH`),
+//! z's `~/.z` and fasd's `~/.fasd` (`PATH|SCORE|TIME`), as gump reads
+//! them; gump's `db.bin` by its bincode layout (`db/gump.lu`). The other
+//! tools' scores are scaled so the best is 100 (at least 1) and enter as
+//! one visit now; gump's keep their scores, visits and times.
+
+use db
+use out
+use std.fmt.decimal
+
+struct Found {
+    path: str,
+    score: f64,
+}
+
+fn exists_dir(p: str) -> bool {
+    fs_is_dir(p)
+}
+
+/// zoxide's `  SCORE PATH` line (gump `import.rs:218`): leading blanks,
+/// the score, a space, the path.
+pub fn zoxide_line(line: str) -> (f64, str) ! {none} {
+    let t = line.trim_start()
+    let sp = t.find(" ") else |_| {
+        return none
+    }
+    let path = t[sp..t.len].trim_start()
+    if path.len == 0 {
+        return none
+    }
+    let score = decimal.parse_float(t[0..sp]) else |_| {
+        return none
+    }
+    (score, path)
+}
+
+/// autojump's `SCORE<tab>PATH` line.
+pub fn autojump_line(line: str) -> (f64, str) ! {none} {
+    let t = line.trim()
+    if t.len == 0 {
+        return none
+    }
+    let tab = t.find("\t") else |_| {
+        return none
+    }
+    let score = decimal.parse_float(t[0..tab]) else |_| {
+        return none
+    }
+    (score, t[tab + 1..t.len])
+}
+
+/// z's and fasd's `PATH|SCORE|TIME` line (the time is not read).
+pub fn piped_line(line: str) -> (f64, str) ! {none} {
+    let t = line.trim()
+    if t.len == 0 {
+        return none
+    }
+    let parts = t.split("|")
+    if parts.len < 2 {
+        return none
+    }
+    let score = decimal.parse_float(parts[1]) else |_| {
+        return none
+    }
+    (score, parts[0])
+}
+
+fn read_or_empty(path: str) -> str {
+    let b = fs_read_bytes(path) else |_| {
+        return ""
+    }
+    str_from_utf8(b) else ""
+}
+
+fn from_zoxide(mut found: List[Found], mut o: out.Out) {
+    let exe = on_path("zoxide")
+    if exe.len == 0 {
+        return
+    }
+    let r = run_captured(exe, ["query", "--list", "--score"])
+    if r.status != 0 {
+        return
+    }
+    var n = 0
+    for line in r.output.lines() {
+        let (s, p) = zoxide_line(line) else |_| {
+            continue
+        }
+        if fs_exists(p) {
+            (mut found).push(Found { path: copy p, score: s })
+            n += 1
+        }
+    }
+    if n > 0 {
+        out.line(mut o, "  zoxide: {n} entries")
+    }
+}
+
+fn from_autojump(mut found: List[Found], mut o: out.Out) {
+    var file = db.join(db.xdg_data_home(), "autojump/autojump.txt")
+    if !fs_exists(file) {
+        file = db.join(db.home(), "Library/Application Support/autojump/autojump.txt")
+        if !fs_exists(file) {
+            return
+        }
+    }
+    let text = read_or_empty(file)
+    var n = 0
+    for line in text.lines() {
+        let (s, p) = autojump_line(line) else |_| {
+            continue
+        }
+        if fs_exists(p) {
+            (mut found).push(Found { path: copy p, score: s })
+            n += 1
+        }
+    }
+    if n > 0 {
+        out.line(mut o, "  autojump: {n} entries")
+    }
+}
+
+fn from_z(mut found: List[Found], mut o: out.Out) {
+    var files = List[str]()
+    (mut files).push(db.join(db.home(), ".z"))
+    for v in ["_Z_DATA", "Z_DATA", "ZSHZ_DATA"] {
+        let f = env_get(v) else ""
+        if f.len > 0 {
+            (mut files).push(f)
+        }
+    }
+    var n = 0
+    for f in files {
+        if !fs_exists(f) {
+            continue
+        }
+        let text = read_or_empty(f)
+        for line in text.lines() {
+            let (s, p) = piped_line(line) else |_| {
+                continue
+            }
+            if fs_exists(p) {
+                (mut found).push(Found { path: copy p, score: s })
+                n += 1
+            }
+        }
+    }
+    if n > 0 {
+        out.line(mut o, "  z/z.lua: {n} entries")
+    }
+}
+
+fn from_fasd(mut found: List[Found], mut o: out.Out) {
+    let file = db.join(db.home(), ".fasd")
+    if !fs_exists(file) {
+        return
+    }
+    let text = read_or_empty(file)
+    var n = 0
+    for line in text.lines() {
+        let (s, p) = piped_line(line) else |_| {
+            continue
+        }
+        if exists_dir(p) {
+            (mut found).push(Found { path: copy p, score: s })
+            n += 1
+        }
+    }
+    if n > 0 {
+        out.line(mut o, "  fasd: {n} entries")
+    }
+}
+
+/// gump's own database, merged entry by entry: a path lope does not know
+/// enters as gump kept it; one it knows keeps the higher score, the later
+/// visit and the larger count. Answers how many entries gump's held, or
+/// -1 when its `db.bin` exists and is not one.
+fn from_gump(mut s: db.Store, mut o: out.Out, mut e: out.Out) -> int {
+    for file in db.gump_db_candidates() {
+        if !fs_exists(file) {
+            continue
+        }
+        let bytes = fs_read_bytes(file) else |_| {
+            let _f = failed(mut e, io_words())
+            return -1
+        }
+        let g = db.read_gump(take bytes) else |_| {
+            let _f = failed(mut e, "{file}: not a gump 0.2 database")
+            return -1
+        }
+        for en in g.entries {
+            if db.excluded(en.path) {
+                continue
+            }
+            let i = db.find(s, en.path)
+            if i < 0 {
+                (mut s.entries).push(en)
+            } else {
+                var have = s.entries[i]
+                if en.score > have.score {
+                    have.score = en.score
+                }
+                if en.last > have.last {
+                    have.last = en.last
+                }
+                if en.count > have.count {
+                    have.count = en.count
+                }
+                s.entries[i] = have
+            }
+        }
+        out.line(mut o, "  gump: {g.entries.len} entries (scores, visits and times kept)")
+        return g.entries.len
+    }
+    0
+}
+
+/// `lope import`.
+pub fn import_all(mut o: out.Out, mut e: out.Out) -> int {
+    let now = time_unix_ms()
+    var l = open_store(db.store_file(), now, mut e)
+    if l.stop >= 0 {
+        return l.stop
+    }
+    let from_g = from_gump(mut l.store, mut o, mut e)
+    if from_g < 0 {
+        return 1
+    }
+    var found = List[Found]()
+    from_zoxide(mut found, mut o)
+    from_autojump(mut found, mut o)
+    from_z(mut found, mut o)
+    from_fasd(mut found, mut o)
+    if found.len == 0 {
+        if from_g == 0 {
+            out.line(mut o, "No databases found to import from")
+            return 0
+        }
+        return save_store(l.store, mut e)
+    }
+    var top = 0.0
+    for f in found {
+        if f.score > top {
+            top = f.score
+        }
+    }
+    var imported = 0
+    var skipped = 0
+    for f in found {
+        var v = if top > 0.0 then (f.score / top) * 100.0 else 1.0
+        if v < 1.0 {
+            v = 1.0
+        }
+        let p = db.canonical(f.path) else |_| {
+            skipped += 1
+            continue
+        }
+        db.merge(mut l.store, p, (v * 1000000.0 + 0.5) as int, now)
+        imported += 1
+    }
+    let st = save_store(l.store, mut e)
+    if st != 0 {
+        return st
+    }
+    out.line(mut o, "Found {found.len} entries, imported {imported} (scores normalized to 1-100)")
+    if skipped > 0 {
+        out.line(mut o, "Skipped {skipped} entries (excluded or unresolvable paths)")
+    }
+    0
+}
