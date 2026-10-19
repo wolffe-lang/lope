@@ -14,11 +14,33 @@ pub struct Hay {
     fold: List[int],
     bonus: List[int],
     n: int,
+    ascii: bool,
+    ctab: List[int],
+    btab: List[int],
 }
 
-/// An empty hay, to be filled by `hay_into`.
+/// An empty hay, to be filled by `hay_into`, with the ASCII class table
+/// and the bonus table made once.
 pub fn hay_new() -> Hay {
-    Hay { low: List[int](), fold: List[int](), bonus: List[int](), n: 0 }
+    var ctab = List[int]()
+    for c in 0..128 {
+        (mut ctab).push(class_of(c))
+    }
+    var btab = List[int]()
+    for p in 0..6 {
+        for k in 0..6 {
+            (mut btab).push(bonus(p, k))
+        }
+    }
+    Hay {
+        low: List[int](),
+        fold: List[int](),
+        bonus: List[int](),
+        n: 0,
+        ascii: true,
+        ctab: ctab,
+        btab: btab,
+    }
 }
 
 fn set_at(mut xs: List[int], i: int, v: int) {
@@ -41,14 +63,14 @@ pub fn hay_into(mut h: Hay, text: str) {
         }
     }
     var j = 0
+    h.ascii = ascii
     if ascii {
         for b in text.bytes() {
             let c = b as int
-            let k = class_of(c)
+            let k = h.ctab[c]
             let l = if c >= 65 && c <= 90 then c + 32 else c
             set_at(mut h.low, j, l)
-            set_at(mut h.fold, j, l)
-            set_at(mut h.bonus, j, bonus(prev, k))
+            set_at(mut h.bonus, j, h.btab[prev * 6 + k])
             prev = k
             j += 1
         }
@@ -80,8 +102,9 @@ pub fn occurs_in(atom: List[int], ascii: bool, h: Hay, from: int, to: int) -> bo
     var i = 0
     var j = from
     let m = atom.len
+    let folded = ascii && !h.ascii
     while i < m && j < to {
-        let c = if ascii then h.fold[j] else h.low[j]
+        let c = if folded then h.fold[j] else h.low[j]
         if c == atom[i] {
             i += 1
         }
@@ -190,6 +213,7 @@ pub fn atom_score(atom: List[int], ascii: bool, h: Hay, mut sc: Scratch) -> int 
         return -1
     }
     grow(mut sc, n)
+    let folded = ascii && !h.ascii
     sc.gen += 1
     let base = sc.gen * 1048576
     let cap = sc.cap
@@ -197,7 +221,7 @@ pub fn atom_score(atom: List[int], ascii: bool, h: Hay, mut sc: Scratch) -> int 
     // row 0, in half 0
     var j = 0
     while j < n {
-        let c = if ascii then h.fold[j] else h.low[j]
+        let c = if folded then h.fold[j] else h.low[j]
         if c == atom[0] {
             let b = h.bonus[j]
             let v = 16 + 2 * b
@@ -228,7 +252,7 @@ pub fn atom_score(atom: List[int], ascii: bool, h: Hay, mut sc: Scratch) -> int 
                     gap = t
                 }
             }
-            let c = if ascii then h.fold[j] else h.low[j]
+            let c = if folded then h.fold[j] else h.low[j]
             if c == want {
                 let b = h.bonus[j]
                 let row = (ch * cap + j) * 5
