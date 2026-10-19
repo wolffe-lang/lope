@@ -24,7 +24,9 @@
 # A lane's PR merges on a green `tier full` at its head; the label is added
 # once the head is the one to merge, never at open.
 #
-# Every step runs bare and its exit code is read directly: no pipes.
+# Every step runs bare and its exit code is read directly: no pipes. Every
+# step after the toolchain runs whatever failed before it (`!cancelled()`),
+# so each gate reports on its own; the job is red if any one is.
 
 name: ci
 
@@ -97,9 +99,11 @@ jobs:
         run: tools/fetch-toolchain
 
       - name: wolf fmt --check
+        if: ${{ !cancelled() }}
         run: tools/check-fmt
 
       - name: the generated sources are the generated ones
+        if: ${{ !cancelled() }}
         run: |
           python3 tools/gen-hooks --check
           python3 -c "import unicodedata; print('runner Unicode', unicodedata.unidata_version)"
@@ -110,12 +114,15 @@ jobs:
           fi
 
       - name: build, both tiers
+        if: ${{ !cancelled() }}
         run: tools/build --all
 
       - name: wolf test (the matcher's rows, frecency at frozen times, the codecs)
+        if: ${{ !cancelled() }}
         run: tools/check-test
 
       - name: the same unit tests on the reference interpreter
+        if: ${{ !cancelled() }}
         run: |
           .wolf-bin/lupin run src/matcher_test.lu
           .wolf-bin/lupin run src/db_test.lu
@@ -191,9 +198,11 @@ jobs:
         run: tools/fetch-toolchain
 
       - name: build, both tiers
+        if: ${{ !cancelled() }}
         run: tools/build --all
 
       - name: wolf test
+        if: ${{ !cancelled() }}
         run: tools/check-test
 
       - name: the probe rows, the corpus, the fold record
@@ -251,6 +260,7 @@ jobs:
           grep -q "this host cannot run the release tier" release.log
 
       - name: the unit tests on the reference interpreter
+        if: ${{ !cancelled() }}
         run: |
           .wolf-bin/lupin run src/matcher_test.lu
           .wolf-bin/lupin run src/db_test.lu
