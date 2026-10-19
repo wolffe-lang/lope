@@ -1,0 +1,223 @@
+//! paths — where the store lives, and a path made canonical the way gump
+//! stores one (gump `store.rs:82`, `store.rs:222`).
+
+/// An environment variable's value, or "" when it is unset or not text.
+pub fn env_or_empty(name: str) -> str {
+    env_get(name) else ""
+}
+
+/// The home directory: `$HOME`, or `/` when it is unset or empty (PAX
+/// starts its shell with no other; ruling #91 R4).
+pub fn home() -> str {
+    let h = env_or_empty("HOME")
+    if h.len == 0 {
+        return "/"
+    }
+    h
+}
+
+/// `dir/name`, with no doubled slash when `dir` ends in one.
+pub fn join(dir: str, name: str) -> str {
+    if dir.ends_with("/") {
+        return "{dir}{name}"
+    }
+    "{dir}/{name}"
+}
+
+/// The XDG data directory: `$XDG_DATA_HOME` when it is set to an
+/// absolute path, else `$HOME/.local/share` (the XDG base directory
+/// rule, which the `directories` crate gump uses also follows on linux).
+pub fn xdg_data_home() -> str {
+    let x = env_or_empty("XDG_DATA_HOME")
+    if x.starts_with("/") {
+        return x
+    }
+    join(home(), ".local/share")
+}
+
+/// The directory lope keeps its store in: `$LOPE_DATA_DIR` when set and
+/// not empty, else `$XDG_DATA_HOME/lope`, else `$HOME/.local/share/lope`
+/// (`/.local/share/lope` with no `HOME`). The same on every host: lope
+/// does not use macOS's `Library/Application Support`, where gump's
+/// `directories` crate puts gump's.
+pub fn data_dir() -> str {
+    let d = env_or_empty("LOPE_DATA_DIR")
+    if d.len > 0 {
+        return d
+    }
+    join(xdg_data_home(), "lope")
+}
+
+/// The store file.
+pub fn store_file() -> str {
+    join(data_dir(), "store")
+}
+
+/// Where gump's own `db.bin` may be, in the order `lope import` looks:
+/// `$GUMP_DATA_DIR/db.bin`, the XDG data directory's `gump/db.bin`, and
+/// macOS's `~/Library/Application Support/gump/db.bin`.
+pub fn gump_db_candidates() -> List[str] {
+    var out = List[str]()
+    let g = env_or_empty("GUMP_DATA_DIR")
+    if g.len > 0 {
+        (mut out).push(join(g, "db.bin"))
+    }
+    (mut out).push(join(join(xdg_data_home(), "gump"), "db.bin"))
+    (mut out).push(join(home(), "Library/Application Support/gump/db.bin"))
+    out
+}
+
+fn joined(stack: List[str]) -> str {
+    if stack.len == 0 {
+        return "/"
+    }
+    var bytes = List[byte]()
+    for c in stack {
+        (mut bytes).push(47 as byte)
+        for b in c.bytes() {
+            (mut bytes).push(b)
+        }
+    }
+    str_from_utf8(bytes) else "/"
+}
+
+/// `path` resolved as `realpath(3)` resolves it: absolute, every link
+/// followed, no `.` or `..`, every component existing; `none` when some
+/// component does not exist or cannot be read (POSIX XBD 4.16, walked one
+/// component at a time with `fs_lstat` and `fs_read_link`, the shape of
+/// boreutils' `bore/paths.lu`).
+pub fn real(path: str) -> str ! {none} {
+    if path.len == 0 {
+        return none
+    }
+    var stack = List[str]()
+    if !path.starts_with("/") {
+        let cwd = os_cwd() else |_| {
+            return none
+        }
+        for c in cwd.split("/") {
+            if c.len > 0 {
+                (mut stack).push(c)
+            }
+        }
+    }
+    var rest = List[str]()
+    for c in path.split("/") {
+        (mut rest).push(c)
+    }
+    var links = 0
+    var i = 0
+    while i < rest.len {
+        let c = rest[i]
+        i += 1
+        if c.len == 0 || c == "." {
+            continue
+        }
+        if c == ".." {
+            let _ = (mut stack).pop() else ""
+            continue
+        }
+        let here = joined(stack)
+        let candidate = if here == "/" then "/{c}" else "{here}/{c}"
+        let rec = fs_lstat(candidate) else |_| {
+            return none
+        }
+        if rec[0] == 3 {
+            links += 1
+            if links > 40 {
+                return none
+            }
+            let bytes = fs_read_link(candidate) else |_| {
+                return none
+            }
+            let target = str_from_utf8(bytes) else |_| {
+                return none
+            }
+            if target.starts_with("/") {
+                stack = List[str]()
+            }
+            var next = List[str]()
+            for t in target.split("/") {
+                (mut next).push(t)
+            }
+            while i < rest.len {
+                (mut next).push(rest[i])
+                i += 1
+            }
+            rest = next
+            i = 0
+            continue
+        }
+        var more = false
+        var k = i
+        while k < rest.len {
+            if rest[k].len > 0 {
+                more = true
+            }
+            k += 1
+        }
+        if rec[0] != 1 && (more || path.ends_with("/")) {
+            return none
+        }
+        (mut stack).push(c)
+    }
+    joined(stack)
+}
+
+/// A path as gump stores it (`store.rs:222`): `.` is the working
+/// directory; a path that resolves is its canonical form; one that does
+/// not is kept as given when absolute, else joined onto the working
+/// directory (no `.` or `..` removed, as Rust's `PathBuf::join`).
+pub fn canonical(path: str) -> str ! {io} {
+    var p = path
+    if p == "." {
+        p = os_cwd() else |_| {
+            return io
+        }
+    }
+    let r = real(p) else ""
+    if r.len > 0 {
+        return r
+    }
+    if p.starts_with("/") {
+        return p
+    }
+    let cwd = os_cwd() else |_| {
+        return io
+    }
+    join(cwd, p)
+}
+
+/// Whether `path` lies at or under `prefix`, component by component as
+/// Rust's `Path::starts_with` compares (`/home/us` is not a prefix of
+/// `/home/user`; a trailing slash on `prefix` changes nothing).
+pub fn under(path: str, prefix: str) -> bool {
+    var pre = prefix
+    while pre.len > 1 && pre.ends_with("/") {
+        pre = pre[0..pre.len - 1]
+    }
+    if !path.starts_with(pre) {
+        return false
+    }
+    if path.len == pre.len || pre == "/" {
+        return true
+    }
+    path[pre.len..pre.len + 1] == "/"
+}
+
+/// Whether `$LOPE_EXCLUDE` (colon-separated paths) excludes `path`. An
+/// empty item excludes nothing (gump's `GUMP_EXCLUDE=` would exclude
+/// every path: `store.rs:250` splits it into one empty prefix, which
+/// every path starts with).
+pub fn excluded(path: str) -> bool {
+    let ex = env_or_empty("LOPE_EXCLUDE")
+    if ex.len == 0 {
+        return false
+    }
+    for item in ex.split(":") {
+        if item.len > 0 && under(path, item) {
+            return true
+        }
+    }
+    false
+}
