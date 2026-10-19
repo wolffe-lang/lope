@@ -1,0 +1,264 @@
+//! store — the remembered directories, read whole and written whole
+//! (gump `src/db/store.rs`), in lope's own format (`codec.lu`), written
+//! atomically: a temporary file beside the store, then a rename over it.
+//!
+//! **What wolf cannot do, named:** wolf 0.2.33 has no `fsync`, so the
+//! temporary file is not synced before the rename as gump's is
+//! (`store.rs:129`). A crash between the write and the rename leaves the
+//! old store whole; a power loss after the rename can lose the last
+//! write on a filesystem that reorders them.
+
+use std.fmt.decimal
+
+/// The store in memory: its entries in file order, the last cleanup
+/// (Unix milliseconds) and the file it came from.
+pub struct Store {
+    entries: List[Entry],
+    cleanup: int,
+    file: str,
+}
+
+/// An empty store that will be written to `file`.
+pub fn empty(file: str, now: int) -> Store {
+    Store { entries: List[Entry](), cleanup: now, file: file }
+}
+
+/// The ways a store file fails to load: unreadable, or not text.
+pub error LoadErrors = {io, utf8}
+
+/// The store's text, or "" when the file does not exist (gump opens a
+/// missing database as an empty one, `store.rs:72`). `io` when it exists
+/// and cannot be read; `utf8` when it is not text.
+pub fn load_text(file: str) -> str ! LoadErrors {
+    let bytes = fs_read_bytes(file) else |e| match e {
+        not_found => { return "" },
+        denied => { return io },
+        io => { return io },
+    }
+    str_from_utf8(bytes) else |_| {
+        return utf8
+    }
+}
+
+/// The store `text` holds (`file` is where it will be written back).
+/// `format` names a first line that is not `lope-store 1`, or a line
+/// that does not read; `line_no` is not kept: `check` finds it.
+pub fn decode(text: str, file: str, now: int) -> Store ! {format} {
+    var s = empty(file, now)
+    if text.len == 0 {
+        return s
+    }
+    var n = 0
+    for line in text.lines() {
+        n += 1
+        if n == 1 {
+            if line != magic() {
+                return format
+            }
+            continue
+        }
+        if n == 2 && line.starts_with("cleanup ") {
+            s.cleanup = line[8..line.len].to_int() else |_| {
+                return format
+            }
+            continue
+        }
+        if line.len == 0 {
+            continue
+        }
+        let (score, last, count, p) = fields_of(line) else |_| {
+            return format
+        }
+        let path = unescape(line[p..line.len]) else |_| {
+            return format
+        }
+        (mut s.entries).push(Entry { path: path, score: score, last: last, count: count })
+    }
+    s
+}
+
+/// The first line of `text` that does not read, counted from 1, or 0.
+pub fn bad_line(text: str) -> int {
+    var n = 0
+    for line in text.lines() {
+        n += 1
+        if n == 1 {
+            if line != magic() {
+                return 1
+            }
+            continue
+        }
+        if n == 2 && line.starts_with("cleanup ") {
+            let _c = line[8..line.len].to_int() else |_| {
+                return 2
+            }
+            continue
+        }
+        if line.len == 0 {
+            continue
+        }
+        let (_s, _l, _k, p) = fields_of(line) else |_| {
+            return n
+        }
+        let _p = unescape(line[p..line.len]) else |_| {
+            return n
+        }
+    }
+    0
+}
+
+/// The store as its file's bytes.
+pub fn encode(s: Store) -> List[byte] {
+    var buf = List[byte]()
+    put(mut buf, magic())
+    put(mut buf, "\ncleanup {s.cleanup}\n")
+    for e in s.entries {
+        put(mut buf, "{micros_text(e.score)} {e.last} {e.count} ")
+        put_path(mut buf, e.path)
+        (mut buf).push(10 as byte)
+    }
+    buf
+}
+
+/// Write `s` to its file: the directory made, the bytes written to
+/// `FILE.tmp.PID`, then renamed over `FILE`. `io` when any step fails
+/// (`os_error()` says why); the temporary file is removed then.
+pub fn save(s: Store) -> () ! {io} {
+    let cut = s.file.rfind("/") else -1
+    if cut > 0 {
+        fs_create_dir_all(s.file[0..cut]) else |_| {
+            return io
+        }
+    }
+    let tmp = "{s.file}.tmp.{os_pid()}"
+    fs_write_bytes(tmp, encode(s)) else |_| {
+        return io
+    }
+    fs_rename(tmp, s.file) else |_| {
+        let code = os_error()
+        fs_remove(tmp) else |_| {}
+        if code != 0 {
+            return io
+        }
+        return io
+    }
+}
+
+/// The index of `path` in `s`, or -1.
+pub fn find(s: Store, path: str) -> int {
+    var i = 0
+    while i < s.entries.len {
+        if s.entries[i].path == path {
+            return i
+        }
+        i += 1
+    }
+    -1
+}
+
+/// `$LOPE_MAXAGE` (gump's `GUMP_MAXAGE`): the total raw score above which
+/// every score is aged, 10,000 when unset or not a number.
+pub fn max_age() -> f64 {
+    let v = env_get("LOPE_MAXAGE") else ""
+    if v.len == 0 {
+        return 10000.0
+    }
+    decimal.parse_float(v) else 10000.0
+}
+
+/// Age `s` when its total raw score is above `max` (gump `store.rs:260`):
+/// every score divided by `total / (max × 0.9)`, and entries left below
+/// one dropped.
+pub fn age(mut s: Store, max: f64) {
+    var total: int = 0
+    for e in s.entries {
+        total += e.score
+    }
+    let t = total as f64 / 1000000.0
+    if !(t > max) {
+        return
+    }
+    let k = t / (max * 0.9)
+    var kept = List[Entry]()
+    for e in s.entries {
+        let v = e.score as f64 / k
+        let micros = (v + 0.5) as int
+        if v >= 1000000.0 {
+            (mut kept).push(Entry { path: e.path, score: micros, last: e.last, count: e.count })
+        }
+    }
+    s.entries = kept
+}
+
+/// Record a visit to the canonical `path` at `now` (gump `store.rs:139`):
+/// excluded paths are left alone; a known path gains one point and a
+/// visit; a new one starts at one; then the store is aged.
+pub fn visit(mut s: Store, path: str, now: int) {
+    if excluded(path) {
+        return
+    }
+    let i = find(s, path)
+    if i >= 0 {
+        var e = s.entries[i]
+        e.score = e.score + unit()
+        e.last = now
+        e.count = e.count + 1
+        s.entries[i] = e
+    } else {
+        (mut s.entries).push(fresh(path, now))
+    }
+    age(mut s, max_age())
+}
+
+/// Take an imported directory (gump `store.rs:161`): excluded or missing
+/// paths are skipped; a known path keeps the higher of the two scores;
+/// a new one enters with `score` (millionths), visited once, at `now`.
+pub fn merge(mut s: Store, path: str, score: int, now: int) {
+    if excluded(path) || !fs_exists(path) {
+        return
+    }
+    let i = find(s, path)
+    if i >= 0 {
+        if score > s.entries[i].score {
+            var e = s.entries[i]
+            e.score = score
+            s.entries[i] = e
+        }
+        return
+    }
+    (mut s.entries).push(Entry { path: path, score: score, last: now, count: 1 })
+}
+
+/// Drop `path`; `not_found` when the store does not hold it.
+pub fn drop_path(mut s: Store, path: str) -> () ! {not_found} {
+    let i = find(s, path)
+    if i < 0 {
+        return not_found
+    }
+    var kept = List[Entry]()
+    var j = 0
+    while j < s.entries.len {
+        if j != i {
+            (mut kept).push(s.entries[j])
+        }
+        j += 1
+    }
+    s.entries = kept
+}
+
+/// Drop every entry whose path is gone AND that is stale (gump
+/// `store.rs:204`), answering the dropped paths in store order.
+pub fn clean(mut s: Store, now: int) -> List[str] {
+    var gone = List[str]()
+    var kept = List[Entry]()
+    for e in s.entries {
+        if !fs_exists(e.path) && is_stale(e, now) {
+            (mut gone).push(e.path)
+        } else {
+            (mut kept).push(e)
+        }
+    }
+    s.entries = kept
+    s.cleanup = now
+    gone
+}
