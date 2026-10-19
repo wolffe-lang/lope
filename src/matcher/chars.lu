@@ -1,0 +1,155 @@
+//! chars — what the matcher knows about one code point: its lower case,
+//! its class, and the bonus a match there earns (docs/MATCHER.md,
+//! "Classes and bonuses"). Every number here was fixed by a probe of the
+//! gump binary (tests/oracle/probes/), never read from a matcher's source.
+
+/// Whitespace: a space (and the other blanks a path may hold).
+pub fn c_white() -> int {
+    0
+}
+
+/// A delimiter: `/`, `:`, `,`, `;`, `|`.
+pub fn c_delim() -> int {
+    1
+}
+
+/// Any other ASCII punctuation or symbol, and non-ASCII punctuation.
+pub fn c_nonword() -> int {
+    2
+}
+
+/// A lower-case letter, and any letter that has no case.
+pub fn c_lower() -> int {
+    3
+}
+
+/// An upper-case letter.
+pub fn c_upper() -> int {
+    4
+}
+
+/// An ASCII digit.
+pub fn c_digit() -> int {
+    5
+}
+
+/// The simple lower case of `c` for ASCII, Latin-1, Latin Extended-A,
+/// Greek and Cyrillic; any other code point is its own lower case. `İ`
+/// (U+0130) is its own: its full lower case is two code points (`i` and
+/// a combining dot), which equals no one-letter term; `fold` reads it
+/// as `i`.
+pub fn lower(c: int) -> int {
+    if c < 128 {
+        if c >= 65 && c <= 90 {
+            return c + 32
+        }
+        return c
+    }
+    if c >= 192 && c <= 222 && c != 215 {
+        return c + 32
+    }
+    if c >= 256 && c <= 383 {
+        if c == 304 {
+            return 304
+        }
+        if c == 376 {
+            return 255
+        }
+        let even = c % 2 == 0
+        if c <= 311 || c >= 330 && c <= 375 {
+            return if even then c + 1 else c
+        }
+        if c >= 313 && c <= 328 || c >= 377 && c <= 382 {
+            return if even then c else c + 1
+        }
+        return c
+    }
+    if c >= 913 && c <= 937 && c != 930 {
+        return c + 32
+    }
+    if c == 902 {
+        return 940
+    }
+    if c >= 904 && c <= 906 {
+        return c + 37
+    }
+    if c == 908 {
+        return 972
+    }
+    if c == 910 || c == 911 {
+        return c + 63
+    }
+    if c >= 1040 && c <= 1071 {
+        return c + 32
+    }
+    if c >= 1024 && c <= 1039 {
+        return c + 80
+    }
+    c
+}
+
+/// The class of code point `c` (`c_white` … `c_digit`).
+pub fn class_of(c: int) -> int {
+    if c < 128 {
+        if c >= 97 && c <= 122 {
+            return c_lower()
+        }
+        if c >= 65 && c <= 90 {
+            return c_upper()
+        }
+        if c >= 48 && c <= 57 {
+            return c_digit()
+        }
+        if c == 32 || c >= 9 && c <= 13 {
+            return c_white()
+        }
+        if c == 47 || c == 58 || c == 44 || c == 59 || c == 124 {
+            return c_delim()
+        }
+        return c_nonword()
+    }
+    if c == 160 || c == 5760 || c >= 8192 && c <= 8202 || c == 8239 || c == 8287 || c == 12288 {
+        return c_white()
+    }
+    if c >= 161 && c <= 191 && c != 170 && c != 181 && c != 186 || c == 215 || c == 247 {
+        return c_nonword()
+    }
+    if c >= 8208 && c <= 8286 {
+        return c_nonword()
+    }
+    if lower(c) != c || c == 304 {
+        return c_upper()
+    }
+    c_lower()
+}
+
+/// The bonus a match at a code point of class `cur` earns when the code
+/// point before it is of class `prev` (the start of the text reads as
+/// whitespace before it).
+pub fn bonus(prev: int, cur: int) -> int {
+    if cur == c_white() {
+        return 10
+    }
+    if cur == c_delim() {
+        return 0
+    }
+    if cur == c_nonword() {
+        return 8
+    }
+    if prev == c_white() {
+        return 10
+    }
+    if prev == c_delim() {
+        return 9
+    }
+    if prev == c_nonword() {
+        return 8
+    }
+    if prev == c_lower() && cur == c_upper() {
+        return 5
+    }
+    if prev != c_digit() && cur == c_digit() {
+        return 5
+    }
+    0
+}
