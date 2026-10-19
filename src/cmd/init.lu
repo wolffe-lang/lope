@@ -1,0 +1,61 @@
+//! init — the shell integration `lope init SHELL` prints (gump
+//! `src/cmd/init.rs`), assembled from the pieces under shell/ in gump's
+//! order: the hook, its trigger (`--hook pwd`, the default, or
+//! `prompt`), the `g`/`gi` commands unless `--no-cmd`, and the
+//! no-prefix jump. bash, zsh, fish and fortsh as gump has them (with the
+//! changes README.md lists); pelt is lope's own.
+
+use out
+
+fn joined(shell: str, names: List[str], cmd: str) -> str {
+    var buf = List[byte]()
+    for n in names {
+        for b in piece(shell, n).bytes() {
+            (mut buf).push(b)
+        }
+    }
+    let text = str_from_utf8(buf) else ""
+    text.replace("@CMD@", cmd)
+}
+
+/// The text for `shell` (one of `cli.shells()`), the jump command named
+/// `cmd`, the hook `hook` ("prompt" or "pwd"), and no commands when
+/// `no_cmd`.
+pub fn text_of(shell: str, cmd: str, hook: str, no_cmd: bool) -> str {
+    var names = List[str]()
+    if shell == "fish" {
+        (mut names).push(hook)
+        if !no_cmd {
+            (mut names).push("cmd")
+        }
+        (mut names).push("jump")
+        return joined(shell, names, cmd)
+    }
+    (mut names).push("hook")
+    if shell == "fortsh" {
+        if hook == "pwd" {
+            (mut names).push("pwd")
+        }
+    } else {
+        (mut names).push(hook)
+    }
+    let text = joined(shell, names, cmd)
+    var more = List[str]()
+    if !no_cmd {
+        (mut more).push("cmd")
+    }
+    let cmds = joined(shell, more, cmd)
+    let menu = if no_cmd then "" else piece("posix", "menu")
+    var tail = List[str]()
+    (mut tail).push("jump")
+    if shell == "fortsh" {
+        (mut tail).push(if hook == "pwd" then "trap-pwd" else "trap-prompt")
+    }
+    "{text}{cmds}{menu}{joined(shell, tail, cmd)}"
+}
+
+/// `lope init SHELL [--cmd NAME] [--hook prompt|pwd] [--no-cmd]`.
+pub fn init(shell: str, cmd: str, hook: str, no_cmd: bool, mut o: out.Out) -> int {
+    out.line(mut o, text_of(shell, cmd, hook, no_cmd))
+    0
+}
