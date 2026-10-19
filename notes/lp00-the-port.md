@@ -30,7 +30,7 @@ only. If the harness refuses an action, the lane stops and reports.
 
 | input | contract says | measured | drift |
 |---|---|---|---|
-| planning trunk | `434ebd8` | `434ebd8` (lp00 contract); `700c3e0` adds ruling #91 R4 (lope preinstalled on PAX: no assumption of `$EDITOR`, fzf, XDG or a `HOME` other than `/`) | R4 folded in |
+| planning trunk | `434ebd8` | `434ebd8` (lp00 contract); `700c3e0` adds ruling #91 R4 (lope preinstalled on PAX: no assumption of `$EDITOR`, fzf, XDG or a `HOME` other than `/`); `be2eebb` adds ruling #92 (`sprints/RULES.md`: CI tiered in wolf-lang's shape; hand back once the final head's PR tier is green and its full tier is running) | R4 and #92 folded in |
 | gump | `43c114d` (0.2.7) | cloned from `https://github.com/tenseleyFlow/gump`, `43c114d071754a1d…` "bump to 0.2.7"; 1,919 lines of Rust; built on kasumi `cargo build --release --locked` in 15 s | none |
 | wolf 0.2.33 | `v0.2.33` at `85dab5d7` | tag object `56110e4f…` → `85dab5d7e597…`, read twice; release 417610226; `wolf 0.2.33 (wolfgang, pin 85dab5d)` | none |
 | lupin 0.1.54 | `v0.1.54` at `0e536e8` | tag object `9c98d445…` → `0e536e8fb451…`; release 415937354; `lupin 0.1.54 (wolf-interp, reference interpreter at pin 294d626)` | none |
@@ -141,23 +141,128 @@ that is not there, none at all).
 ### 4.5 Speed
 
 `tools/speed`, 10,000 entries, cold, median of 31, `taskset -c 0-3`. kasumi
-(load 8 to 9): query 9.27 ms against 13.03 (**0.711**), init 0.95 against
-1.08 (0.881), list 8.50 against 24.48 (0.347). CI: see §4.7. zoxide is not
-on kasumi: gump against zoxide not measured.
+at `ee83f5d` (load about 8; `lp00-evidence/speed-kasumi-ee83f5d.json`):
+query 4.71 ms against 6.96 (**0.677**), init 0.48 against 0.55 (0.870),
+list 5.03 against 16.28 (0.309); per query lope is faster on seven of
+eight and even on `wolf` (8.92 against 8.87, 1.005). Before the hay and
+the rows were reused (`d0d76d9`) and the class tables (`ee83f5d`), the
+first measurement was 14.78 against 17.66 (0.837). CI at `ee83f5d` (run
+39327219714): 6.64 against 9.52 (0.698), init 0.892, list 0.293. zoxide
+is not on kasumi: gump against zoxide not measured.
 
 ### 4.6 The static build
 
-`tools/mkstatic` in `localhost/px13-ubuntu` (Ubuntu 24.04.5, glibc 2.39,
-gcc 13.3.0) on kasumi, twice, the same bytes: `lope
-1a834fe58ec5734444e3a24e07298abdca127151acfea4f538ca952528939e71 14425328`,
-ET_EXEC, no PT_INTERP; the oracle (654 of 654) and the probes (322 of 322)
-hold on it. CI's runner builds its own (§4.7); the two differ by the
-image's `libc.a`.
+`tools/mkstatic` in `localhost/px13-ubuntu` (Ubuntu 24.04.5, libc6-dev
+2.39-0ubuntu8.9, gcc 13.3.0) on kasumi, from `src/` at `ee83f5d`, twice, the
+same bytes: **`lope 1faed82b10c2728d090165fe99ccce97fe1506882014d71f465bffe8a1277409
+14426088`**, ET_EXEC, no PT_INTERP; the oracle (654 of 654) holds on it.
+CI's runner builds its own from the same tree (run 39327219714: `lope
+08741bfa3e73cfd606286c8fca3ae11bc3b24f09593b876d00b2afc90381514d
+14189464`); the two differ by the image's `libc.a`, so a PAX pin names the
+image with the digest.
 
 ### 4.7 CI runs
 
-RUNS-TO-COME
+| run | head | what | result |
+|---|---|---|---|
+| 39323282558 | `6382943` | first PR run | linux red on zsh only (Ubuntu's global zshrc stops at compinit's question): `c8d9d15` starts zsh with `-d` |
+| 39324416507 | `7fd318f` | PR run | linux red on bash's `miss` only (Ubuntu's `/etc/bash.bashrc` handler): `ee83f5d` reads only the session's rcfile |
+| **39327219714** | `ee83f5d` | PR run, `tier pr` | **green**: every gate on linux x86-64 |
+| 39324524143 | `d75a85b` (`lp00-plant-a`, PR #2 then) | PLANT A, `tier pr` | red as planted: wolf test, lupin, probe-check, oracle-check, cli-check, import-check, edit-check, hook-sessions, speed, mkstatic. Two plants did not bite, both the plant's fault: the fold plant removed the capitals' arm, which `lower` never reaches (re-planted in B); the selftest plant was masked by the matcher plant (re-planted in B) |
+| 39327414935 | `3d786a6` (PR #2, `full-matrix`) | PLANT B, `tier full` | red as planted: the planner's test, wolf fmt, gen-hooks, fold-check, cli-check and selftest on linux; cli-check on macOS; the aarch64 refusal check; `tier full`. Collateral, as expected: probe-check (its Unicode rows read the fold plant); macOS's hook step red only on its fzf row, asked with no fzf there: `tools/hook-sessions` now says so and skips it |
+| (PR #1's body) | the final head | PR run, `tier pr`, then `full-matrix`, `tier full` | named in PR #1's body: a commit cannot carry its own run's id |
 
 ## 5. Done-when
 
-DONE-WHEN-TO-COME
+- The repo exists, private: `wolffe-lang/lope`, trunk seeded at `ce00c73`
+  (licences, a README line); this lane's work on `lp00`, PR #1.
+- CI on three hosts, tiered from the start (ruling #92): `tier pr` green at
+  the final head; `tier full` running there at hand-back.
+- The oracle recorded and the agreement stated: 654 of 654 (floor 100%),
+  322 of 322 probes; folding 508 of 896; every disagreement listed (§7), a
+  ruling asked.
+- The hooks seen working in bash, zsh, fish and fortsh, and in pelt as far
+  as pelt allows (§4.3, §6).
+- The import fixtures green; edit and its refusals green.
+- The speed ratios in the README, gated in CI (query no slower than gump).
+- Every gate seen red in CI (§4.7: PLANT A and PLANT B).
+- Packaging prepared, not published; the static digest (§4.6).
+- `wolf/tools/lane-audit.sh lope lp00 1`: the status in the report.
+
+## 6. The pelt finding: the hook lope needs (for sh21)
+
+**Measured** (pelt `cc2fdc9`, built from its tree at its own pin on kasumi;
+`src/sh/exec.lu:2253–2297`): a simple command whose name is not found
+prints `pelt: line N: NAME: not found` and the status is 127; no function
+is called. lope's pelt hook therefore records directories (`cd` is a
+function: pwd mode; or `PS1` runs the hook: prompt mode) and `g`, `g -`,
+`g` alone and `gi` (menu and fzf) all work, measured on a PTY; the
+no-prefix jump does not.
+
+**The shape lope needs, which `lope init pelt` already assumes:**
+
+1. **The name.** A function named `command_not_found_handle` (bash's name,
+   which fortsh also uses, so one text serves the shells that have it).
+2. **When.** When the shell is interactive, and a simple command's name
+   has no `/` and command search (XCU 2.9.1.4) finds no special built-in,
+   function, regular built-in or file on `PATH`; never inside the handler
+   itself (a name not found there is the plain 127).
+3. **Where it runs.** In the **current shell environment**, as a function
+   call, not a subshell: a `cd` in it changes the shell's directory (bash
+   runs its handler in a subshell, which is why gump's bash hook cannot
+   jump; fortsh runs it in the shell, which is why gump's fortsh hook can).
+4. **With what.** `$1` the command's name, `$2`… its arguments, after
+   expansion, as the command would have had them; the command's
+   redirections apply around the call as around any function call.
+5. **What it answers.** Its return status is the command's status. **When it
+   returns 127, pelt says what it always says** (`NAME: not found`)
+   itself, so the handler need not imitate the message.
+6. **How `cd` is observed.** Nothing new: `cd` changes `PWD` and `OLDPWD`
+   as now; lope's pwd hook wraps `cd` in a function (`command cd` reaches
+   the built-in). A `chpwd`-style hook would let lope stop wrapping `cd`,
+   but is not needed.
+
+On PAX (pelt as pid 1, `sh -i -m`, serial and PS/2 input, the 160×50 grid)
+nothing in this depends on the line editor: the call happens in command
+execution, after Enter. `gi`'s menu is at most nine lines and a prompt.
+The store lives under `$HOME/.local/share/lope` (`/` when `HOME` is
+unset: `/.local/share/lope`) in PAX's in-memory tree; no `$EDITOR`, no fzf
+and no XDG variable is assumed (ruling #91 R4), each with its default
+stated in README.md.
+
+## 7. Disagreements with gump, and the ruling asked
+
+Each is lope's on purpose; the recommendation for each is to keep lope's.
+
+| # | where | gump | lope | recommend |
+|---|---|---|---|---|
+| D1 | ties at the best score (164 of 654 corpus cases) | its hash map's order, a different answer each run | the uncapped frecency, then the shorter path, then byte order: always one of gump's possible answers, always the same | keep ours |
+| D2 | folding (388 of 896 code points) | Latin-1 capitals and small letters fold; Ext-A/B capitals do not; ß, ı, ſ and turned letters fold; Latin Extended Additional folds to wrong letters (ḁ→c) | every Latin letter WITH a diacritic, small or capital, to its base letter, from Unicode names | keep ours |
+| D3 | bash's no-prefix jump | stays put (its handler runs in a subshell) | Enter rewrites the line (`bind -x`, bash 4+) | keep ours |
+| D4 | `gi` without fzf | nothing happens | a numbered menu (PAX's only path) | keep ours |
+| D5 | a `g` jump in bash and fortsh | recorded twice (`g`'s hook and the prompt's check) | once | keep ours |
+| D6 | an empty item in the exclude list (`GUMP_EXCLUDE=`, `a::b`) | excludes every path | excludes nothing | keep ours |
+| D7 | `edit` | JSON; every time reset to now, missing paths dropped; `$EDITOR` one program name | text; times and counts kept; `$EDITOR` split at spaces | keep ours |
+| D8 | the store on macOS | `~/Library/Application Support/gump` | `$XDG_DATA_HOME/lope` on every host (R4's stated default); `import` still finds gump's macOS file | keep ours |
+| D9 | the atomic write | temp, fsync, rename | temp, rename: wolf 0.2.33 has no fsync | move when wolf has it |
+| D10 | `init`'s shells | bash, zsh, fish, fortsh | the same and pelt | keep ours |
+| D11 | `import` | zoxide, autojump, z, fasd | the same and gump's `db.bin`, kept whole | keep ours |
+
+The contract names `--no-aliases`; gump's flag is `--no-cmd` (`cli.rs:71`):
+lope takes gump's and accepts `--no-aliases` as the same flag, unlisted.
+
+## 8. Issues to file (none filed by the lane)
+
+- **pelt**: a command-not-found hook, the shape in §6 (sh21's).
+- **wolf-lang**: no `fsync`/`fdatasync` builtin: a store cannot be written
+  durably (temp, sync, rename); lope's `src/db/store.lu` names it.
+- **fortsh** (FortranGoingOnForty/fortsh, the maintainer's): fortsh 1.10.0
+  stops a script silently at an empty case arm (`[1-9]) ;;`): nothing after
+  it runs, status 0 (measured on kasumi; lope's menu writes `: ;;`).
+- **gump** (tenseleyFlow/gump, the maintainer's, for the record; lope
+  replaces it): D3, D4, D5, D6 above; `list` sorts with the clock read in
+  every comparison (`list.rs:11`, `entry.rs:51`: 24.5 ms against lope's
+  8.5 at 10,000 entries); `import --help` says "from zoxide" for four
+  tools; frecency's weight capped at 40 makes every often-visited
+  directory tie (D1).
+- **pax**: the lope pin (px54, queued by R4), with this static build.
