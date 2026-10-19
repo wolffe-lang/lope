@@ -1,0 +1,63 @@
+//! The matcher's rows: a score per (text, terms), each one a number the
+//! gump binary printed for a store of that one path at frecency 0
+//! (tests/oracle/probes.jsonl holds all 322; tools/probe-check asks them
+//! through the binary). Here, the rows that fixed each constant.
+
+use matcher
+
+fn sc(text: str, terms: List[str]) -> int {
+    matcher.score(matcher.query_of(terms), matcher.hay_of(text))
+}
+
+fn main() {
+    let p = "/home/u/projects"
+    // 16 a match, 9 after `/` doubled on the first: "u" is 34
+    assert(sc(p, ["u"]) == 34, "a match after a slash")
+    // a run keeps its first bonus: p r o j after `/` is 64 + 18 + 27, and
+    // the last component earns 100
+    assert(sc(p, ["proj"]) == 209, "proj")
+    // ... and 50 more when the term IS it
+    assert(sc(p, ["projects"]) == 359, "the whole last component")
+    assert(sc(p, ["projectS"]) == 359, "case does not count")
+    assert(sc(p, ["home"]) == 109, "no last-component bonus")
+    // a gap of six costs 3 + 5: h(34) + p(25) - 8
+    assert(sc(p, ["hp"]) == 51, "a gap")
+    assert(sc(p, ["ts"]) == 136, "the consecutive floor of 4")
+    // bonuses by what came before: space 10, `-` 8, camel 5, digit after a
+    // letter 5, a letter after a digit 0
+    assert(sc("/home/u/my app", ["app"]) == 188, "after a space")
+    assert(sc("/home/u/my-app", ["app"]) == 180, "after a dash")
+    assert(sc("/home/u/myApp", ["app"]) == 168, "camel case")
+    assert(sc("/home/u/x9app", ["app"]) == 156, "after a digit")
+    assert(sc("/x/app2", ["2"]) == 126, "a digit after a letter")
+    assert(sc("app", ["a"]) == 136, "the start of a name counts as after a space")
+    // a run's bonus rises with a boundary inside it, and never falls
+    assert(sc("/xab-cd", ["ab-cd"]) == 208, "a run through a dash")
+    assert(sc("x-y", ["x-y"]) == 238, "the run keeps the larger bonus")
+    assert(sc("/xaBcd", ["abc"]) == 157, "camel case does not raise a run")
+    // delimiters (/ : , ; |) score 0 when matched; other punctuation 8
+    assert(sc("/xab/cd", ["b/c"]) == 61, "a slash in the term")
+    assert(sc("/xab.cd", ["b.c"]) == 164, "a dot in the term")
+    // terms: each scored, summed; out of order (by first characters)
+    // quartered; the LAST term decides the last-component bonus
+    let q = "/home/u/projects/myapp"
+    assert(sc(q, ["proj", "app"]) == 265, "two terms in order")
+    assert(sc(q, ["app", "proj"]) == 165, "in order by first characters")
+    assert(sc(q, ["app", "u"]) == 22, "out of order: a quarter")
+    assert(sc(q, ["proj", "home", "app"]) == 168, "quartered, then the bonus")
+    assert(sc(q, ["ma pp"]) == 184, "a space splits a term into atoms")
+    assert(sc("/a b", ["a\\ b"]) == 186, "an escaped space is matched")
+    assert(sc(q, [""]) == 100, "an empty term matches everything")
+    assert(sc(q, ["zz"]) == -1, "no match")
+    assert(sc(q, ["^proj"]) == -1, "no pattern syntax: ^ is a character")
+    // the gap's carry never goes below zero (Smith-Waterman)
+    assert(sc("/axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb/y", ["ab"]) == 16, "a long gap")
+    // folding: an ASCII atom reads é as e; a non-ASCII atom does not fold
+    assert(sc("/x/éa", ["ea"]) == 159, "é read as e")
+    assert(sc("/x/e", ["é"]) == -1, "é does not match e")
+    assert(sc("/x/É", ["é"]) == 184, "É is é's upper case")
+    assert(sc("/x/İ", ["i"]) == 134, "İ folds to i but is not i")
+    // the combined key: score x (1 + min(frecency, 40) / 160)
+    assert(matcher.key_of(209, 16000000) == 209 * 656000000, "frecency 4")
+    assert(matcher.key_of(209, 999000000) == 209 * 800000000, "frecency capped at 40")
+}
