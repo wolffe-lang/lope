@@ -1,0 +1,223 @@
+//! fuzzy — one atom scored against one text: a Smith-Waterman alignment
+//! with a bonus per matched position, a run bonus for consecutive
+//! matches and an affine gap penalty, floored at zero (docs/MATCHER.md,
+//! "The recurrence"). Written from first principles; the constants are
+//! the ones the gump binary answers with (tests/oracle/probes/).
+
+/// A text prepared for matching: its code points lowered (`low`), the
+/// same with Latin diacritics stripped (`fold`, what an ASCII atom
+/// compares against), and the bonus a match at each position earns.
+pub struct Hay {
+    low: List[int],
+    fold: List[int],
+    bonus: List[int],
+    n: int,
+}
+
+/// `text` prepared for matching (one pass; one list of each kind).
+pub fn hay_of(text: str) -> Hay {
+    var low = List[int]()
+    var fl = List[int]()
+    var bo = List[int]()
+    var prev = c_white()
+    var ascii = true
+    for b in text.bytes() {
+        if b as int >= 128 {
+            ascii = false
+            break
+        }
+    }
+    if ascii {
+        for b in text.bytes() {
+            let c = b as int
+            let k = class_of(c)
+            let l = if c >= 65 && c <= 90 then c + 32 else c
+            (mut low).push(l)
+            (mut fl).push(l)
+            (mut bo).push(bonus(prev, k))
+            prev = k
+        }
+    } else {
+        for ch in text.chars() {
+            let c = ch as int
+            let k = class_of(c)
+            let l = lower(c)
+            (mut low).push(l)
+            (mut fl).push(fold(l))
+            (mut bo).push(bonus(prev, k))
+            prev = k
+        }
+    }
+    let n = low.len
+    Hay { low: low, fold: fl, bonus: bo, n: n }
+}
+
+/// Whether `atom` occurs in `h` as a subsequence (`ascii`: against the
+/// folded text, else the lowered one), at or after position `from`.
+pub fn occurs(atom: List[int], ascii: bool, h: Hay, from: int) -> bool {
+    var i = 0
+    var j = from
+    let m = atom.len
+    while i < m && j < h.n {
+        let c = if ascii then h.fold[j] else h.low[j]
+        if c == atom[i] {
+            i += 1
+        }
+        j += 1
+    }
+    i == m
+}
+
+fn neg() -> int {
+    -1000000000
+}
+
+/// The run bonus's state: the values a run can carry are 0 (or anything
+/// below the consecutive floor of 4), 5, 8, 9 and 10.
+fn state_of(v: int) -> int {
+    if v >= 10 {
+        return 4
+    }
+    if v >= 9 {
+        return 3
+    }
+    if v >= 8 {
+        return 2
+    }
+    if v >= 5 {
+        return 1
+    }
+    0
+}
+
+fn value_of(s: int) -> int {
+    match s {
+        0 => 0,
+        1 => 5,
+        2 => 8,
+        3 => 9,
+        _ => 10,
+    }
+}
+
+fn filled(n: int, v: int) -> List[int] {
+    var xs = List[int]()
+    var i = 0
+    while i < n {
+        (mut xs).push(v)
+        i += 1
+    }
+    xs
+}
+
+/// The best score of `atom` (lowered code points; `ascii` when every one
+/// is ASCII, which folds the text) against `h`, or -1 when it does not
+/// occur. Per matched position: 16, plus the position's bonus (doubled
+/// for the atom's first character); a match right after the previous one
+/// takes the largest of its own bonus, the run's bonus and 4, and a
+/// bonus of 8 or more raises the run's; a match after a gap of `k`
+/// skipped positions takes its own bonus and pays `k + 2`, never below
+/// zero for what came before (`[matcher.gap]`).
+pub fn atom_score(atom: List[int], ascii: bool, h: Hay) -> int {
+    let m = atom.len
+    let n = h.n
+    if m == 0 {
+        return 0
+    }
+    if m > n || !occurs(atom, ascii, h, 0) {
+        return -1
+    }
+    let lo = neg()
+    var prev = filled(n * 5, lo)
+    var pmax = filled(n, lo)
+    var j = 0
+    while j < n {
+        let c = if ascii then h.fold[j] else h.low[j]
+        if c == atom[0] {
+            let b = h.bonus[j]
+            let v = 16 + 2 * b
+            prev[j * 5 + state_of(b)] = v
+            pmax[j] = v
+        }
+        j += 1
+    }
+    var i = 1
+    while i < m {
+        var cur = filled(n * 5, lo)
+        var cmax = filled(n, lo)
+        var gap = lo
+        let want = atom[i]
+        j = i
+        while j < n {
+            if j >= 2 {
+                let t = pmax[j - 2]
+                if t > lo && t + j - 2 > gap {
+                    gap = t + j - 2
+                }
+            }
+            let c = if ascii then h.fold[j] else h.low[j]
+            if c == want {
+                let b = h.bonus[j]
+                var best = lo
+                var s = 0
+                while s < 5 {
+                    let p = prev[(j - 1) * 5 + s]
+                    if p > lo {
+                        let r = value_of(s)
+                        var eff = r
+                        if b > eff {
+                            eff = b
+                        }
+                        if eff < 4 {
+                            eff = 4
+                        }
+                        var r2 = r
+                        if b >= 8 && b > r2 {
+                            r2 = b
+                        }
+                        let v = p + 16 + eff
+                        let k = j * 5 + state_of(r2)
+                        if v > cur[k] {
+                            cur[k] = v
+                        }
+                        if v > best {
+                            best = v
+                        }
+                    }
+                    s += 1
+                }
+                if gap > lo {
+                    var carried = gap - j - 1
+                    if carried < 0 {
+                        carried = 0
+                    }
+                    let v = carried + 16 + b
+                    let k = j * 5 + state_of(b)
+                    if v > cur[k] {
+                        cur[k] = v
+                    }
+                    if v > best {
+                        best = v
+                    }
+                }
+                cmax[j] = best
+            }
+            j += 1
+        }
+        prev = cur
+        pmax = cmax
+        i += 1
+    }
+    var top = lo
+    j = 0
+    while j < n {
+        if pmax[j] > top {
+            top = pmax[j]
+        }
+        j += 1
+    }
+    if top <= lo {
+        return -1
+    }
+    top
+}
