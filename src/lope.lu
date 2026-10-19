@@ -38,5 +38,14 @@ fn run(a: cli.Args, mut o: out.Out, mut e: out.Out) -> int {
     if a.cmd == "clean" {
         return cmd.clean(mut o, mut e)
     }
+    if a.cmd == "import" {
+        return cmd.import_all(mut o, mut e)
+    }
+    if a.cmd == "edit" {
+        return cmd.edit(mut o, mut e)
+    }
+    if a.cmd == "init" {
+        return cmd.init(a.shell, a.name, a.hook, a.no_cmd, mut o)
+    }
     0
 }

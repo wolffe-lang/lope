@@ -1,0 +1,156 @@
+//! edit — the store in an editor (gump `src/cmd/edit.rs`): written as
+//! text, one `SCORE PATH` line per directory, most frecent first; read
+//! back when the editor exits 0.
+//!
+//! Where lope parts from gump, on purpose: gump writes JSON and, reading
+//! it back, enters every path as a fresh import (each visit time reset
+//! to now, each missing path dropped, `edit.rs:92`); lope keeps the time
+//! and count of every path that was already there, keeps the paths it is
+//! given, and gives a new path one visit now. And `$EDITOR` may hold
+//! arguments (`code -w`), split at spaces, where gump runs the whole
+//! value as one program name.
+
+use db
+use out
+
+/// The editor to run: `$EDITOR`, else `$VISUAL`, else `vi` (gump's
+/// order), as a program and its arguments.
+pub fn editor_words() -> List[str] {
+    var v = env_get("EDITOR") else ""
+    if v.len == 0 {
+        v = env_get("VISUAL") else ""
+    }
+    if v.len == 0 {
+        v = "vi"
+    }
+    var words = List[str]()
+    for w in v.split(" ") {
+        if w.len > 0 {
+            (mut words).push(w)
+        }
+    }
+    words
+}
+
+/// The text `edit` hands the editor for `s` at `now`.
+pub fn dump(s: db.Store, now: int) -> str {
+    var buf = List[byte]()
+    db.put(mut buf, "# lope: one directory per line, \"SCORE PATH\". Delete a line to forget\n")
+    db.put(mut buf, "# a directory; change its SCORE to weigh it. Lines starting with # are\n")
+    db.put(mut buf, "# ignored. Save and quit to write the store back.\n")
+    var fq = List[int]()
+    var paths = List[str]()
+    for en in s.entries {
+        (mut fq).push(db.frecency_q(en, now))
+        (mut paths).push(en.path)
+    }
+    for i in ranked(fq, fq, paths) {
+        db.put(mut buf, "{db.micros_text(s.entries[i].score)} ")
+        db.put_path(mut buf, s.entries[i].path)
+        (mut buf).push(10 as byte)
+    }
+    str_from_utf8(buf) else ""
+}
+
+/// The entries an edited text holds, merged with what `old` knew;
+/// `parse` names the first line that does not read (its number in
+/// `bad`).
+pub struct Edited {
+    store: db.Store,
+    bad: int,
+}
+
+/// Read the edited `text` back against the store it was made from.
+pub fn reread(text: str, old: db.Store, now: int) -> Edited {
+    var s = db.empty(old.file, now)
+    s.cleanup = old.cleanup
+    var n = 0
+    for line in text.lines() {
+        n += 1
+        let t = line.trim()
+        if t.len == 0 || t.starts_with("#") {
+            continue
+        }
+        let sp = t.find(" ") else -1
+        if sp < 0 {
+            return Edited { store: s, bad: n }
+        }
+        let score = db.micros_of(t[0..sp]) else |_| {
+            return Edited { store: s, bad: n }
+        }
+        let path = db.unescape(t[sp + 1..t.len].trim()) else |_| {
+            return Edited { store: s, bad: n }
+        }
+        if path.len == 0 {
+            return Edited { store: s, bad: n }
+        }
+        let have = db.find(s, path)
+        if have >= 0 {
+            if score > s.entries[have].score {
+                var en = s.entries[have]
+                en.score = score
+                s.entries[have] = en
+            }
+            continue
+        }
+        let was = db.find(old, path)
+        if was >= 0 {
+            let last = old.entries[was].last
+            let count = old.entries[was].count
+            (mut s.entries).push(db.Entry { path: copy path, score: score, last: last, count: count })
+        } else {
+            (mut s.entries).push(db.Entry { path: copy path, score: score, last: now, count: 1 })
+        }
+    }
+    Edited { store: s, bad: 0 }
+}
+
+/// `lope edit`.
+pub fn edit(mut o: out.Out, mut e: out.Out) -> int {
+    let now = time_unix_ms()
+    let l = open_store(db.store_file(), now, mut e)
+    if l.stop >= 0 {
+        return l.stop
+    }
+    let words = editor_words()
+    let exe = on_path(words[0])
+    if exe.len == 0 {
+        return failed(mut e, "editor '{words[0]}' not found. Set $EDITOR or $VISUAL to an installed editor")
+    }
+    var tmpdir = env_get("TMPDIR") else ""
+    if tmpdir.len == 0 {
+        tmpdir = "/tmp"
+    }
+    let file = db.join(tmpdir, "lope-edit-{os_pid()}.txt")
+    fs_write_text(file, dump(l.store, now)) else |_| {
+        return failed(mut e, io_words())
+    }
+    var args = List[str]()
+    var k = 1
+    while k < words.len {
+        (mut args).push(words[k])
+        k += 1
+    }
+    (mut args).push(file)
+    out.flush(mut o)
+    out.flush(mut e)
+    let st = run_here(exe, args)
+    if st != 0 {
+        fs_remove(file) else |_| {}
+        return failed(mut e, "Editor exited with error")
+    }
+    let text = fs_read_text(file) else |_| {
+        return failed(mut e, io_words())
+    }
+    let ed = reread(text, l.store, now)
+    if ed.bad > 0 {
+        return failed(mut e, "Failed to parse {file}: line {ed.bad} is not \"SCORE PATH\"")
+    }
+    let saved = save_store(ed.store, mut e)
+    if saved != 0 {
+        return saved
+    }
+    fs_remove(file) else |_| {}
+    out.line(mut o, "Database updated")
+    0
+}
