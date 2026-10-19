@@ -1,0 +1,619 @@
+//! cli — the command line, read as gump's clap 4 reads it (gump
+//! `src/cli.rs`), with clap's messages and statuses as recorded from the
+//! gump binary (tests/cli/expected.jsonl): help and version on standard
+//! output with status 0, every usage error on standard error with
+//! status 2. Read left to right; the first help, version or error ends
+//! the reading.
+
+use out
+
+/// The version every `--version` names.
+pub fn version() -> str {
+    "0.1.0"
+}
+
+/// What the command line asked for. `stop` >= 0 means the reading has
+/// already answered (help, version or an error, written to `o`/`e`) and
+/// the program ends with that status.
+pub struct Args {
+    cmd: str,
+    terms: List[str],
+    path: str,
+    score: bool,
+    all: bool,
+    cwd: bool,
+    shell: str,
+    name: str,
+    hook: str,
+    no_cmd: bool,
+    stop: int,
+}
+
+fn blank() -> Args {
+    Args {
+        cmd: "",
+        terms: List[str](),
+        path: ".",
+        score: false,
+        all: false,
+        cwd: false,
+        shell: "",
+        name: "g",
+        hook: "pwd",
+        no_cmd: false,
+        stop: -1,
+    }
+}
+
+/// The subcommands, in the order the top-level help lists them.
+fn commands() -> List[str] {
+    ["add", "query", "remove", "list", "clean", "init", "import", "edit", "help"]
+}
+
+fn is_command(c: str) -> bool {
+    for k in commands() {
+        if k == c {
+            return true
+        }
+    }
+    false
+}
+
+/// The shells `init` writes for.
+pub fn shells() -> List[str] {
+    ["bash", "zsh", "fish", "fortsh", "pelt"]
+}
+
+/// Jaro similarity of `a` and `b` (the measure clap's suggestions use:
+/// a suggestion is made above 0.7).
+pub fn jaro(a: str, b: str) -> f64 {
+    var xa = List[int]()
+    for c in a.chars() {
+        (mut xa).push(c as int)
+    }
+    var xb = List[int]()
+    for c in b.chars() {
+        (mut xb).push(c as int)
+    }
+    let la = xa.len
+    let lb = xb.len
+    if la == 0 && lb == 0 {
+        return 1.0
+    }
+    if la == 0 || lb == 0 {
+        return 0.0
+    }
+    var window = (if la > lb then la else lb) / 2
+    if window > 0 {
+        window -= 1
+    }
+    var used_b = List[bool]()
+    for _ in 0..lb {
+        (mut used_b).push(false)
+    }
+    var ma = List[int]()
+    var m = 0
+    var i = 0
+    while i < la {
+        let lo = if i > window then i - window else 0
+        let hi = if i + window + 1 < lb then i + window + 1 else lb
+        var j = lo
+        while j < hi {
+            if !used_b[j] && xa[i] == xb[j] {
+                used_b[j] = true
+                (mut ma).push(xa[i])
+                m += 1
+                break
+            }
+            j += 1
+        }
+        i += 1
+    }
+    if m == 0 {
+        return 0.0
+    }
+    var mb = List[int]()
+    var j = 0
+    while j < lb {
+        if used_b[j] {
+            (mut mb).push(xb[j])
+        }
+        j += 1
+    }
+    var half = 0
+    var k = 0
+    while k < m {
+        if ma[k] != mb[k] {
+            half += 1
+        }
+        k += 1
+    }
+    let t = (half / 2) as f64
+    let mf = m as f64
+    (mf / la as f64 + mf / lb as f64 + (mf - t) / mf) / 3.0
+}
+
+/// The candidate most like `word` above clap's 0.7, or "".
+pub fn similar(word: str, candidates: List[str]) -> str {
+    var best = ""
+    var top = 0.7
+    for c in candidates {
+        let s = jaro(word, c)
+        if s > top {
+            top = s
+            best = c
+        }
+    }
+    best
+}
+
+/// The long flags a subcommand takes (help and version included), for
+/// a suggestion.
+fn longs(cmd: str) -> List[str] {
+    if cmd == "query" {
+        return ["score", "all", "cwd", "help", "version"]
+    }
+    if cmd == "list" {
+        return ["score", "help", "version"]
+    }
+    if cmd == "init" {
+        return ["cmd", "hook", "no-cmd", "help", "version"]
+    }
+    ["help", "version"]
+}
+
+/// A subcommand's whole usage line, as its help prints it.
+pub fn usage_full(cmd: str) -> str {
+    if cmd == "add" {
+        return "lope add [PATH]"
+    }
+    if cmd == "query" {
+        return "lope query [OPTIONS] [TERMS]..."
+    }
+    if cmd == "remove" {
+        return "lope remove <PATH>"
+    }
+    if cmd == "list" {
+        return "lope list [OPTIONS]"
+    }
+    if cmd == "init" {
+        return "lope init [OPTIONS] <SHELL>"
+    }
+    if cmd == "help" {
+        return "lope help [COMMAND]..."
+    }
+    if cmd == "" {
+        return "lope <COMMAND>"
+    }
+    "lope {cmd}"
+}
+
+/// clap's usage line for an error after some arguments were read: the
+/// flags used so far (`flags`, in the order the subcommand declares them)
+/// and the positional, required in form once given (`<TERMS>...`) and as
+/// declared otherwise; the whole usage when nothing was used.
+fn usage_used(cmd: str, flags: List[str], positional: bool) -> str {
+    if flags.len == 0 && !positional {
+        return usage_full(cmd)
+    }
+    var s = "lope {cmd}"
+    for f in flags {
+        s = "{s} {f}"
+    }
+    if cmd == "query" {
+        return if positional then "{s} <TERMS>..." else "{s} [TERMS]..."
+    }
+    if cmd == "add" {
+        return if positional then "{s} <PATH>" else "{s} [PATH]"
+    }
+    if cmd == "remove" {
+        return "{s} <PATH>"
+    }
+    if cmd == "init" {
+        return "{s} <SHELL>"
+    }
+    s
+}
+
+fn fail(mut e: out.Out, msg: str) -> int {
+    out.put(mut e, msg)
+    2
+}
+
+fn with_usage(msg: str, usage: str) -> str {
+    "error: {msg}\n\nUsage: {usage}\n\nFor more information, try '--help'.\n"
+}
+
+fn takes_positional(cmd: str) -> bool {
+    cmd == "add" || cmd == "query" || cmd == "remove" || cmd == "init"
+}
+
+fn help_of(cmd: str, long: bool) -> str {
+    if cmd == "add" {
+        return help_add()
+    }
+    if cmd == "query" {
+        return help_query()
+    }
+    if cmd == "remove" {
+        return help_remove()
+    }
+    if cmd == "list" {
+        return help_list()
+    }
+    if cmd == "clean" {
+        return help_clean()
+    }
+    if cmd == "init" {
+        return if long then help_init_long() else help_init_short()
+    }
+    if cmd == "import" {
+        return help_import()
+    }
+    if cmd == "edit" {
+        return help_edit()
+    }
+    if cmd == "help" {
+        return help_help()
+    }
+    help_top()
+}
+
+/// The order a subcommand declares its flags in, as usage lines name
+/// them.
+fn flag_rank(f: str) -> int {
+    if f == "--score" || f == "--cmd <CMD>" {
+        return 0
+    }
+    if f == "--all" || f == "--hook <HOOK>" {
+        return 1
+    }
+    2
+}
+
+fn ordered(flags: List[str]) -> List[str] {
+    var out = List[str]()
+    for r in 0..3 {
+        for f in flags {
+            if flag_rank(f) == r {
+                (mut out).push(f)
+            }
+        }
+    }
+    out
+}
+
+/// Read `argv` (the arguments after the program's name).
+pub fn parse(argv: List[str], mut o: out.Out, mut e: out.Out) -> Args {
+    var a = blank()
+    if argv.len == 0 {
+        out.put(mut e, help_top())
+        a.stop = 2
+        return a
+    }
+    let first = argv[0]
+    if first == "--help" {
+        out.put(mut o, help_top())
+        a.stop = 0
+        return a
+    }
+    if first == "--version" {
+        out.line(mut o, "lope {version()}")
+        a.stop = 0
+        return a
+    }
+    if first.starts_with("-") && first.len > 1 {
+        if !first.starts_with("--") {
+            for ch in first[1..first.len].chars() {
+                if ch == 'h' {
+                    out.put(mut o, help_top())
+                    a.stop = 0
+                    return a
+                }
+                if ch == 'V' {
+                    out.line(mut o, "lope {version()}")
+                    a.stop = 0
+                    return a
+                }
+                a.stop = fail(
+                    mut e,
+                    with_usage("unexpected argument '-{ch}' found", "lope <COMMAND>"),
+                )
+                return a
+            }
+        }
+        a.stop = fail(mut e, with_usage("unexpected argument '{first}' found", "lope <COMMAND>"))
+        return a
+    }
+    if !is_command(first) {
+        let tip = similar(first, commands())
+        var msg = "error: unrecognized subcommand '{first}'\n"
+        if tip.len > 0 {
+            msg = "{msg}\n  tip: a similar subcommand exists: '{tip}'\n"
+        }
+        a.stop = fail(
+            mut e,
+            "{msg}\nUsage: lope <COMMAND>\n\nFor more information, try '--help'.\n",
+        )
+        return a
+    }
+    a.cmd = first
+    if first == "help" {
+        return parse_help(argv, mut o, mut e)
+    }
+    parse_sub(argv, mut a, mut o, mut e)
+    a
+}
+
+fn parse_help(argv: List[str], mut o: out.Out, mut e: out.Out) -> Args {
+    var a = blank()
+    a.cmd = "help"
+    if argv.len == 1 {
+        out.put(mut o, help_top())
+        a.stop = 0
+        return a
+    }
+    let target = argv[1]
+    if !is_command(target) {
+        a.stop = fail(mut e, with_usage("unrecognized subcommand '{target}'", "lope <COMMAND>"))
+        return a
+    }
+    if argv.len > 2 {
+        a.stop = fail(mut e, with_usage("unrecognized subcommand '{argv[2]}'", usage_full(target)))
+        return a
+    }
+    out.put(mut o, help_of(target, true))
+    a.stop = 0
+    a
+}
+
+fn mark(mut used: List[str], name: str) -> bool {
+    for u in used {
+        if u == name {
+            return false
+        }
+    }
+    (mut used).push(name)
+    true
+}
+
+fn parse_sub(argv: List[str], mut a: Args, mut o: out.Out, mut e: out.Out) {
+    let cmd = a.cmd
+    var used = List[str]()
+    var positional = false
+    var dashdash = false
+    var i = 1
+    while i < argv.len {
+        let arg = argv[i]
+        i += 1
+        if !dashdash && arg == "--" {
+            dashdash = true
+            continue
+        }
+        if !dashdash && arg.starts_with("--") {
+            var name = arg[2..arg.len]
+            var value = ""
+            var has_value = false
+            let eq = name.find("=") else -1
+            if eq >= 0 {
+                value = name[eq + 1..name.len]
+                name = name[0..eq]
+                has_value = true
+            }
+            if name == "help" {
+                out.put(mut o, help_of(cmd, true))
+                a.stop = 0
+                return
+            }
+            if name == "version" {
+                out.line(mut o, "lope-{cmd} {version()}")
+                a.stop = 0
+                return
+            }
+            let is_switch = cmd == "query" && (name == "score" || name == "all" || name == "cwd") ||
+                cmd == "list" && name == "score" ||
+                cmd == "init" && (name == "no-cmd" || name == "no-aliases")
+            let is_value = cmd == "init" && (name == "cmd" || name == "hook")
+            if is_switch {
+                let canon = if name == "no-aliases" then "no-cmd" else name
+                if has_value {
+                    var fl = copy used
+                    (mut fl).push("--{canon}")
+                    a.stop = fail(
+                        mut e,
+                        with_usage(
+                            "unexpected value '{value}' for '--{canon}' found; no more were expected",
+                            usage_used(cmd, ordered(fl), positional),
+                        ),
+                    )
+                    return
+                }
+                if !mark(mut used, "--{canon}") {
+                    a.stop = fail(
+                        mut e,
+                        with_usage(
+                            "the argument '--{canon}' cannot be used multiple times",
+                            usage_full(cmd),
+                        ),
+                    )
+                    return
+                }
+                if canon == "score" {
+                    a.score = true
+                } else if canon == "all" {
+                    a.all = true
+                } else if canon == "cwd" {
+                    a.cwd = true
+                } else {
+                    a.no_cmd = true
+                }
+                continue
+            }
+            if is_value {
+                let shown = if name == "cmd" then "--cmd <CMD>" else "--hook <HOOK>"
+                if !has_value {
+                    if i < argv.len && !argv[i].starts_with("-") {
+                        value = argv[i]
+                        i += 1
+                    } else {
+                        var msg = "error: a value is required for '{shown}' but none was supplied\n"
+                        if name == "hook" {
+                            msg = "{msg}  [possible values: prompt, pwd]\n"
+                        }
+                        a.stop = fail(mut e, "{msg}\nFor more information, try '--help'.\n")
+                        return
+                    }
+                }
+                if !mark(mut used, shown) {
+                    a.stop = fail(
+                        mut e,
+                        with_usage(
+                            "the argument '{shown}' cannot be used multiple times",
+                            usage_full(cmd),
+                        ),
+                    )
+                    return
+                }
+                if name == "cmd" {
+                    a.name = copy value
+                } else {
+                    if value != "prompt" && value != "pwd" {
+                        a.stop = fail(
+                            mut e,
+                            "error: invalid value '{value}' for '{shown}'\n  [possible values: prompt, pwd]\n{tip_value(value, ["prompt", "pwd"])}\nFor more information, try '--help'.\n",
+                        )
+                        return
+                    }
+                    a.hook = copy value
+                }
+                continue
+            }
+            // unknown long flag
+            let sim = similar(name, longs(cmd))
+            if sim.len > 0 {
+                var fl = copy used
+                let shown = if sim == "cmd" {
+                    "--cmd <CMD>"
+                } else if sim == "hook" {
+                    "--hook <HOOK>"
+                } else {
+                    "--{sim}"
+                }
+                (mut fl).push(shown)
+                a.stop = fail(
+                    mut e,
+                    "error: unexpected argument '{arg}' found\n\n  tip: a similar argument exists: '--{sim}'\n\nUsage: {usage_used(cmd, ordered(fl), positional)}\n\nFor more information, try '--help'.\n",
+                )
+                return
+            }
+            var msg = "error: unexpected argument '{arg}' found\n"
+            if takes_positional(cmd) {
+                msg = "{msg}\n  tip: to pass '{arg}' as a value, use '-- {arg}'\n"
+            }
+            a.stop = fail(
+                mut e,
+                "{msg}\nUsage: {usage_used(cmd, ordered(used), positional)}\n\nFor more information, try '--help'.\n",
+            )
+            return
+        }
+        if !dashdash && arg.starts_with("-") && arg.len > 1 {
+            for ch in arg[1..arg.len].chars() {
+                if ch == 'h' {
+                    out.put(mut o, help_of(cmd, false))
+                    a.stop = 0
+                    return
+                }
+                if ch == 'V' {
+                    out.line(mut o, "lope-{cmd} {version()}")
+                    a.stop = 0
+                    return
+                }
+                let short_ok = cmd == "query" && (ch == 's' || ch == 'a') ||
+                    cmd == "list" && ch == 's'
+                if !short_ok {
+                    var msg = "error: unexpected argument '-{ch}' found\n"
+                    if takes_positional(cmd) {
+                        msg = "{msg}\n  tip: to pass '-{ch}' as a value, use '-- -{ch}'\n"
+                    }
+                    a.stop = fail(
+                        mut e,
+                        "{msg}\nUsage: {usage_full(cmd)}\n\nFor more information, try '--help'.\n",
+                    )
+                    return
+                }
+                let canon = if ch == 's' then "--score" else "--all"
+                if !mark(mut used, canon) {
+                    a.stop = fail(
+                        mut e,
+                        with_usage(
+                            "the argument '{canon}' cannot be used multiple times",
+                            usage_full(cmd),
+                        ),
+                    )
+                    return
+                }
+                if ch == 's' {
+                    a.score = true
+                } else {
+                    a.all = true
+                }
+            }
+            continue
+        }
+        // a positional
+        if cmd == "query" {
+            (mut a.terms).push(copy arg)
+            positional = true
+            continue
+        }
+        if (cmd == "add" || cmd == "remove") && !positional {
+            a.path = copy arg
+            positional = true
+            continue
+        }
+        if cmd == "init" && !positional {
+            var ok = false
+            for s in shells() {
+                if s == arg {
+                    ok = true
+                }
+            }
+            if !ok {
+                a.stop = fail(
+                    mut e,
+                    "error: invalid value '{arg}' for '<SHELL>'\n  [possible values: bash, zsh, fish, fortsh, pelt]\n{tip_value(arg, shells())}\nFor more information, try '--help'.\n",
+                )
+                return
+            }
+            a.shell = copy arg
+            positional = true
+            continue
+        }
+        a.stop = fail(mut e, with_usage("unexpected argument '{arg}' found", usage_full(cmd)))
+        return
+    }
+    if !positional && cmd == "remove" {
+        a.stop = fail(
+            mut e,
+            "error: the following required arguments were not provided:\n  <PATH>\n\nUsage: lope remove <PATH>\n\nFor more information, try '--help'.\n",
+        )
+        return
+    }
+    if !positional && cmd == "init" {
+        a.stop = fail(
+            mut e,
+            "error: the following required arguments were not provided:\n  <SHELL>\n\nUsage: lope init <SHELL>\n\nFor more information, try '--help'.\n",
+        )
+        return
+    }
+}
+
+/// clap's tip line for an invalid value ("" when nothing is similar),
+/// ending with the blank line before the next part.
+fn tip_value(v: str, candidates: List[str]) -> str {
+    let t = similar(v, candidates)
+    if t.len == 0 {
+        return ""
+    }
+    "\n  tip: a similar value exists: '{t}'\n"
+}
