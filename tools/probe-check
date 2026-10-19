@@ -21,7 +21,7 @@ def main():
         return 2
     lope = os.path.abspath(sys.argv[1])
     rows = [json.loads(l) for l in open(os.path.join(ROOT, "tests/oracle/probes.jsonl"), encoding="utf-8") if l.strip()]
-    d = tempfile.mkdtemp(prefix="lope-probe-")
+    d = os.path.realpath(tempfile.mkdtemp(prefix="lope-probe-"))
     bad = 0
     try:
         for r in rows:

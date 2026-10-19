@@ -35,7 +35,7 @@ def main():
     report = sys.argv[sys.argv.index("--report") + 1] if "--report" in sys.argv else None
     cases = [json.loads(l) for l in open(os.path.join(ROOT, "tests/oracle/corpus.jsonl"), encoding="utf-8")]
     floor = float(open(os.path.join(ROOT, "tests/oracle/FLOOR")).read().split()[0])
-    d = tempfile.mkdtemp(prefix="lope-oracle-")
+    d = os.path.realpath(tempfile.mkdtemp(prefix="lope-oracle-"))
     agree, ties, diffs = 0, 0, []
     try:
         current = None

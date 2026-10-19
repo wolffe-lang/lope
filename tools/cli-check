@@ -38,7 +38,7 @@ def main():
     bad = 0
     by_design = 0
     for r in rows:
-        d = tempfile.mkdtemp(prefix="lope-cli-")
+        d = os.path.realpath(tempfile.mkdtemp(prefix="lope-cli-"))
         env = {"PATH": "/usr/bin:/bin", "HOME": d, "XDG_DATA_HOME": d + "/data", "LANG": "C.UTF-8", "EDITOR": "/bin/false"}
         p = subprocess.run([lope] + r["argv"], env=env, cwd=d, capture_output=True, text=True, stdin=subprocess.DEVNULL)
         out, err = p.stdout.replace(d, "$SCRATCH"), p.stderr.replace(d, "$SCRATCH")

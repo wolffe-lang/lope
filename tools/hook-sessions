@@ -163,7 +163,7 @@ def shell_argv(shell, bins):
 
 
 def run_one(tool, binary, shell, bins, fzf, outdir):
-    root = tempfile.mkdtemp(prefix="lope-hook-%s-%s-" % (tool, shell))
+    root = os.path.realpath(tempfile.mkdtemp(prefix="lope-hook-%s-%s-" % (tool, shell)))
     home = os.path.join(root, "home")
     cfg = os.path.join(home, ".config")
     t = os.path.join(root, "t")

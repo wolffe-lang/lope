@@ -17,7 +17,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def main():
     lope = os.path.abspath(sys.argv[1])
     rows = [json.loads(l) for l in open(os.path.join(ROOT, "tests/oracle/fold.jsonl"))]
-    d = tempfile.mkdtemp(prefix="lope-fold-")
+    d = os.path.realpath(tempfile.mkdtemp(prefix="lope-fold-"))
     got = collections.defaultdict(str)
     try:
         with open(os.path.join(d, "store"), "w", encoding="utf-8") as f:

@@ -23,7 +23,7 @@ import gumpdb  # noqa: E402
 
 
 def scratch():
-    d = tempfile.mkdtemp(prefix="lope-import-")
+    d = os.path.realpath(tempfile.mkdtemp(prefix="lope-import-"))
     for p in ("code/wolf", "code/gump", "code/lope", "code/pax", "code", "Documents", "Downloads", "bin", "data", "home"):
         os.makedirs(os.path.join(d, p), exist_ok=True)
     open(os.path.join(d, "a-file.txt"), "w").close()

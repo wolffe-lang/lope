@@ -1,0 +1,67 @@
+#!/bin/sh
+# selftest — each harness sees a difference: run against a lope that
+# answers wrong in one way (a wrapper script per way), each must exit 1;
+# against the real lope (the steps before this one) each exits 0. The
+# standing proof, in every run, that a green is not a harness that cannot
+# go red; the planted breaks of real code are lp00's plant runs.
+#
+#   tools/selftest LOPE
+set -eu
+LOPE_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+lope=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+cd "$LOPE_ROOT"
+w=$(mktemp -d "${TMPDIR:-/tmp}/lope-selftest.XXXXXX")
+trap 'rm -rf "$w"' EXIT
+
+# wrap MODE CASE-ARMS: a `lope` that runs the real one but for the arms.
+wrap() {
+    mkdir -p "$w/$1"
+    {
+        echo '#!/bin/sh'
+        echo 'case "$1" in'
+        printf '%s\n' "$2"
+        echo "*) exec \"$lope\" \"\$@\" ;;"
+        echo 'esac'
+    } >"$w/$1/lope"
+    chmod +x "$w/$1/lope"
+}
+# the oracle: the last match instead of the best
+wrap oracle "query) shift; \"$lope\" query -a \"\$@\" | tail -n 1 ;;"
+# the probes: every score 900 higher
+wrap probe "query) \"$lope\" \"\$@\" | sed 's/^ */ 9/' ;;"
+# the command line: a wrong version
+wrap cli "--version) echo 'lope 0.0.0' ;;"
+# import: the first line of the summary lost
+wrap import "import) \"$lope\" \"\$@\" | sed 1d ;;"
+# the hooks: init prints nothing
+wrap hooks "init) exit 0 ;;"
+# speed: every query 60 ms late
+wrap slow "query) sleep 0.06; exec \"$lope\" \"\$@\" ;;"
+
+fail=0
+expect_red() { # name, command...
+    name=$1
+    shift
+    set +e
+    "$@" >"$w/$name.log" 2>&1
+    st=$?
+    set -e
+    if [ "$st" = 1 ]; then
+        echo "selftest: $name went red on its planted difference (status 1): ok"
+    else
+        echo "selftest: $name answered $st on a planted difference; it must be 1" >&2
+        tail -5 "$w/$name.log" >&2
+        fail=1
+    fi
+}
+expect_red oracle-check tools/oracle-check "$w/oracle/lope"
+expect_red probe-check tools/probe-check "$w/probe/lope"
+expect_red cli-check tools/cli-check "$w/cli/lope"
+expect_red import-check tools/import-check "$w/import/lope"
+expect_red hook-sessions python3 tools/hook-sessions --tool lope="$w/hooks/lope" --shells bash --fzf "" --expect tests/hooks/expected.tsv --logs "$w/hook-logs"
+if [ -x .gump/target/release/gump ]; then
+    expect_red speed tools/speed "$w/slow/lope" .gump/target/release/gump --runs 5
+else
+    echo "selftest: speed not planted (no .gump/target/release/gump: run tools/fetch-gump)"
+fi
+exit $fail
