@@ -135,8 +135,11 @@ states them, `tests/import/FORMATS.md`): lope's summary and resulting
 listing equal `tests/import/expected.txt`; gump's own import of the same
 autojump, z, fasd and zoxide files gives the same entries at the same
 frecency (kasumi, `--gump`). `tools/edit-check`: an edit written back with
-times and counts kept, and the three refusals (an editor that fails, one
-that is not there, none at all).
+times and counts kept; how `$EDITOR` is found (a path used as given, never
+looked for by its last part; a name searched on PATH, passing over a file
+that may not be executed); and the refusals (an editor that fails, one that
+is not there, none at all). The editors are scripts the check writes:
+`/bin/false`, which the first version used, is not on macOS.
 
 ### 4.5 Speed
 
@@ -162,8 +165,11 @@ is not on kasumi: gump against zoxide not measured.
 
 `tools/mkstatic` in `localhost/px13-ubuntu` (Ubuntu 24.04.5, libc6-dev
 2.39-0ubuntu8.9, gcc 13.3.0) on kasumi, from `src/` at `323d80f` (the final
-source), twice, the same bytes: **`lope 4e05bc21a57fdd653510b2aa4c091ccb288cac86f687eed65d92f131ed247f45
-14426408`**, ET_EXEC, no PT_INTERP; the oracle (654 of 654) holds on it.
+source), twice, the same bytes: `lope 4e05bc21a57fdd653510b2aa4c091ccb288cac86f687eed65d92f131ed247f45
+14426408`; and from `src/` at `ee97741` (the PATH fix, the final source), twice,
+the same bytes: **`lope f9a2f064077f6bb33ede9219608b6fe72d4a45a66c84f61f3f9d9e5e94f5066c
+14426728`**, ET_EXEC, no PT_INTERP; the oracle (654 of 654) and edit-check
+hold on it.
 CI's runner builds its own from the same tree (run 39327219714: `lope
 08741bfa3e73cfd606286c8fca3ae11bc3b24f09593b876d00b2afc90381514d
 14189464`); the two differ by the image's `libc.a`, so a PAX pin names the
@@ -189,6 +195,8 @@ speed; selftest.
 | 39324524143 | `d75a85b` (`lp00-plant-a`, PR #2 then) | PLANT A, `tier pr` | red as planted: wolf test, lupin, probe-check, oracle-check, cli-check, import-check, edit-check, hook-sessions, speed, mkstatic. Two plants did not bite, both the plant's fault: the fold plant removed the capitals' arm, which `lower` never reaches (re-planted in B); the selftest plant was masked by the matcher plant (re-planted in B) |
 | 39327414935 | `3d786a6` (PR #2, `full-matrix`) | PLANT B, `tier full` | red as planted: the planner's test, wolf fmt, gen-hooks, fold-check, cli-check and selftest on linux; cli-check on macOS; the aarch64 refusal check; `tier full`. Collateral, as expected: probe-check (its Unicode rows read the fold plant); macOS's hook step red only on its fzf row, asked with no fzf there: `tools/hook-sessions` now says so and skips it |
 | (sessions) | `323d80f` | fish's Enter inside `read` | found by the sessions (a flake at `b9a0268`'s PR run, the menu's answer `1` turned into a jump when the scratch path held a 1); made certain by a store holding `…/v1`; the guard green 6 of 6 on kasumi, the unguarded text red on exactly the menu row |
+| 39353415124 | `a838ecd` | `full-matrix`, `tier full` | red on macOS only (job 118404748196): edit-check's "editor that fails" was `EDITOR=/bin/false`, which macOS does not have (it keeps `false` in /usr/bin), so lope rightly said `editor '/bin/false' not found`. The test was at fault; looking at the lookup, lope's was too: a name on PATH took the first FILE of that name, runnable or not |
+| 39356946152 | `ec49692` | PR run, `tier pr` | red on exactly the new row (job 118418888219): `a file on PATH that cannot be executed is passed over`; fixed in `ee97741` (a candidate must be a regular file with an execute bit) |
 | (PR #1's body) | the final head | PR run, `tier pr`, then `full-matrix`, `tier full` | named in PR #1's body: a commit cannot carry its own run's id |
 
 ## 5. Done-when
