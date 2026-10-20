@@ -11,7 +11,8 @@ or data).
 For every tool and shell, the session sources `TOOL init SHELL` from the
 shell's own startup file and then types, one line at a time:
 
-  cd  : `cd` into three directories, then `TOOL list`: each is recorded
+  cd  : `cd` into three directories (and t/v1), then `TOOL list`: each
+        of the three is recorded
   word: from HOME, the bare word `gamma`: lands in t/beta/gamma
   two : `proj my` (two words): lands in t/projects/myapp
   here: in t/, `alpha` (a directory of the working directory)
@@ -29,17 +30,20 @@ status). `--expect FILE` compares lope's rows with the file's
 the black-box record of what gump's own hooks do. Exit 2 on a tool error.
 """
 import argparse
+import fcntl
 import os
 import pty
 import re
 import select
 import shutil
 import signal
+import struct
 import sys
+import termios
 import tempfile
 import time
 
-ANSI = re.compile(rb"\x1b\[[0-9;?<=>]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)|\x1b[()][0-9A-Za-z]|\x1b[=>78DEHMNOZc]|\r")
+ANSI = re.compile(rb"\x1b\[[0-9;?<=>-]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)|\x1b[()][0-9A-Za-z]|\x1b[=>78DEHMNOZc]|\r")
 PROMPT = b"PROMPT> "
 
 
@@ -51,6 +55,9 @@ class Session:
             os.chdir(cwd)
             os.execve(argv[0], argv, env)
         self.pid, self.fd = pid, fd
+        # the terminal's size: PAX's console grid, 50 rows of 160 (a PTY
+        # starts at 0 by 0, where fzf draws no list)
+        fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", 50, 160, 0, 0))
         self.buf = b""
 
     def read(self, timeout):
@@ -67,10 +74,16 @@ class Session:
             if not chunk:
                 break
             got += chunk
-            # answer a terminal's cursor-position query, which some line
-            # editors (fish, fortsh) send before drawing
+            # answer what a terminal answers, as a real one would at once:
+            # the line editors (fish, fortsh) and fzf ask before drawing,
+            # and a question left unanswered makes the asker wait, eating
+            # keys typed meanwhile as its answer
             if b"\x1b[6n" in chunk:
                 os.write(self.fd, b"\x1b[1;1R")
+            if b"\x1b[0c" in chunk or b"\x1b[c" in chunk:
+                os.write(self.fd, b"\x1b[?62;22c")
+            if b"\x1b]11;?" in chunk:
+                os.write(self.fd, b"\x1b]11;rgb:0000/0000/0000\x1b\\")
         self.buf += got
         self.log.write(got)
         return got
@@ -85,6 +98,19 @@ class Session:
             if not got and PROMPT in ANSI.sub(b"", seen):
                 return ANSI.sub(b"", seen).decode("utf-8", "replace")
         raise TimeoutError("no prompt after %.0fs; last output %r" % (timeout, ANSI.sub(b"", seen)[-300:]))
+
+    def wait_for(self, pattern, timeout=15.0):
+        """Read until the cleaned output matches `pattern` (a regex): the
+        menu's question, fzf's count. Then the next keys go to the reader
+        that asked, never ahead of it."""
+        end = time.time() + timeout
+        seen = b""
+        while time.time() < end:
+            seen += self.read(0.2)
+            text = ANSI.sub(b"", seen).decode("utf-8", "replace")
+            if re.search(pattern, text):
+                return text
+        raise TimeoutError("no %r after %.0fs; last output %r" % (pattern, timeout, ANSI.sub(b"", seen)[-300:]))
 
     def send(self, data):
         self.log.write(b"\n<<< " + data + b"\n")
@@ -172,7 +198,7 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
     home = os.path.join(root, "home")
     cfg = os.path.join(home, ".config")
     t = os.path.join(root, "t")
-    for d in ("alpha", "beta/gamma", "projects/myapp", "printf", "ls", "delta"):
+    for d in ("alpha", "beta/gamma", "projects/myapp", "printf", "ls", "delta", "v1"):
         os.makedirs(os.path.join(t, d))
     os.makedirs(cfg)
     bin_ = os.path.join(root, "bin")
@@ -204,6 +230,10 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
         # cd: three directories visited, then listed
         for d in ("alpha", "beta/gamma", "projects/myapp"):
             s.line("cd %s/%s" % (t, d))
+        # a directory with a digit in the store, so a menu's answer `1`
+        # also matches one: an Enter hook that rewrites inside `read`
+        # turns the answer into a jump (fish's, before the guard)
+        s.line("cd %s/v1" % t)
         s.line("cd %s" % home)
         out = s.line("%s list" % tool)
         listed = [d for d in ("alpha", "beta/gamma", "projects/myapp") if "%s/%s\n" % (t, d) in out.replace("\r", "")]
@@ -247,9 +277,15 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
         # menu: gi with no fzf on PATH
         s.line("cd %s" % home)
         s.send(b"gi a\r")
-        got = s.read(3.0)
-        shown = ANSI.sub(b"", got).decode("utf-8", "replace")
+        try:
+            shown = s.wait_for(r"which( \(1-\d\))?\? ")
+        except TimeoutError:
+            shown = ""
         menu = ("1) " + t) in shown
+        # typed as a person types, after the question is on the screen:
+        # a reader that sets its terminal modes with TCSAFLUSH (fish's
+        # `read`) discards keys that arrive while it starts
+        s.read(0.5)
         s.send(b"1\r")
         s.wait_prompt()
         rows.append(("menu", "%s%s" % ("menu, " if menu else "NO MENU, ", where(s, root, shell)[0])))
@@ -257,7 +293,8 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
             s.line("cd %s" % home)
             s.line("PATH=%s:$PATH" % fzfbin if shell != "fish" else "set -gx PATH %s $PATH" % fzfbin)
             s.send(b"gi gam\r")
-            s.read(3.0)
+            s.wait_for(r"\b\d+/\d+\b")
+            s.read(0.5)
             s.send(b"\r")
             s.wait_prompt()
             rows.append(("fzf", where(s, root, shell)[0]))
