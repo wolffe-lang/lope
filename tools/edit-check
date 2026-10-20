@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """edit-check — `lope edit` with an editor this tool writes (a script
-that deletes one line, re-weighs one and adds one), and the refusals: an
-editor that fails, one that is not there, and no `$EDITOR`, `$VISUAL` or
-`vi` at all (PAX's case, ruling #91 R4).
+that deletes one line, re-weighs one and adds one), how `$EDITOR` is
+found (a path used as given; a name searched on PATH, passing over a file
+that cannot be executed), and the refusals: an editor that fails, one
+that is not there, and no `$EDITOR`, `$VISUAL` or `vi` at all (PAX's
+case, ruling #91 R4).
 
     tools/edit-check LOPE        exit 0 when every row holds
 """
@@ -43,9 +45,36 @@ def main():
         say("%s/b\n" % d not in text, "a deleted line forgets its directory")
         say(" 1 %s/c\n" % d in text and text.count("\n") == 4, "a new line enters with one visit now")
         say(os.listdir(os.path.join(d, "tmp")) == [], "the text file is removed")
-        env = dict(base, PATH="/usr/bin:/bin", EDITOR="/bin/false")
+        # an editor that exits 1, made here: `/bin/false` is not on every
+        # host (macOS keeps it in /usr/bin only)
+        bad = os.path.join(d, "bin", "failing-editor")
+        with open(bad, "w") as f:
+            f.write("#!/bin/sh\nexit 1\n")
+        os.chmod(bad, 0o755)
+        path = "%s:/usr/bin:/bin" % os.path.join(d, "bin")
+        env = dict(base, PATH=path, EDITOR=bad)
         p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
-        say(p.returncode == 1 and p.stderr == "lope: Editor exited with error\n", "an editor that fails (%r)" % p.stderr)
+        say(p.returncode == 1 and p.stderr == "lope: Editor exited with error\n", "an editor that fails, named by its path (%r)" % p.stderr)
+        env = dict(base, PATH=path, EDITOR="failing-editor")
+        p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        say(p.returncode == 1 and p.stderr == "lope: Editor exited with error\n", "an editor that fails, found on PATH (%r)" % p.stderr)
+        # a path is used as given, never searched for by its last part
+        gone = os.path.join(d, "nowhere", "fake-editor")
+        env = dict(base, PATH=path, EDITOR=gone)
+        p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        say(p.returncode == 1 and p.stderr == "lope: editor '%s' not found. Set $EDITOR or $VISUAL to an installed editor\n" % gone,
+            "a path that is not there is not looked for on PATH (%r)" % p.stderr)
+        # a name is searched on PATH as a shell searches: a file there that
+        # cannot be executed is passed over for the next directory's
+        shadow = os.path.join(d, "shadow")
+        os.makedirs(shadow)
+        with open(os.path.join(shadow, "fake-editor"), "w") as f:
+            f.write("#!/bin/sh\nexit 7\n")
+        os.chmod(os.path.join(shadow, "fake-editor"), 0o644)
+        env = dict(base, PATH="%s:%s" % (shadow, path), EDITOR="fake-editor")
+        p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
+        say(p.returncode == 0 and p.stdout == "Database updated\n",
+            "a file on PATH that cannot be executed is passed over (%d %r %r)" % (p.returncode, p.stdout, p.stderr))
         env = dict(base, PATH="/usr/bin:/bin", EDITOR="no-such-editor-xyz")
         p = subprocess.run([lope, "edit"], env=env, capture_output=True, text=True, stdin=subprocess.DEVNULL)
         say(p.returncode == 1 and p.stderr == "lope: editor 'no-such-editor-xyz' not found. Set $EDITOR or $VISUAL to an installed editor\n",
