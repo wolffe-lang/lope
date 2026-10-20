@@ -241,6 +241,7 @@ Each is lope's on purpose; the recommendation for each is to keep lope's.
 | D3 | bash's no-prefix jump | stays put (its handler runs in a subshell) | Enter rewrites the line (`bind -x`, bash 4+) | keep ours |
 | D4 | `gi` without fzf | nothing happens | a numbered menu (PAX's only path) | keep ours |
 | D5 | a `g` jump in bash and fortsh | recorded twice (`g`'s hook and the prompt's check) | once | keep ours |
+| D5b | Enter inside `read`, in fish | the Enter binding rewrites a `read`'s answer that matches a directory into `cd "DIR"` (measured: `gi`'s menu answer `1`, with a store holding `…/v1`) | a `read` keeps its answer (the guard in `shell/fish/jump.sh`; the unguarded text red on exactly the menu row, kasumi) | keep ours |
 | D6 | an empty item in the exclude list (`GUMP_EXCLUDE=`, `a::b`) | excludes every path | excludes nothing | keep ours |
 | D7 | `edit` | JSON; every time reset to now, missing paths dropped; `$EDITOR` one program name | text; times and counts kept; `$EDITOR` split at spaces | keep ours |
 | D8 | the store on macOS | `~/Library/Application Support/gump` | `$XDG_DATA_HOME/lope` on every host (R4's stated default); `import` still finds gump's macOS file | keep ours |
@@ -260,7 +261,7 @@ lope takes gump's and accepts `--no-aliases` as the same flag, unlisted.
   stops a script silently at an empty case arm (`[1-9]) ;;`): nothing after
   it runs, status 0 (measured on kasumi; lope's menu writes `: ;;`).
 - **gump** (tenseleyFlow/gump, the maintainer's, for the record; lope
-  replaces it): D3, D4, D5, D6 above; `list` sorts with the clock read in
+  replaces it): D3, D4, D5, D5b, D6 above; `list` sorts with the clock read in
   every comparison (`list.rs:11`, `entry.rs:51`: 24.5 ms against lope's
   8.5 at 10,000 entries); `import --help` says "from zoxide" for four
   tools; frecency's weight capped at 40 makes every often-visited

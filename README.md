@@ -121,6 +121,10 @@ Where lope's hooks part from gump's, on purpose:
   no `READLINE_LINE`, so there the jump is left out; `g` and `gi` work.
 - **`gi` without fzf.** gump's `gi` needs fzf. lope's falls back to a numbered
   menu of the best nine, chosen by one digit (PAX has no fzf).
+- **Enter inside `read`, in fish.** gump's fish hook binds Enter for the whole
+  shell, so the answer to any `read` that looks like a directory fragment is
+  rewritten to a `cd` (measured: `gi`'s menu answer `1` became a jump to a
+  path holding a 1). lope's leaves a `read`'s answer alone.
 - **One visit per jump in bash and fortsh.** gump's `g` records the visit and
   the prompt's directory check records it again; lope's records it once.
 
