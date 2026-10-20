@@ -315,8 +315,10 @@ def main():
     ap.add_argument("--fzf", default=shutil.which("fzf"))
     ap.add_argument("--report")
     ap.add_argument("--expect")
-    ap.add_argument("--logs", default=tempfile.mkdtemp(prefix="lope-hook-logs-"))
+    ap.add_argument("--logs")
     a = ap.parse_args()
+    if not a.logs:
+        a.logs = tempfile.mkdtemp(prefix="lope-hook-logs-")
     bins = {s: shutil.which(s) for s in ("bash", "zsh", "fish", "fortsh")}
     bins["pelt"] = os.path.abspath(a.pelt) if a.pelt else None
     os.makedirs(a.logs, exist_ok=True)
