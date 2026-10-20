@@ -206,20 +206,21 @@ Measured cold (a fresh process per run, as a hook starts one), with a
 (`tools/speed`); CI gates the query path on every run: lope no slower than
 gump.
 
-On kasumi (16 cores, load about 8 from other lanes), 2026-10-19, the release
-tier at `ee83f5d` (`notes/lp00-evidence/speed-kasumi-ee83f5d.json`):
+On kasumi (16 cores, idle: load 0.1), 2026-10-20, the release tier, lope's
+and gump's runs interleaved (`notes/lp00-evidence/speed-kasumi-interleaved.json`):
 
 | command | lope | gump | lope / gump |
 |---|---|---|---|
-| `query` (the median of eight queries' medians) | 4.71 ms | 6.96 ms | **0.68** |
-| `init bash` | 0.48 ms | 0.55 ms | 0.87 |
-| `list` (10,000 lines) | 5.03 ms | 16.28 ms | 0.31 |
+| `query` (the median of eight queries' medians) | 11.49 ms | 14.77 ms | **0.78** |
+| `init bash` | 2.93 ms | 3.21 ms | 0.91 |
+| `list` (10,000 lines) | 4.54 ms | 17.10 ms | 0.27 |
 
 lope is faster on seven of the eight queries; on `wolf`, which every path of
-the store holds (they live under `/home/wolf`), the two are even (8.92 ms to
-8.87). On the CI runner (ubuntu-latest, run 39327219714) the query ratio was
-0.70, `init` 0.89 and `list` 0.29. gump's `list` is slow because its sort reads
-the clock inside every comparison (`list.rs:11`, `entry.rs:51`).
+the store holds (they live under `/home/wolf`), the two are even (15.2 ms to
+14.9, 1.02). Absolute times move with the host (an idle kasumi clocks down;
+loaded, the same query mix ran in 4.7 ms against 7.0, 0.68); the ratio is the
+measurement, and CI's runner gave 0.70. gump's `list` is slow because its sort
+reads the clock inside every comparison (`list.rs:11`, `entry.rs:51`).
 
 zoxide is not installed on kasumi, so gump against zoxide was not measured.
 

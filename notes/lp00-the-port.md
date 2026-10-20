@@ -140,8 +140,16 @@ that is not there, none at all).
 
 ### 4.5 Speed
 
-`tools/speed`, 10,000 entries, cold, median of 31, `taskset -c 0-3`. kasumi
-at `ee83f5d` (load about 8; `lp00-evidence/speed-kasumi-ee83f5d.json`):
+`tools/speed`, 10,000 entries, cold, median of 31, `taskset -c 0-3`, lope's
+and gump's runs interleaved. **Final, kasumi idle (load 0.1), the binary of
+`323d80f`** (`lp00-evidence/speed-kasumi-interleaved.json`): query 11.49 ms
+against 14.77 (**0.778**), init 2.93 against 3.21 (0.911), list 4.54 against
+17.10 (0.266); faster on seven of eight queries, even on `wolf` (1.017). The
+tool timed the two in separate blocks until `323d80f`; on an idle host,
+whose powersave governor clocks the cores down, that let one block run three
+times slower than the other (the gauntlet's own line at `323d80f`, 0.887,
+with per-query ratios from 0.79 to 1.31), so the runs are interleaved now.
+Earlier, kasumi at `ee83f5d` loaded (load about 8):
 query 4.71 ms against 6.96 (**0.677**), init 0.48 against 0.55 (0.870),
 list 5.03 against 16.28 (0.309); per query lope is faster on seven of
 eight and even on `wolf` (8.92 against 8.87, 1.005). Before the hay and
@@ -153,13 +161,23 @@ is not on kasumi: gump against zoxide not measured.
 ### 4.6 The static build
 
 `tools/mkstatic` in `localhost/px13-ubuntu` (Ubuntu 24.04.5, libc6-dev
-2.39-0ubuntu8.9, gcc 13.3.0) on kasumi, from `src/` at `ee83f5d`, twice, the
-same bytes: **`lope 1faed82b10c2728d090165fe99ccce97fe1506882014d71f465bffe8a1277409
-14426088`**, ET_EXEC, no PT_INTERP; the oracle (654 of 654) holds on it.
+2.39-0ubuntu8.9, gcc 13.3.0) on kasumi, from `src/` at `323d80f` (the final
+source), twice, the same bytes: **`lope 4e05bc21a57fdd653510b2aa4c091ccb288cac86f687eed65d92f131ed247f45
+14426408`**, ET_EXEC, no PT_INTERP; the oracle (654 of 654) holds on it.
 CI's runner builds its own from the same tree (run 39327219714: `lope
 08741bfa3e73cfd606286c8fca3ae11bc3b24f09593b876d00b2afc90381514d
 14189464`); the two differ by the image's `libc.a`, so a PAX pin names the
 image with the digest.
+
+### 4.6b The kasumi gauntlet at the final source
+
+`lp00-evidence/kasumi-gauntlet-323d80f.log` (`kasumi-gauntlet.sh`): every gate
+at `323d80f`, both tiers, 22 statuses read directly, all 0: fmt, both
+generators, the build, wolf test and lupin, then per tier probe-check (322 of
+322), oracle-check (654 of 654), fold-check (508), cli-check (95 of 95),
+import-check, edit-check; hook-sessions in bash, zsh, fish, fortsh and pelt
+for lope and gump (`hooks-kasumi-323d80f.tsv`, lope's rows as expected);
+speed; selftest.
 
 ### 4.7 CI runs
 
@@ -170,6 +188,7 @@ image with the digest.
 | **39327219714** | `ee83f5d` | PR run, `tier pr` | **green**: every gate on linux x86-64 |
 | 39324524143 | `d75a85b` (`lp00-plant-a`, PR #2 then) | PLANT A, `tier pr` | red as planted: wolf test, lupin, probe-check, oracle-check, cli-check, import-check, edit-check, hook-sessions, speed, mkstatic. Two plants did not bite, both the plant's fault: the fold plant removed the capitals' arm, which `lower` never reaches (re-planted in B); the selftest plant was masked by the matcher plant (re-planted in B) |
 | 39327414935 | `3d786a6` (PR #2, `full-matrix`) | PLANT B, `tier full` | red as planted: the planner's test, wolf fmt, gen-hooks, fold-check, cli-check and selftest on linux; cli-check on macOS; the aarch64 refusal check; `tier full`. Collateral, as expected: probe-check (its Unicode rows read the fold plant); macOS's hook step red only on its fzf row, asked with no fzf there: `tools/hook-sessions` now says so and skips it |
+| (sessions) | `323d80f` | fish's Enter inside `read` | found by the sessions (a flake at `b9a0268`'s PR run, the menu's answer `1` turned into a jump when the scratch path held a 1); made certain by a store holding `…/v1`; the guard green 6 of 6 on kasumi, the unguarded text red on exactly the menu row |
 | (PR #1's body) | the final head | PR run, `tier pr`, then `full-matrix`, `tier full` | named in PR #1's body: a commit cannot carry its own run's id |
 
 ## 5. Done-when
