@@ -41,7 +41,11 @@ function @CMD@i --description "Jump to a directory (interactive)"
     for i in (seq $n)
         printf '%s) %s\n' $i $all[$i] >&2
     end
+    set -g __lope_reading 1
     read -P "lope: which (1-$n)? " -l pick
+    set -l st $status
+    set -e __lope_reading
+    test $st -eq 0
     or return 1
     if string match -qr '^[1-9]$' -- "$pick"; and test $pick -le $n
         cd $all[$pick]

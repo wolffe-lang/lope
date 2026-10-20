@@ -1,6 +1,14 @@
 
 # No-prefix directory jumping via Enter key interception
 function __lope_execute
+    # Enter inside `read` is that read's own answer, never a command line
+    # to rewrite: gi's menu says it is reading; a `read` typed at the
+    # prompt is the current command
+    if set -q __lope_reading; or test (status current-command) = read
+        commandline -f execute
+        return
+    end
+
     set -l cmd (commandline -b)
     set -l first_word (string split ' ' -- $cmd)[1]
 

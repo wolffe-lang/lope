@@ -1,3 +1,4 @@
 # tests/cli/differences.txt — rows of expected.jsonl whose TEXT lope changes on
 # purpose (tools/cli-check compares their status only). argv<TAB>why.
 ["init", "zsh", "--cmd=j"]	gi falls back to a numbered menu when fzf is absent (README.md, "The hooks")
+["init", "fish", "--hook=prompt", "--no-cmd"]	Enter inside `read` keeps the answer for the read (README.md, "The hooks")
