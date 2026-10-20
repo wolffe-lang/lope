@@ -1,8 +1,19 @@
 //! proc — finding and running another program: `$EDITOR` for `edit`,
 //! `zoxide` for `import`.
 
-/// `name` found on `$PATH` (a regular file there; the first wins), or ""
-/// when it is not; a name holding a slash is taken as it is.
+/// Whether `path` names a regular file someone may execute (any of its
+/// execute bits set; links followed).
+pub fn runnable(path: str) -> bool {
+    let rec = fs_stat(path) else |_| {
+        return false
+    }
+    rec[0] == 0 && rec[4] % 512 / 64 % 2 + rec[4] % 64 / 8 % 2 + rec[4] % 8 % 2 > 0
+}
+
+/// `name` found on `$PATH` as a shell finds a command: the first
+/// directory holding a regular file of that name that may be executed (a
+/// file that may not is passed over), or "" when none does. A name holding
+/// a slash is taken as it is, and must be a file.
 pub fn on_path(name: str) -> str {
     if name.len == 0 {
         return ""
@@ -14,7 +25,7 @@ pub fn on_path(name: str) -> str {
     for dir in path.split(":") {
         let d = if dir.len == 0 then "." else dir
         let cand = if d.ends_with("/") then "{d}{name}" else "{d}/{name}"
-        if fs_is_file(cand) {
+        if runnable(cand) {
             return cand
         }
     }
