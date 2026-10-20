@@ -8,8 +8,8 @@ run, as a shell hook starts one):
   init   `init bash`
   list   `list`
 
-Each command runs WARMUP times untimed, then RUNS times; the number is the
-median wall time. Under `taskset -c 0-3` when the host has taskset (the
+Each command runs five times untimed, then RUNS times, lope's and gump's
+runs interleaved; the number is the median wall time. Under `taskset -c 0-3` when the host has taskset (the
 house rule for timing). The gate: lope's query median no slower than
 gump's (ratio <= 1.00); init and list are reported, not gated.
 
@@ -42,16 +42,30 @@ def tree(n, r):
     return out
 
 
-def median_ms(argv, env, cwd, warm, runs):
+def pair_ms(a, b, env_a, env_b, cwd, warm, runs):
+    """Medians of `a` and `b` timed INTERLEAVED (a b, b a, a b, ...), so a
+    clock that ramps or a neighbour that wakes weighs on both alike: run
+    back to back in two blocks, an idle host's frequency scaling alone
+    moved one block by a factor of three on kasumi."""
     tasks = ["taskset", "-c", "0-3"] if shutil.which("taskset") else []
-    for _ in range(warm):
-        subprocess.run(tasks + argv, env=env, cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    ts = []
-    for _ in range(runs):
+
+    def once(argv, env):
         t0 = time.perf_counter()
         subprocess.run(tasks + argv, env=env, cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        ts.append((time.perf_counter() - t0) * 1000)
-    return statistics.median(ts)
+        return (time.perf_counter() - t0) * 1000
+
+    for _ in range(warm):
+        once(a, env_a)
+        once(b, env_b)
+    ta, tb = [], []
+    for i in range(runs):
+        if i % 2 == 0:
+            ta.append(once(a, env_a))
+            tb.append(once(b, env_b))
+        else:
+            tb.append(once(b, env_b))
+            ta.append(once(a, env_a))
+    return statistics.median(ta), statistics.median(tb)
 
 
 def main():
@@ -78,16 +92,14 @@ def main():
         res = {"entries": len(rows), "runs": runs, "taskset": bool(shutil.which("taskset")), "query": {}}
         lq, gq = [], []
         for q in QUERIES:
-            a = median_ms([lope, "query", "--"] + q, env_l, d, 3, runs)
-            b = median_ms([gump, "query", "--"] + q, env_g, d, 3, runs)
+            a, b = pair_ms([lope, "query", "--"] + q, [gump, "query", "--"] + q, env_l, env_g, d, 5, runs)
             res["query"][" ".join(q)] = {"lope_ms": round(a, 3), "gump_ms": round(b, 3)}
             lq.append(a)
             gq.append(b)
         res["query_lope_ms"] = round(statistics.median(lq), 3)
         res["query_gump_ms"] = round(statistics.median(gq), 3)
         for name, args in (("init", ["init", "bash"]), ("list", ["list"])):
-            a = median_ms([lope] + args, env_l, d, 3, runs)
-            b = median_ms([gump] + args, env_g, d, 3, runs)
+            a, b = pair_ms([lope] + args, [gump] + args, env_l, env_g, d, 5, runs)
             res[name] = {"lope_ms": round(a, 3), "gump_ms": round(b, 3), "ratio": round(a / b, 3)}
         if "--zoxide" in sys.argv:
             res["zoxide"] = "measured by hand"
