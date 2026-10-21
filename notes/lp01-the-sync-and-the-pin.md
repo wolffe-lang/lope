@@ -186,7 +186,7 @@ on kasumi, loaded, interleaved, 31 runs: lope 20.00 / 30.98 ms, gump 10.89 /
 (0.2.32), and CI's linux job now runs the pelt sessions (before lp01 the
 pelt rows were checked on kasumi only). At the head, pelt's ten rows are
 every other shell's, 0 rows differ: kasumi (`hooks-kasumi-8872c7e.tsv`,
-lope and gump in bash, zsh, fish, fortsh and pelt) and CI 39684417699 (step
+lope in bash, zsh, fish, fortsh and pelt, gump in the four it has hooks for) and CI 39684417699 (step
 "the hooks on PTYs (pelt at pelt.pin)"). Seen red: at the pin with trunk's
 rows (§4.1), and in the plant run **39684817118** (job 119516123771, the
 rows put back to cc2fdc9's answers): exactly `word`, `two`, `here`, `frag`.
@@ -224,8 +224,8 @@ lane's.
 `kasumi-gauntlet-8872c7e.log` (`8872c7e`: every source, tool, test and
 workflow change of the lane; later commits are prose): 27 statuses read
 directly, all 0, including the sync census on both tiers, `tools/fetch-pelt`,
-the hook sessions in bash, zsh, fish, fortsh and pelt for lope and gump
-(0 rows differ), speed and selftest (seven planted reds, the census's
+the hook sessions in bash, zsh, fish, fortsh and pelt for lope and in the
+first four for gump (0 rows differ), speed and selftest (seven planted reds, the census's
 among them).
 
 ### 4.8 CI runs
