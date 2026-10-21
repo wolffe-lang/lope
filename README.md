@@ -27,7 +27,7 @@ runs on PAX; and its speed measured against gump's in CI.
 lope is not published yet. The packaging is prepared in `packaging/`
 (a Homebrew formula, an AUR `PKGBUILD`, an RPM spec) for a release.
 
-**From source** (the toolchain is fetched by digest; wolf 0.2.33):
+**From source** (the toolchain is fetched by digest; wolf 0.2.34):
 ```bash
 tools/fetch-toolchain
 tools/build --release
@@ -38,6 +38,21 @@ cp target/release/lope ~/.local/bin/
 ```bash
 tools/mkstatic target/static      # on a baseline glibc, e.g. an Ubuntu container
 ```
+
+## On PAX
+
+lope is preinstalled on [PAX](https://github.com/wolffe-lang/pax) as
+`/bin/lope` (px54): pax's `tools/mklope` builds it from this tree at the
+commit `user/lope.pin` names, with the toolchain this tree pins, as
+`tools/mkstatic` does (`cc -static`, a baseline glibc, the digest in the
+pin). PAX's console shell is pelt, started with `ENV=/etc/shrc`, and
+`/etc/shrc` runs `eval "$(lope init pelt)"`: a `cd` is recorded, `g` and
+`gi` jump, and a word that names no command jumps (pelt's
+`command_not_found_handle`). The store is the user's,
+`$HOME/.local/share/lope/store` (`/.local/share/lope/store` for root,
+whose `HOME` is `/`), in PAX's in-memory tree until PAX has storage. PAX
+has no fzf, so `gi` shows its numbered menu; with no editor, `lope edit`
+says so and changes nothing.
 
 ## Shell Setup
 
@@ -110,7 +125,7 @@ command is never shadowed, `g`, `g -`, `g` alone and `gi` (with fzf and without)
 | zsh | `chpwd_functions` (or `precmd`) | a `zle` widget on `accept-line` (gump's) | zsh 5.9 |
 | fish | `--on-variable PWD` (or `fish_prompt`) | an Enter binding (gump's) | fish 4.9 |
 | fortsh | a `DEBUG` trap | `command_not_found_handle` (gump's; fortsh runs it in the shell itself) | fortsh 1.10 |
-| pelt | `cd` as a function (or `PS1`) | **waits on pelt**: pelt `cc2fdc9` calls no function for a command it cannot find; lope's text already defines the one it should call (`command_not_found_handle`) | pelt `cc2fdc9` |
+| pelt | `cd` as a function (or `PS1`) | `command_not_found_handle`, which pelt calls in the shell itself since sh21 (pelt#43) | pelt `3b0bab9` (`pelt.pin`) |
 
 Where lope's hooks part from gump's, on purpose:
 
@@ -170,8 +185,9 @@ lope init bash --no-cmd      # skip g/gi aliases, keep no-prefix jumping
 3. Query matches terms against paths using fuzzy matching (`docs/MATCHER.md`)
 4. Unknown commands are intercepted and checked against the database
 
-The store is text, one directory per line, versioned and written atomically
-(`docs/STORE.md`). `lope import` moves a gump user over in one step: gump's
+The store is text, one directory per line, versioned, and written atomically
+and durably: a temporary file, synced, renamed over the store, and the
+directory synced (`docs/STORE.md`, which states the cost: two syncs per save). `lope import` moves a gump user over in one step: gump's
 `db.bin` is read with every score, visit count and time kept.
 
 ## The matcher, and gump as its oracle
