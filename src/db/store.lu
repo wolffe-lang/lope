@@ -148,9 +148,6 @@ pub fn save(s: Store) -> int {
     fs_write_chunk(fd, encode(s)) else |_| {
         return abandon(fd, tmp)
     }
-    fs_sync(fd) else |_| {
-        return abandon(fd, tmp)
-    }
     fs_close(fd) else |_| {
         return discard(tmp)
     }

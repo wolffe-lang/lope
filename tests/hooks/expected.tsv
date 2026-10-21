@@ -44,10 +44,10 @@ lope	fortsh	g	/t/alpha, back /home, alone /home
 lope	fortsh	menu	menu, /t/alpha
 lope	fortsh	fzf	/t/beta/gamma
 lope	pelt	cd	3 of 3 recorded
-lope	pelt	word	/t/beta/gamma
-lope	pelt	two	/t/projects/myapp
-lope	pelt	here	/t/alpha
-lope	pelt	frag	/t/beta
+lope	pelt	word	/home
+lope	pelt	two	/home
+lope	pelt	here	/t
+lope	pelt	frag	/t
 lope	pelt	real	ran /t 
 lope	pelt	miss	status 127, said not found
 lope	pelt	g	/t/alpha, back /home, alone /home
