@@ -3,7 +3,8 @@
 # Three hosts, as pelt's: linux x86-64, macOS arm64 and linux aarch64,
 # from the release archives pinned BY DIGEST in wolf-toolchain.toml
 # (tools/fetch-toolchain refuses a mismatch; nothing is built from source
-# but lope itself and, for the speed gate, gump at gump.pin).
+# but lope itself, for the speed gate gump at gump.pin, and for the pelt
+# hook's sessions pelt at pelt.pin, with its own pinned toolchain).
 #
 # THE ORACLE IS RECORDED, NOT RUN HERE (ruling #91 R3). The matcher's
 # probe rows, the 654-case corpus, the fold record, the command lines and
@@ -155,6 +156,26 @@ jobs:
         if: ${{ !cancelled() }}
         run: tools/edit-check target/release/lope
 
+      - name: strace, for the sync census
+        if: ${{ !cancelled() }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq strace >/dev/null
+          strace -V | head -1
+
+      # The store's save in its system calls (ruling #96 D9): the temporary
+      # file created exclusively, written, synced, renamed over the store,
+      # the directory synced; four failures injected. The scratch store is
+      # under $RUNNER_TEMP, on the runner's disk (a sync on tmpfs is free),
+      # and the cost per save is printed, not gated.
+      - name: the store's syncs, seen in its system calls, both tiers
+        if: ${{ !cancelled() }}
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          tools/sync-census target/native/lope
+          tools/sync-census target/release/lope
+
       - name: the shells for the hook sessions
         if: ${{ !cancelled() }}
         run: |
@@ -168,6 +189,15 @@ jobs:
         if: ${{ !cancelled() }}
         timeout-minutes: 10
         run: python3 tools/hook-sessions --tool lope=target/release/lope --shells bash,zsh,fish --expect tests/hooks/expected.tsv --logs hook-logs
+
+      - name: pelt at pelt.pin, for its hook (lope#3)
+        if: ${{ !cancelled() }}
+        run: tools/fetch-pelt
+
+      - name: the hooks on PTYs (pelt at pelt.pin)
+        if: ${{ !cancelled() }}
+        timeout-minutes: 10
+        run: python3 tools/hook-sessions --tool lope=target/release/lope --shells pelt --pelt .pelt/target/release/pelt --expect tests/hooks/expected.tsv --logs hook-logs-pelt
 
       - name: gump at gump.pin, for the speed gate
         if: ${{ !cancelled() }}
@@ -239,7 +269,7 @@ jobs:
       - name: the pinned toolchain, by digest
         run: tools/fetch-toolchain
 
-      # wolf 0.2.33, like 0.2.24..0.2.32 (pelt's CI), builds NO tier on
+      # wolf 0.2.34, like 0.2.24..0.2.33 (pelt's CI), builds NO tier on
       # linux aarch64 (wolf-lang#614): both refusals are asserted by name,
       # so the day a tier arrives this goes red and the matrix widens.
       - name: both tiers are refused on this host, by name (wolf-lang#614)
