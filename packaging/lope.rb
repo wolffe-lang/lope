@@ -5,7 +5,7 @@
 # A prebuilt archive, as lobo's formula is and for lobo's reason: lope pins
 # its compiler by EXACT identity (`wolf-toolchain.toml`, `version_line`),
 # so a source formula saying `depends_on "wolf"` would break the day the
-# wolf formula moved past 0.2.33. The archive is built from the pin by the
+# wolf formula moved past 0.2.34. The archive is built from the pin by the
 # release workflow. Shape: tenseleyFlow/homebrew-tap's gump.rb (caveats,
 # test) and homebrew-wolf's lobo.rb (the archives).
 class Lope < Formula
