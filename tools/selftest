@@ -37,6 +37,8 @@ wrap import "import) \"$lope\" \"\$@\" | sed 1d ;;"
 wrap hooks "init) exit 0 ;;"
 # speed: every query 60 ms late
 wrap slow "query) sleep 0.06; exec \"$lope\" \"\$@\" ;;"
+# the sync census: add saves nothing
+wrap nosave "add) exit 0 ;;"
 
 fail=0
 expect_red() { # name, command...
@@ -59,6 +61,11 @@ expect_red probe-check tools/probe-check "$w/probe/lope"
 expect_red cli-check tools/cli-check "$w/cli/lope"
 expect_red import-check tools/import-check "$w/import/lope"
 expect_red hook-sessions python3 tools/hook-sessions --tool lope="$w/hooks/lope" --shells bash --fzf "" --expect tests/hooks/expected.tsv --logs "$w/hook-logs"
+if command -v strace >/dev/null 2>&1; then
+    expect_red sync-census tools/sync-census "$w/nosave/lope" --runs 3
+else
+    echo "selftest: sync-census not planted (no strace on this host)"
+fi
 if [ -x .gump/target/release/gump ]; then
     expect_red speed tools/speed "$w/slow/lope" .gump/target/release/gump --runs 5
 else
