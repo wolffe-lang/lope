@@ -1,0 +1,349 @@
+#!/usr/bin/env python3
+"""sync-census — the store's save, seen in the system calls it makes
+(ruling #96 D9, `[os.fs.sync]`): `lope add` run under strace in a scratch
+store, its calls read back, and each row compared with what the save must
+do. Linux only (strace); exit 2 when strace is missing, never a pass.
+
+    tools/sync-census LOPE [--against OTHER] [--runs N] [--report FILE]
+
+The rows:
+
+  first    the first save (no store, no directory yet) and
+  again    a save over a store already there: in this order, the
+           temporary file `STORE.tmp.PID` opened with O_CREAT|O_EXCL,
+           its bytes written (as many as the store then holds), a sync of
+           it (`fsync`, of the handle or a duplicate of it), the rename
+           over STORE, then the store's directory opened O_DIRECTORY and
+           synced; no other sync; no temporary file left.
+  stale    a `STORE.tmp.PID` already there with the save's own pid (left by
+           an earlier process with that pid): the exclusive create answers
+           EEXIST, the file is removed, the create made again, and the
+           save is the same as `again`'s.
+  fault-*  a failure injected (strace `inject=`): ENOSPC at the write, EIO
+           at the file's sync, EIO at the rename, EIO at the directory's
+           sync. Status 1 and `lope: I/O error: TEXT (os error N)` with the
+           injected error's number; no temporary file left; the store holds
+           its old bytes, except for the directory's sync, which comes
+           after the rename: the new store is in place and the save says
+           it failed.
+
+And the cost, stated and not gated: each sync's time in the census runs
+(strace -T), and the wall time of `lope add` (a fresh process per run,
+median of N, under `taskset -c 0-3` where there is taskset); with
+`--against OTHER` (a lope that does not sync) the two interleaved and the
+difference given as the cost per save. The filesystem the scratch store is
+on is named: on tmpfs a sync costs nothing, so time it on a disk (TMPDIR).
+"""
+import argparse, json, os, re, shutil, statistics, subprocess, sys, tempfile, time
+
+TRACE = "execve,openat,open,creat,write,fsync,fdatasync,syncfs,sync,sync_file_range,rename,renameat,renameat2,close,dup,dup2,dup3,fcntl,unlink,unlinkat"
+SYNCS = ("fsync", "fdatasync", "syncfs", "sync", "sync_file_range")
+LINE = re.compile(r"^(?:\[pid\s+)?(\d+)\]?\s+(\w+)\((.*)\)\s+=\s+(-?\d+|\?)\s*([A-Z0-9_]*)?.*?(?:<([\d.]+)>)?\s*$")
+QUOTED = re.compile(r'"((?:[^"\\]|\\.)*)"')
+
+
+def fail2(msg):
+    print("sync-census: %s" % msg, file=sys.stderr)
+    sys.exit(2)
+
+
+def fstype(path):
+    p = subprocess.run(["stat", "-f", "-c", "%T", path], capture_output=True, text=True)
+    return p.stdout.strip() or "?"
+
+
+def calls(log):
+    """The traced calls, in order: (pid, name, args, ret, errno, secs).
+    strace -f splits a call another thread interrupts into an
+    `<unfinished ...>` line and a `<... NAME resumed>` line: joined here."""
+    out, pending = [], {}
+    for raw in open(log, encoding="utf-8", errors="replace"):
+        raw = raw.rstrip("\n")
+        m = re.match(r"^(\d+)\s+(.*)$", raw)
+        pid, body = (m.group(1), m.group(2)) if m else ("0", raw)
+        if body.endswith("<unfinished ...>"):
+            pending[pid] = body[: -len("<unfinished ...>")]
+            continue
+        r = re.match(r"^<\.\.\. (\w+) resumed>(.*)$", body)
+        if r:
+            body = pending.pop(pid, r.group(1) + "(") + r.group(2)
+        m = LINE.match("%s %s" % (pid, body))
+        if not m:
+            continue
+        ret = m.group(4)
+        out.append((m.group(1), m.group(2), m.group(3), int(ret) if ret != "?" else None, m.group(5) or "", float(m.group(6) or 0)))
+    return out
+
+
+def first_int(args):
+    m = re.match(r"\s*(-?\d+)", args)
+    return int(m.group(1)) if m else None
+
+
+def paths(args):
+    return [bytes(s, "utf-8").decode("unicode_escape") for s in QUOTED.findall(args)]
+
+
+def save_shape(cs, store, lope):
+    """What the traced save did, from lope's execve on (a shell that
+    started it is not lope): the events in order, each (kind, detail), and
+    the two syncs' times. Kinds: excl-exists, unlink-tmp, open-tmp,
+    write-tmp (bytes), sync-tmp, close-tmp, rename, open-dir, sync-dir,
+    sync-other."""
+    d = os.path.dirname(store)
+    tmp_re = re.compile(re.escape(store) + r"\.tmp\.\d+$")
+    tmp_fds, dir_fds, ev, times = set(), set(), [], {}
+    started = False
+    for _pid, name, args, ret, err, secs in cs:
+        if name == "execve":
+            if ret == 0 and paths(args)[:1] == [lope]:
+                started = True
+            continue
+        if not started:
+            continue
+        if name in ("openat", "open", "creat"):
+            ps = paths(args)
+            p = ps[0] if ps else ""
+            if tmp_re.search(p):
+                if ret is not None and ret < 0:
+                    ev.append(("excl-exists" if err == "EEXIST" else "open-tmp-failed", err))
+                else:
+                    excl = "O_EXCL" in args and "O_CREAT" in args
+                    ev.append(("open-tmp" if excl else "open-tmp-not-exclusive", args.split(",")[2].strip() if args.count(",") >= 2 else ""))
+                    tmp_fds.add(ret)
+            elif p == d and "O_DIRECTORY" in args and ret is not None and ret >= 0:
+                ev.append(("open-dir", ""))
+                dir_fds.add(ret)
+        elif name == "fcntl" and ("F_DUPFD" in args) and ret is not None and ret >= 0:
+            src = first_int(args)
+            if src in tmp_fds:
+                tmp_fds.add(ret)
+            if src in dir_fds:
+                dir_fds.add(ret)
+        elif name in ("dup", "dup2", "dup3") and ret is not None and ret >= 0:
+            src = first_int(args)
+            if src in tmp_fds:
+                tmp_fds.add(ret)
+            if src in dir_fds:
+                dir_fds.add(ret)
+        elif name == "write":
+            fd = first_int(args)
+            if fd in tmp_fds:
+                ev.append(("write-tmp", ret if ret is not None else -1))
+        elif name in SYNCS:
+            fd = first_int(args)
+            if fd in tmp_fds:
+                ev.append(("sync-tmp", err))
+                times.setdefault("sync-tmp", secs)
+            elif fd in dir_fds:
+                ev.append(("sync-dir", err))
+                times.setdefault("sync-dir", secs)
+            else:
+                ev.append(("sync-other", "%s(%s)" % (name, args)))
+        elif name == "close":
+            fd = first_int(args)
+            if fd in tmp_fds:
+                tmp_fds.discard(fd)
+                ev.append(("close-tmp", ""))
+            if fd in dir_fds:
+                dir_fds.discard(fd)
+        elif name in ("rename", "renameat", "renameat2"):
+            ps = paths(args)
+            if len(ps) >= 2 and tmp_re.search(ps[0]) and ps[1] == store:
+                ev.append(("rename", err))
+        elif name in ("unlink", "unlinkat"):
+            ps = paths(args)
+            if ps and tmp_re.search(ps[-1]):
+                ev.append(("unlink-tmp", err))
+    return ev, times
+
+
+def squash(ev):
+    """The events as a word list, a run of writes to the tmp as one."""
+    words, wrote = [], 0
+    for k, v in ev:
+        if k == "write-tmp":
+            if not words or words[-1] != "write-tmp":
+                words.append("write-tmp")
+            wrote += max(v, 0)
+            continue
+        if k == "close-tmp":
+            continue  # the duplicate's close and the handle's: their order is the runtime's
+        words.append(k)
+    return words, wrote
+
+
+WANT = ["open-tmp", "write-tmp", "sync-tmp", "rename", "open-dir", "sync-dir"]
+
+
+class Scratch:
+    def __init__(self, base):
+        self.root = os.path.realpath(tempfile.mkdtemp(prefix="lope-sync-", dir=base))
+        self.data = os.path.join(self.root, "data", "lope")
+        self.store = os.path.join(self.data, "store")
+        for t in ("a", "b", "c"):
+            os.makedirs(os.path.join(self.root, "t", t))
+        self.env = {"PATH": "/usr/bin:/bin", "HOME": os.path.join(self.root, "home"), "LOPE_DATA_DIR": self.data,
+                    "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+        os.makedirs(self.env["HOME"])
+
+    def tmps(self):
+        if not os.path.isdir(self.data):
+            return []
+        return sorted(n for n in os.listdir(self.data) if n.startswith("store.tmp."))
+
+    def bytes(self):
+        try:
+            return open(self.store, "rb").read()
+        except FileNotFoundError:
+            return None
+
+    def close(self):
+        shutil.rmtree(self.root, ignore_errors=True)
+
+
+def traced(lope, s, target, inject=None, pre_tmp=False):
+    """`lope add TARGET` under strace; (status, stderr, calls)."""
+    log = os.path.join(s.root, "trace.log")
+    argv = ["strace", "-f", "-qq", "-T", "-s", "4096", "-e", "trace=" + TRACE, "-e", "signal=none", "-o", log]
+    if inject:
+        argv += ["-e", inject]
+    if pre_tmp:
+        # the shell makes STORE.tmp.$$ and execs lope, which keeps the pid
+        argv += ["sh", "-c", 'mkdir -p "$1" && : > "$1/store.tmp.$$" && exec "$2" add "$3"', "sh", s.data, lope, target]
+    else:
+        argv += [lope, "add", target]
+    p = subprocess.run(argv, env=s.env, cwd=s.root, capture_output=True, text=True)
+    return p.returncode, p.stderr, calls(log)
+
+
+def timed(argv, env, cwd, prefix):
+    t0 = time.perf_counter()
+    p = subprocess.run(prefix + argv, env=env, cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    t1 = time.perf_counter()
+    if p.returncode != 0:
+        fail2("`%s` answered %d while timed" % (" ".join(argv), p.returncode))
+    return (t1 - t0) * 1000.0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("lope")
+    ap.add_argument("--against")
+    ap.add_argument("--runs", type=int, default=15)
+    ap.add_argument("--report")
+    a = ap.parse_args()
+    if not shutil.which("strace"):
+        fail2("no strace on this host: the census cannot be taken (not a pass)")
+    lope = os.path.abspath(a.lope)
+    base = os.environ.get("TMPDIR") or "/tmp"
+    bad, rows, report = 0, [], {"rows": {}, "cost": {}}
+
+    def row(name, ok, text):
+        nonlocal bad
+        if not ok:
+            bad += 1
+        line = "sync-census: %-12s %s  %s" % (name, "ok  " if ok else "DIFFERS", text)
+        print(line)
+        report["rows"][name] = {"ok": ok, "text": text}
+
+    sync_times = {"sync-tmp": [], "sync-dir": []}
+
+    # first, again, stale
+    s = Scratch(base)
+    try:
+        report["fs"] = fstype(s.root)
+        print("sync-census: scratch store on %s (%s)" % (s.root, report["fs"]))
+        for name, target, pre in (("first", "t/a", False), ("again", "t/b", False), ("stale", "t/c", True)):
+            st, err, cs = traced(lope, s, target, pre_tmp=pre)
+            ev, times = save_shape(cs, s.store, lope)
+            words, wrote = squash(ev)
+            want = (["excl-exists", "unlink-tmp"] if pre else []) + WANT
+            size = len(s.bytes() or b"")
+            ok = st == 0 and words == want and wrote == size and not s.tmps()
+            row(name, ok, "status %d, %s, %d of %d bytes written to the temporary file, %d left%s" % (
+                st, " ".join(words) or "(no save seen)", wrote, size, len(s.tmps()), (", " + err.strip()) if err.strip() else ""))
+            for k in sync_times:
+                if k in times:
+                    sync_times[k].append(times[k])
+        # the syncs' times over more saves
+        for i in range(max(0, a.runs // 3)):
+            st, err, cs = traced(lope, s, "t/%s" % "abc"[i % 3])
+            _ev, times = save_shape(cs, s.store, lope)
+            for k in sync_times:
+                if k in times:
+                    sync_times[k].append(times[k])
+        # where the tmp's write falls among the writes, for the write fault
+        _st, _err, cs = traced(lope, s, "t/a")
+        tmp_write_at, n_writes = None, 0
+        ev_fds = set()
+        tmp_re = re.compile(re.escape(s.store) + r"\.tmp\.\d+$")
+        for _pid, name, args, ret, _e, _t in cs:
+            if name in ("openat", "open") and paths(args) and tmp_re.search(paths(args)[0]) and ret is not None and ret >= 0:
+                ev_fds.add(ret)
+            if name == "write":
+                n_writes += 1
+                if first_int(args) in ev_fds and tmp_write_at is None:
+                    tmp_write_at = n_writes
+    finally:
+        s.close()
+
+    # the faults
+    faults = [
+        ("fault-write", "inject=write:error=ENOSPC:when=%d" % (tmp_write_at or 1), 28, "old"),
+        ("fault-sync", "inject=fsync,fdatasync:error=EIO:when=1", 5, "old"),
+        ("fault-rename", "inject=rename,renameat,renameat2:error=EIO:when=1", 5, "old"),
+        ("fault-dir", "inject=fsync,fdatasync:error=EIO:when=2", 5, "new"),
+    ]
+    for name, inj, errno_, after in faults:
+        s = Scratch(base)
+        try:
+            p = subprocess.run([lope, "add", "t/a"], env=s.env, cwd=s.root, capture_output=True, text=True)
+            if p.returncode != 0:
+                fail2("the store could not be made for %s: %s" % (name, p.stderr.strip()))
+            old = s.bytes()
+            st, err, _cs = traced(lope, s, "t/b", inject=inj)
+            new = s.bytes()
+            msg = re.search(r"lope: I/O error: .* \(os error (\d+)\)", err)
+            said = int(msg.group(1)) if msg else None
+            holds = (new == old) if after == "old" else (new is not None and new != old and (os.path.join(s.root, "t/b").encode() in new))
+            ok = st == 1 and said == errno_ and holds and not s.tmps()
+            row(name, ok, "status %d, said %s, the store holds the %s bytes: %s, %d temporary left" % (
+                st, repr(err.strip()), after, "yes" if holds else "NO", len(s.tmps())))
+        finally:
+            s.close()
+
+    # the cost
+    pre = ["taskset", "-c", "0-3"] if shutil.which("taskset") else []
+    for k, v in sync_times.items():
+        if v:
+            report["cost"][k + "_ms"] = statistics.median(v) * 1000.0
+            print("sync-census: cost %s: median %.3f ms over %d saves (strace -T)" % (k, statistics.median(v) * 1000.0, len(v)))
+    tools = [("lope", lope)] + ([("against", os.path.abspath(a.against))] if a.against else [])
+    s = Scratch(base)
+    try:
+        times = {n: [] for n, _ in tools}
+        for n, b in tools:  # warm, untimed
+            for _ in range(3):
+                timed([b, "add", "t/a"], s.env, s.root, pre)
+        for i in range(a.runs):
+            for n, b in tools:
+                times[n].append(timed([b, "add", "t/%s" % "abc"[i % 3]], s.env, s.root, pre))
+        med = {n: statistics.median(v) for n, v in times.items()}
+        report["cost"]["add_ms"] = med
+        line = "sync-census: cost `lope add`: median %.2f ms over %d runs%s" % (med["lope"], a.runs, " (taskset -c 0-3)" if pre else "")
+        if a.against:
+            line += "; against %s: %.2f ms; the cost per save %+.2f ms" % (a.against, med["against"], med["lope"] - med["against"])
+            report["cost"]["per_save_ms"] = med["lope"] - med["against"]
+        print(line)
+    finally:
+        s.close()
+
+    if a.report:
+        json.dump(report, open(a.report, "w"), indent=1)
+    print("sync-census: %d row(s) differ" % bad)
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
