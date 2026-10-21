@@ -1,6 +1,8 @@
 # tests/hooks/expected.tsv — what lope's hooks answer in each shell (tools/hook-sessions
-# --expect): tool, shell, step, answer. pelt cc2fdc9 calls no function for a
-# command it cannot find, so its no-prefix rows stay where they were (sh21).
+# --expect): tool, shell, step, answer. pelt is the one at pelt.pin (tools/fetch-pelt),
+# which calls command_not_found_handle since sh21 (pelt#43): its rows are every
+# other shell's (lope#3; pelt cc2fdc9 had no hook, and `word`, `two`, `here`, `frag`
+# stayed where they were).
 lope	bash	cd	3 of 3 recorded
 lope	bash	word	/t/beta/gamma
 lope	bash	two	/t/projects/myapp
@@ -42,10 +44,10 @@ lope	fortsh	g	/t/alpha, back /home, alone /home
 lope	fortsh	menu	menu, /t/alpha
 lope	fortsh	fzf	/t/beta/gamma
 lope	pelt	cd	3 of 3 recorded
-lope	pelt	word	/home
-lope	pelt	two	/home
-lope	pelt	here	/t
-lope	pelt	frag	/t
+lope	pelt	word	/t/beta/gamma
+lope	pelt	two	/t/projects/myapp
+lope	pelt	here	/t/alpha
+lope	pelt	frag	/t/beta
 lope	pelt	real	ran /t 
 lope	pelt	miss	status 127, said not found
 lope	pelt	g	/t/alpha, back /home, alone /home
