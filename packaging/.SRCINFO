@@ -10,10 +10,10 @@ pkgbase = lope
 	depends = glibc
 	optdepends = fzf: gi picks with fzf (a numbered menu without it)
 	source = lope-0.1.0.tar.gz::https://github.com/wolffe-lang/lope/archive/refs/tags/v0.1.0.tar.gz
-	source = wolf-0.2.33-x86_64-unknown-linux-gnu.tar.gz::https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.33/wolf-0.2.33-x86_64-unknown-linux-gnu.tar.gz
-	source = wolf-std-cceda63151430eac07df895fdfffddfa4a0b92c1.tar.gz::https://github.com/wolffe-lang/wolf-std/archive/cceda63151430eac07df895fdfffddfa4a0b92c1.tar.gz
+	source = wolf-0.2.34-x86_64-unknown-linux-gnu.tar.gz::https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.34/wolf-0.2.34-x86_64-unknown-linux-gnu.tar.gz
+	source = wolf-std-e036bec318ad81ecd5a025612bc2c2adb17527f3.tar.gz::https://github.com/wolffe-lang/wolf-std/archive/e036bec318ad81ecd5a025612bc2c2adb17527f3.tar.gz
 	sha256sums = RELEASE-LANE-FILLS-THIS
-	sha256sums = 4f955e8dfe6eaafa441903eeba43c009c4ec2b45a8da09fe13431e8b12340af8
-	sha256sums = RELEASE-LANE-FILLS-THIS
+	sha256sums = 88a9dd3da1c9a0e38c08eb6e2de9c1ef04d1ed93dcf51024d8dbbb76890c1821
+	sha256sums = a7489de80683dd8a3bd9f7ac67d46d746a44c91c6fdd86ffafc328ab294a0c96
 
 pkgname = lope

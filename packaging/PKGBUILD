@@ -19,14 +19,18 @@ depends=('glibc')
 makedepends=('clang')
 checkdepends=('python')
 optdepends=('fzf: gi picks with fzf (a numbered menu without it)')
-_wolf=0.2.33
-_std=cceda63151430eac07df895fdfffddfa4a0b92c1
+_wolf=0.2.34
+_std=e036bec318ad81ecd5a025612bc2c2adb17527f3
 source=("$pkgname-$pkgver.tar.gz::https://github.com/wolffe-lang/lope/archive/refs/tags/v$pkgver.tar.gz"
         "wolf-$_wolf-x86_64-unknown-linux-gnu.tar.gz::https://github.com/wolffe-lang/wolf-lang/releases/download/v$_wolf/wolf-$_wolf-x86_64-unknown-linux-gnu.tar.gz"
         "wolf-std-$_std.tar.gz::https://github.com/wolffe-lang/wolf-std/archive/$_std.tar.gz")
+# The wolf archive's digest is the release API's (read twice, and the
+# download hashed twice: lp01); wolf-std's is GitHub's archive of the
+# commit, downloaded twice, equal, its std/ the archive's bundled std/
+# file for file (lp01). lope's own tag's digest is the release lane's.
 sha256sums=('RELEASE-LANE-FILLS-THIS'
-            '4f955e8dfe6eaafa441903eeba43c009c4ec2b45a8da09fe13431e8b12340af8'
-            'RELEASE-LANE-FILLS-THIS')
+            '88a9dd3da1c9a0e38c08eb6e2de9c1ef04d1ed93dcf51024d8dbbb76890c1821'
+            'a7489de80683dd8a3bd9f7ac67d46d746a44c91c6fdd86ffafc328ab294a0c96')
 
 build() {
     cd "$pkgname-$pkgver"
