@@ -1,12 +1,10 @@
 //! store — the remembered directories, read whole and written whole
 //! (gump `src/db/store.rs`), in lope's own format (`codec.lu`), written
-//! atomically: a temporary file beside the store, then a rename over it.
-//!
-//! **What wolf cannot do, named:** wolf 0.2.33 has no `fsync`, so the
-//! temporary file is not synced before the rename as gump's is
-//! (`store.rs:129`). A crash between the write and the rename leaves the
-//! old store whole; a power loss after the rename can lose the last
-//! write on a filesystem that reorders them.
+//! atomically and durably: a temporary file beside the store, synced,
+//! renamed over it, and the directory synced (`[os.fs.sync]`, wolf 0.2.34;
+//! ruling #96 D9). gump syncs the temporary file (`store.rs:129`) and not
+//! the directory; lope syncs both, so the rename survives a power loss
+//! too. A crash at any point leaves the old store or the new one, whole.
 
 use std.fmt.decimal
 
@@ -120,28 +118,108 @@ pub fn encode(s: Store) -> List[byte] {
     buf
 }
 
-/// Write `s` to its file: the directory made, the bytes written to
-/// `FILE.tmp.PID`, then renamed over `FILE`. `io` when any step fails
-/// (`os_error()` says why); the temporary file is removed then.
-pub fn save(s: Store) -> () ! {io} {
+/// Write `s` to its file, atomically and durably (`[os.fs.sync]`'s five
+/// calls): the directory made; the bytes written to `FILE.tmp.PID`,
+/// created exclusively; that file synced (`fs_sync`) and closed; renamed
+/// over `FILE`; then the directory synced (`fs_sync_dir`), so the rename
+/// is on the disk too. Answers 0, or the host's error number for the step
+/// that failed (-1 when the host gave none): the temporary file is closed
+/// and removed then, and the number is still the failing step's (a
+/// removal that succeeds sets `os_error()` to 0, `[os.fs.error]`). A
+/// failing directory sync comes after the rename: the new store is in
+/// place, and the save still answers the failure, since the rename may
+/// not survive a crash.
+pub fn save(s: Store) -> int {
     let cut = s.file.rfind("/") else -1
+    var dir = "."
+    if cut == 0 {
+        dir = "/"
+    }
     if cut > 0 {
-        fs_create_dir_all(s.file[0..cut]) else |_| {
-            return io
+        dir = s.file[0..cut]
+        fs_create_dir_all(dir) else |_| {
+            return failure()
         }
     }
     let tmp = "{s.file}.tmp.{os_pid()}"
-    fs_write_bytes(tmp, encode(s)) else |_| {
-        return io
+    let fd = create_new(tmp) else |_| {
+        return failure()
+    }
+    fs_write_chunk(fd, encode(s)) else |_| {
+        return abandon(fd, tmp)
+    }
+    fs_sync(fd) else |_| {
+        return abandon(fd, tmp)
+    }
+    fs_close(fd) else |_| {
+        return discard(tmp)
     }
     fs_rename(tmp, s.file) else |_| {
-        let code = os_error()
-        fs_remove(tmp) else |_| {}
-        if code != 0 {
+        return discard(tmp)
+    }
+    fs_sync_dir(dir) else |_| {
+        return failure()
+    }
+    0
+}
+
+/// The temporary file `tmp`, created exclusively (open mode 4,
+/// `[os.fs.open]`), its handle answered. One already there was left by an
+/// earlier process with this pid that ended between its create and its
+/// rename (the live process with this pid is this one), so it is removed
+/// and the create tried once more. `io` when that fails too.
+fn create_new(tmp: str) -> int ! {io} {
+    let first = fs_open_mode(tmp, 4) else |e| match e {
+        exists => -1,
+        not_found => {
             return io
-        }
+        },
+        denied => {
+            return io
+        },
+        invalid => {
+            return io
+        },
+        io => {
+            return io
+        },
+    }
+    if first >= 0 {
+        return first
+    }
+    fs_remove(tmp) else |_| {
         return io
     }
+    fs_open_mode(tmp, 4) else |_| {
+        return io
+    }
+}
+
+/// The host's number for the fs call that just failed, or -1 when it gave
+/// none (a failure decided before the host was asked).
+fn failure() -> int {
+    let code = os_error()
+    if code > 0 {
+        return code
+    }
+    -1
+}
+
+/// After a failed write or sync: the failure's number, then the handle
+/// closed and the temporary file removed.
+fn abandon(fd: int, tmp: str) -> int {
+    let code = failure()
+    fs_close(fd) else |_| {}
+    fs_remove(tmp) else |_| {}
+    code
+}
+
+/// After a failed close or rename: the failure's number, then the
+/// temporary file removed.
+fn discard(tmp: str) -> int {
+    let code = failure()
+    fs_remove(tmp) else |_| {}
+    code
 }
 
 /// The index of `path` in `s`, or -1.

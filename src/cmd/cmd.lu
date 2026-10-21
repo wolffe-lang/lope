@@ -14,8 +14,12 @@ pub fn failed(mut e: out.Out, msg: str) -> int {
 
 /// The words for the last host error, as Rust's `io::Error` prints them.
 pub fn io_words() -> str {
-    let code = os_error()
-    if code == 0 {
+    io_words_of(os_error())
+}
+
+/// The words for the host error `code` (0 or below: none was given).
+pub fn io_words_of(code: int) -> str {
+    if code <= 0 {
         return "I/O error: an unknown failure"
     }
     "I/O error: {os_error_text(code)} (os error {code})"
@@ -51,10 +55,12 @@ pub fn open_store(file: str, now: int, mut e: out.Out) -> Loaded {
     Loaded { store: s, stop: -1 }
 }
 
-/// Write the store back; status 0, or 1 with the reason.
+/// Write the store back; status 0, or 1 with the reason (the number of
+/// the step of the save that failed, `db.save`).
 pub fn save_store(s: db.Store, mut e: out.Out) -> int {
-    db.save(s) else |_| {
-        return failed(mut e, io_words())
+    let code = db.save(s)
+    if code != 0 {
+        return failed(mut e, io_words_of(code))
     }
     0
 }
