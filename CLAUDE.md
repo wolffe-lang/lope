@@ -26,7 +26,8 @@ brief.
 | folding | `tools/fold-check` (floor `tests/oracle/FOLD-FLOOR`) |
 | frecency, aging, the codec, db.bin | `src/db_test.lu` |
 | gump's messages and statuses | `tools/cli-check` (95 recorded command lines) |
-| the hooks | `tools/hook-sessions` on PTYs, `tests/hooks/expected.tsv` |
+| the hooks | `tools/hook-sessions` on PTYs, `tests/hooks/expected.tsv` (pelt at `pelt.pin`) |
+| the store's syncs | `tools/sync-census` (strace; the calls in order, four failures injected, the cost) |
 | import, edit | `tools/import-check`, `tools/edit-check` |
 | speed | `tools/speed` (query no slower than gump) |
 | each harness can go red | `tools/selftest` |
@@ -46,9 +47,10 @@ with scratch `HOME` and `XDG_*` directories. The static build
 ## No silent stub
 
 What wolf cannot do yet is named where the reader meets it, with its
-issue: no `fsync` (`src/db/store.lu`, `docs/STORE.md`); paths are `str`, so
-a non-UTF-8 path cannot be stored (wolf-lang#687). pelt's no-prefix jump
-waits on pelt's command-not-found hook (README, "The hooks").
+issue: paths are `str`, so a non-UTF-8 path cannot be stored
+(wolf-lang#687). lupin 0.1.55 resolves neither `fs_sync` nor
+`fs_sync_dir` (wolf-interp#268): it refuses at the call, and no test it
+runs saves the store (`wolf-toolchain.toml`).
 
 ## Commits, PRs
 
