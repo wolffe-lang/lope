@@ -69,6 +69,7 @@ RULES = [
     ("packaging/**", PR),
     ("wolf-toolchain.toml", PR),
     ("gump.pin", PR),
+    ("pelt.pin", PR),
     ("LICENSE", PR),
     ("LICENSE-TRAINING-DATA", PR),
     (".gitignore", PR),
