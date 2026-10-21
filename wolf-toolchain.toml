@@ -10,40 +10,45 @@
 # refuses when it drifts from `version_line`. `rev` is information: the
 # commit the tag names.
 #
-# ## The first pin: 0.2.33 / 0.1.54 (lp00, 2026-10-19)
+# ## The pin: 0.2.34 / 0.1.55 (lp01, 2026-10-21)
 #
-# Digests read twice from the release API (wolf-lang release 417610226,
-# wolf-interp release 415937354), equal both times, and the linux x86-64
-# pair hashed twice after download on kasumi. The tag objects: v0.2.33
-# `56110e4f` -> `85dab5d7`, v0.1.54 `9c98d445` -> `0e536e8f`. The wolf
-# archive bundles wolf-std `cceda63` (`std/STD-REV`), which is the std
-# pin below.
+# Digests read twice from the release API (wolf-lang release 419552903,
+# wolf-interp release 418932753), equal both times, and the three unix
+# archives of each hashed twice after download on kasumi. The tag
+# objects: v0.2.34 `38ab81cb` -> `9da7bdcf`, v0.1.55 `047184fb` ->
+# `e642f263`. The wolf archive bundles wolf-std `e036bec`
+# (`std/STD-REV`), which is the std pin below. 0.2.34 brings `fs_sync`
+# and `fs_sync_dir` (`[os.fs.sync]`), which the store's save adopts
+# (ruling #96 D9).
+#
+# The first pin was 0.2.33 / 0.1.54 / `cceda63` (lp00, 2026-10-19).
 #
 # Windows is not pinned: lope is a shell companion for unix shells.
 
 [wolf]
-version = "0.2.33"
+version = "0.2.34"
 repo = "wolffe-lang/wolf-lang"
-rev = "85dab5d7e597680d6fd7034f1d7ed2acb9a92f97"
-version_line = "wolf 0.2.33 (wolfgang, pin 85dab5d)"
-aarch64-apple-darwin = "9152dbd136d858539100088394cbaa97cf23f7ddd2816512cd9b48c70a9f40eb"
-x86_64-unknown-linux-gnu = "4f955e8dfe6eaafa441903eeba43c009c4ec2b45a8da09fe13431e8b12340af8"
-aarch64-unknown-linux-gnu = "24cde9e4668d17448527f774db602d93a348d285c2219a1edff791519530a2ac"
+rev = "9da7bdcf2aea9adf48df6570bedc58e16e9ef853"
+version_line = "wolf 0.2.34 (wolfgang, pin 9da7bdc)"
+aarch64-apple-darwin = "29c8331f5d188b00c4580bc7677b1238891c5734d00b0512df10c60eab236ee3"
+x86_64-unknown-linux-gnu = "88a9dd3da1c9a0e38c08eb6e2de9c1ef04d1ed93dcf51024d8dbbb76890c1821"
+aarch64-unknown-linux-gnu = "ca5cadf936dc0d4396e92733fc65e953d549f3b61f0aa354e7be2e78ea8c3ad0"
 
 [lupin]
-# The reference interpreter wolf 0.2.33 declares as its pairing:
-# `wolf --version` line 2 reads "paired with lupin 0.1.54 (reference
-# interpreter), pin 294d626".
-version = "0.1.54"
+# The reference interpreter wolf 0.2.34 declares as its pairing:
+# `wolf --version` line 2 reads "paired with lupin 0.1.55 (reference
+# interpreter), pin 294d626". lupin 0.1.55 resolves neither sync
+# (wolf-interp#268): it refuses at the call, and no test it runs saves.
+version = "0.1.55"
 repo = "wolffe-lang/wolf-interp"
-rev = "0e536e8fb4518eaa798ac426901ab81275db5c9f"
-version_line = "lupin 0.1.54 (wolf-interp, reference interpreter at pin 294d626)"
-aarch64-apple-darwin = "9cd14db71e32c277829b5e05cdae27bf60cd6f269a9a24f97a7dba67e28a4093"
-x86_64-unknown-linux-gnu = "175df23880cd5bb993b778e5c8fdd7d0d96c176696802e640f6fc87d3dab40dd"
-aarch64-unknown-linux-gnu = "5fb15e31289d810129b40a9a0af07417d85d5090e74045f66b1f7f4016d166e7"
+rev = "e642f2630ad4c7f53740428d5cca705f2e0d295b"
+version_line = "lupin 0.1.55 (wolf-interp, reference interpreter at pin 294d626)"
+aarch64-apple-darwin = "2eac1cccdc8a5bec5831787604098982a7ac42e41561a037c3b5ccf0ac21741a"
+x86_64-unknown-linux-gnu = "1152abc0bef65d334b94bc881a26463fac345919cc2ca07a291796e6048a8a38"
+aarch64-unknown-linux-gnu = "5854ab268a835bb75749bce7601441858ac342351906a0838e8602e4edbd45d7"
 
 [std]
 # The tree is pinned by commit: git's object hash is the digest. It is
 # the commit the wolf archive bundles as `std/`.
 repo = "wolffe-lang/wolf-std"
-rev = "cceda63151430eac07df895fdfffddfa4a0b92c1"
+rev = "e036bec318ad81ecd5a025612bc2c2adb17527f3"
