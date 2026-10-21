@@ -1,0 +1,22 @@
+#!/bin/sh
+# fetch-pelt — pelt at pelt.pin, built from its own tree (its own
+# tools/fetch-toolchain, its own pinned wolf) into .pelt/ (gitignored):
+# the shell the pelt rows of tests/hooks/expected.tsv are sessions of.
+# Prints the binary's path. pelt has no --version: the pin is the commit.
+set -eu
+LOPE_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$LOPE_ROOT"
+. ./pelt.pin
+if [ ! -d .pelt/.git ]; then
+    git init -q .pelt
+fi
+if [ "$(git -C .pelt rev-parse -q --verify HEAD 2>/dev/null || true)" != "$PELT_REV" ]; then
+    git -C .pelt fetch -q --depth 1 "$PELT_REPO" "$PELT_REV"
+    git -C .pelt checkout -q --detach FETCH_HEAD
+fi
+[ "$(git -C .pelt rev-parse HEAD)" = "$PELT_REV" ] || { echo "fetch-pelt: HEAD is not $PELT_REV" >&2; exit 1; }
+(cd .pelt && tools/fetch-toolchain && tools/build --release)
+[ -x .pelt/target/release/pelt ] || { echo "fetch-pelt: no .pelt/target/release/pelt" >&2; exit 1; }
+out=$(.pelt/target/release/pelt -c 'echo pelt')
+[ "$out" = pelt ] || { echo "fetch-pelt: the built pelt answered '$out'" >&2; exit 1; }
+echo "fetch-pelt: pelt at $PELT_REV: $LOPE_ROOT/.pelt/target/release/pelt"

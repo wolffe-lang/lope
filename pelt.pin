@@ -1,0 +1,8 @@
+# pelt.pin — the pelt the hook sessions run (tools/fetch-pelt, then
+# tools/hook-sessions --pelt), whose answers tests/hooks/expected.tsv's
+# pelt rows hold. pelt is the org's POSIX shell in wolf; since sh21
+# (pelt#43, `90d7c64`) it calls `command_not_found_handle` in the current
+# shell when a command is not found, so lope's no-prefix jump works in it
+# (lope#3). Built from its own tree with its own pinned toolchain.
+PELT_REPO=https://github.com/wolffe-lang/pelt
+PELT_REV=3b0bab9881f5d099cd5258a6f50a9f2d55d91bc4
