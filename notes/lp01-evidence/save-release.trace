@@ -1,0 +1,16 @@
+965194 close(3)                         = 0 <0.000002>
+965194 close(3)                         = 0 <0.000002>
+965194 close(3)                         = 0 <0.000002>
+965194 close(3)                         = 0 <0.000003>
+965194 openat(AT_FDCWD, "~/lanes/lp01/scratch/lp01-trace/d/lope/store", O_RDONLY|O_CLOEXEC) = 3 <0.000006>
+965194 close(3)                         = 0 <0.000003>
+965194 openat(AT_FDCWD, "~/lanes/lp01/scratch/lp01-trace/d/lope/store.tmp.965194", O_RDWR|O_CREAT|O_EXCL|O_CLOEXEC, 0666) = 3 <0.000016>
+965194 write(3, "lope-store 1\ncleanup 17926208076"..., 183) = 183 <0.000007>
+965194 fcntl(3, F_DUPFD_CLOEXEC, 3)     = 4 <0.000003>
+965194 fsync(4)                         = 0 <0.012144>
+965194 close(4)                         = 0 <0.000006>
+965194 close(3)                         = 0 <0.000005>
+965194 rename("~/lanes/lp01/scratch/lp01-trace/d/lope/store.tmp.965194", "~/lanes/lp01/scratch/lp01-trace/d/lope/store") = 0 <0.000063>
+965194 openat(AT_FDCWD, "~/lanes/lp01/scratch/lp01-trace/d/lope", O_RDONLY|O_CLOEXEC|O_DIRECTORY) = 3 <0.000005>
+965194 fsync(3)                         = 0 <0.014356>
+965194 close(3)                         = 0 <0.000006>

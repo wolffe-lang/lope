@@ -1,0 +1,52 @@
+{
+ "entries": 10000,
+ "runs": 31,
+ "taskset": true,
+ "query": {
+  "wolf": {
+   "lope_ms": 9.255,
+   "gump_ms": 10.027
+  },
+  "src": {
+   "lope_ms": 8.682,
+   "gump_ms": 10.595
+  },
+  "proj": {
+   "lope_ms": 3.063,
+   "gump_ms": 6.125
+  },
+  "cfg": {
+   "lope_ms": 4.865,
+   "gump_ms": 7.553
+  },
+  "gump src": {
+   "lope_ms": 8.716,
+   "gump_ms": 11.108
+  },
+  "doc": {
+   "lope_ms": 3.742,
+   "gump_ms": 6.34
+  },
+  "mtchr": {
+   "lope_ms": 5.43,
+   "gump_ms": 8.905
+  },
+  "zzqx": {
+   "lope_ms": 4.488,
+   "gump_ms": 10.428
+  }
+ },
+ "query_lope_ms": 5.147,
+ "query_gump_ms": 9.466,
+ "init": {
+  "lope_ms": 0.974,
+  "gump_ms": 1.047,
+  "ratio": 0.93
+ },
+ "list": {
+  "lope_ms": 9.467,
+  "gump_ms": 26.399,
+  "ratio": 0.359
+ },
+ "query_ratio": 0.544
+}

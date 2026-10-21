@@ -1,0 +1,313 @@
+head 8872c7eeeb99891dc129b8d0c3dcd15d6d41c26d 2026-10-21T22:04:04Z  18:04:04 up 5 days,  6:21,  8 users,  load average: 2.56, 3.84, 3.34
+fetch-toolchain: .wolf-bin/ already holds the pin (x86_64-unknown-linux-gnu)
+== status 0 : tools/fetch-toolchain
+== status 0 : tools/check-fmt
+gen-hooks: src/cmd/pieces.lu is the generated one
+== status 0 : python3 tools/gen-hooks --check
+gen-fold: the table is the generated one
+== status 0 : python3 tools/gen-fold --check
+build: target/native/lope
+build: target/release/lope
+== status 0 : tools/build --all
+test ./src/db_test.lu::main ... ok
+test ./src/matcher_test.lu::main ... ok
+wolf test: 2 passed; 0 failed; 0 rejected; 0 unsupported; 0 filtered out
+== status 0 : tools/check-test
+== status 0 : .wolf-bin/lupin run src/matcher_test.lu
+== status 0 : .wolf-bin/lupin run src/db_test.lu
+probe-check: 322 of 322 rows agree
+== status 0 : tools/probe-check target/native/lope
+oracle-check: 654 of 654 cases agree (100.00%), floor 100.00%: 490 of 490 with one best answer, 164 of 164 where gump's best is shared (its tie set)
+== status 0 : tools/oracle-check target/native/lope
+fold-check: 508 of 896 code points agree (56.70%), floor 56.69%
+fold-check:   69  both fold, to different letters  (LATIN SMALL)
+fold-check:    8  gump folds, lope does not  (LATIN CAPITAL)
+fold-check:    6  gump folds, lope does not  (LATIN SMALL)
+fold-check:  236  lope folds, gump does not  (LATIN CAPITAL)
+fold-check:   69  lope folds, gump does not  (LATIN SMALL)
+== status 0 : tools/fold-check target/native/lope
+cli-check: 95 of 95 rows agree (2 by status only, by design)
+== status 0 : tools/cli-check target/native/lope
+status 0
+--- import
+  gump: 3 entries (scores, visits and times kept)
+  zoxide: 3 entries
+  autojump: 3 entries
+  z/z.lua: 3 entries
+  fasd: 2 entries
+Found 11 entries, imported 11 (scores normalized to 1-100)
+--- stderr
+--- list -s (sorted)
+    0.38  $ROOT/gone-now
+   16.67  $ROOT/a-file.txt
+   33.33  $ROOT/Documents
+   41.67  $ROOT/Downloads
+   66.67  $ROOT/code/gump
+   83.33  $ROOT/code/lope
+  101.67  $ROOT/code/pax
+  200.00  $ROOT/code/wolf
+import-check: as expected
+== status 0 : tools/import-check target/native/lope
+edit-check: ok   an edit is written back (0 'Database updated\n' '')
+edit-check: ok   a re-weighed path keeps its time and count
+edit-check: ok   a deleted line forgets its directory
+edit-check: ok   a new line enters with one visit now
+edit-check: ok   the text file is removed
+edit-check: ok   an editor that fails, named by its path ('lope: Editor exited with error\n')
+edit-check: ok   an editor that fails, found on PATH ('lope: Editor exited with error\n')
+edit-check: ok   a path that is not there is not looked for on PATH ("lope: editor '/home/mfwolffe/lanes/lp01/scratch/tmp/lope-edit-0t2_ktzm/nowhere/fake-editor' not found. Set $EDITOR or $VISUAL to an installed editor\n")
+edit-check: ok   a file on PATH that cannot be executed is passed over (0 'Database updated\n' '')
+edit-check: ok   an editor that is not there ("lope: editor 'no-such-editor-xyz' not found. Set $EDITOR or $VISUAL to an installed editor\n")
+edit-check: ok   no $EDITOR, no $VISUAL, no vi ("lope: editor 'vi' not found. Set $EDITOR or $VISUAL to an installed editor\n")
+== status 0 : tools/edit-check target/native/lope
+sync-census: scratch store on /home/mfwolffe/lanes/lp01/scratch/tmp/lope-sync-5pe6kiew (btrfs)
+sync-census: first        ok    status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 121 of 121 bytes written to the temporary file, 0 left
+sync-census: again        ok    status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 207 of 207 bytes written to the temporary file, 0 left
+sync-census: stale        ok    status 0, excl-exists unlink-tmp open-tmp write-tmp sync-tmp rename open-dir sync-dir, 293 of 293 bytes written to the temporary file, 0 left
+sync-census: fault-write  ok    status 1, said 'lope: I/O error: No space left on device (os error 28)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-sync   ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-rename ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-dir    ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the new bytes: yes, 0 temporary left
+sync-census: cost sync-tmp: median 4.814 ms over 8 saves (strace -T)
+sync-census: cost sync-dir: median 4.804 ms over 8 saves (strace -T)
+sync-census: cost `lope add`: median 12.11 ms over 15 runs (taskset -c 0-3)
+sync-census: 0 row(s) differ
+== status 0 : tools/sync-census target/native/lope --report /home/mfwolffe/lanes/lp01/scratch/head1/sync-native.json
+probe-check: 322 of 322 rows agree
+== status 0 : tools/probe-check target/release/lope
+oracle-check: 654 of 654 cases agree (100.00%), floor 100.00%: 490 of 490 with one best answer, 164 of 164 where gump's best is shared (its tie set)
+== status 0 : tools/oracle-check target/release/lope
+fold-check: 508 of 896 code points agree (56.70%), floor 56.69%
+fold-check:   69  both fold, to different letters  (LATIN SMALL)
+fold-check:    8  gump folds, lope does not  (LATIN CAPITAL)
+fold-check:    6  gump folds, lope does not  (LATIN SMALL)
+fold-check:  236  lope folds, gump does not  (LATIN CAPITAL)
+fold-check:   69  lope folds, gump does not  (LATIN SMALL)
+== status 0 : tools/fold-check target/release/lope
+cli-check: 95 of 95 rows agree (2 by status only, by design)
+== status 0 : tools/cli-check target/release/lope
+status 0
+--- import
+  gump: 3 entries (scores, visits and times kept)
+  zoxide: 3 entries
+  autojump: 3 entries
+  z/z.lua: 3 entries
+  fasd: 2 entries
+Found 11 entries, imported 11 (scores normalized to 1-100)
+--- stderr
+--- list -s (sorted)
+    0.38  $ROOT/gone-now
+   16.67  $ROOT/a-file.txt
+   33.33  $ROOT/Documents
+   41.67  $ROOT/Downloads
+   66.67  $ROOT/code/gump
+   83.33  $ROOT/code/lope
+  101.67  $ROOT/code/pax
+  200.00  $ROOT/code/wolf
+import-check: as expected
+== status 0 : tools/import-check target/release/lope
+edit-check: ok   an edit is written back (0 'Database updated\n' '')
+edit-check: ok   a re-weighed path keeps its time and count
+edit-check: ok   a deleted line forgets its directory
+edit-check: ok   a new line enters with one visit now
+edit-check: ok   the text file is removed
+edit-check: ok   an editor that fails, named by its path ('lope: Editor exited with error\n')
+edit-check: ok   an editor that fails, found on PATH ('lope: Editor exited with error\n')
+edit-check: ok   a path that is not there is not looked for on PATH ("lope: editor '/home/mfwolffe/lanes/lp01/scratch/tmp/lope-edit-me45otne/nowhere/fake-editor' not found. Set $EDITOR or $VISUAL to an installed editor\n")
+edit-check: ok   a file on PATH that cannot be executed is passed over (0 'Database updated\n' '')
+edit-check: ok   an editor that is not there ("lope: editor 'no-such-editor-xyz' not found. Set $EDITOR or $VISUAL to an installed editor\n")
+edit-check: ok   no $EDITOR, no $VISUAL, no vi ("lope: editor 'vi' not found. Set $EDITOR or $VISUAL to an installed editor\n")
+== status 0 : tools/edit-check target/release/lope
+sync-census: scratch store on /home/mfwolffe/lanes/lp01/scratch/tmp/lope-sync-dw7yw5pk (btrfs)
+sync-census: first        ok    status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 121 of 121 bytes written to the temporary file, 0 left
+sync-census: again        ok    status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 207 of 207 bytes written to the temporary file, 0 left
+sync-census: stale        ok    status 0, excl-exists unlink-tmp open-tmp write-tmp sync-tmp rename open-dir sync-dir, 293 of 293 bytes written to the temporary file, 0 left
+sync-census: fault-write  ok    status 1, said 'lope: I/O error: No space left on device (os error 28)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-sync   ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-rename ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-dir    ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the new bytes: yes, 0 temporary left
+sync-census: cost sync-tmp: median 4.894 ms over 8 saves (strace -T)
+sync-census: cost sync-dir: median 4.862 ms over 8 saves (strace -T)
+sync-census: cost `lope add`: median 10.76 ms over 15 runs (taskset -c 0-3)
+sync-census: 0 row(s) differ
+== status 0 : tools/sync-census target/release/lope --report /home/mfwolffe/lanes/lp01/scratch/head1/sync-release.json
+fetch-toolchain: https://github.com/wolffe-lang/wolf-lang/releases/download/v0.2.32/wolf-0.2.32-x86_64-unknown-linux-gnu.tar.gz
+fetch-toolchain: sha256 4c37f9c5dc3d8830c06810948027d38bdbc375dc5524ab23127b0ada0907d851 OK
+fetch-toolchain: https://github.com/wolffe-lang/wolf-interp/releases/download/v0.1.54/lupin-0.1.54-x86_64-unknown-linux-gnu.tar.gz
+fetch-toolchain: sha256 175df23880cd5bb993b778e5c8fdd7d0d96c176696802e640f6fc87d3dab40dd OK
+fetch-toolchain: the archive bundles std d37c911f12206c4bf5c8d3281a649bf31da3beef; staging the pin instead
+fetch-toolchain: https://github.com/wolffe-lang/wolf-std at d37c911f12206c4bf5c8d3281a649bf31da3beef
+fetch-toolchain: staged x86_64-unknown-linux-gnu into .wolf-bin/
+build: target/release/pelt
+fetch-pelt: pelt at 3b0bab9881f5d099cd5258a6f50a9f2d55d91bc4: /home/mfwolffe/lanes/lp01/lope/.pelt/target/release/pelt
+== status 0 : tools/fetch-pelt
+hook-sessions: logs in /home/mfwolffe/lanes/lp01/scratch/head1/hooks-logs
+lope	bash	cd	3 of 3 recorded
+lope	bash	word	/t/beta/gamma
+lope	bash	two	/t/projects/myapp
+lope	bash	here	/t/alpha
+lope	bash	frag	/t/beta
+lope	bash	real	ran /t 
+lope	bash	miss	status 127, said not found
+lope	bash	g	/t/alpha, back /home, alone /home
+lope	bash	menu	menu, /t/alpha
+lope	bash	fzf	/t/beta/gamma
+lope	zsh	cd	3 of 3 recorded
+lope	zsh	word	/t/beta/gamma
+lope	zsh	two	/t/projects/myapp
+lope	zsh	here	/t/alpha
+lope	zsh	frag	/t/beta
+lope	zsh	real	ran /t 
+lope	zsh	miss	status 127, said not found
+lope	zsh	g	/t/alpha, back /home, alone /home
+lope	zsh	menu	menu, /t/alpha
+lope	zsh	fzf	/t/beta/gamma
+lope	fish	cd	3 of 3 recorded
+lope	fish	word	/t/beta/gamma
+lope	fish	two	/t/projects/myapp
+lope	fish	here	/t/alpha
+lope	fish	frag	/t/beta
+lope	fish	real	ran /t 
+lope	fish	miss	status 127, said not found
+lope	fish	g	/t/alpha, back /home, alone /home
+lope	fish	menu	menu, /t/alpha
+lope	fish	fzf	/t/beta/gamma
+lope	fortsh	cd	3 of 3 recorded
+lope	fortsh	word	/t/beta/gamma
+lope	fortsh	two	/t/projects/myapp
+lope	fortsh	here	/t/alpha
+lope	fortsh	frag	/t/beta
+lope	fortsh	real	ran /t 
+lope	fortsh	miss	status 127, said not found
+lope	fortsh	g	/t/alpha, back /home, alone /home
+lope	fortsh	menu	menu, /t/alpha
+lope	fortsh	fzf	/t/beta/gamma
+lope	pelt	cd	3 of 3 recorded
+lope	pelt	word	/t/beta/gamma
+lope	pelt	two	/t/projects/myapp
+lope	pelt	here	/t/alpha
+lope	pelt	frag	/t/beta
+lope	pelt	real	ran /t 
+lope	pelt	miss	status 127, said not found
+lope	pelt	g	/t/alpha, back /home, alone /home
+lope	pelt	menu	menu, /t/alpha
+lope	pelt	fzf	/t/beta/gamma
+gump	bash	cd	3 of 3 recorded
+gump	bash	word	/home
+gump	bash	two	/home
+gump	bash	here	/t
+gump	bash	frag	/t
+gump	bash	real	ran /t 
+gump	bash	miss	status 127, said not found
+gump	bash	g	/t/alpha, back /home, alone /home
+gump	bash	menu	NO MENU, /home
+gump	bash	fzf	/t/beta/gamma
+gump	zsh	cd	3 of 3 recorded
+gump	zsh	word	/t/beta/gamma
+gump	zsh	two	/t/projects/myapp
+gump	zsh	here	/t/alpha
+gump	zsh	frag	/t/beta
+gump	zsh	real	ran /t 
+gump	zsh	miss	status 127, said not found
+gump	zsh	g	/t/alpha, back /home, alone /home
+gump	zsh	menu	NO MENU, /t/v1
+gump	zsh	fzf	/t/beta/gamma
+gump	fish	cd	3 of 3 recorded
+gump	fish	word	/t/beta/gamma
+gump	fish	two	/t/projects/myapp
+gump	fish	here	/t/alpha
+gump	fish	frag	/t/beta
+gump	fish	real	ran /t 
+gump	fish	miss	status 127, said not found
+gump	fish	g	/t/alpha, back /home, alone /home
+gump	fish	menu	NO MENU, /t/v1
+gump	fish	fzf	/t/beta/gamma
+gump	fortsh	cd	3 of 3 recorded
+gump	fortsh	word	/t/beta/gamma
+gump	fortsh	two	/t/projects/myapp
+gump	fortsh	here	/t/alpha
+gump	fortsh	frag	/t/beta
+gump	fortsh	real	ran /t 
+gump	fortsh	miss	status 127, said not found
+gump	fortsh	g	/t/alpha, back /home, alone /home
+gump	fortsh	menu	NO MENU, /t/v1
+gump	fortsh	fzf	/t/beta/gamma
+hook-sessions: 0 expected row(s) differ
+== status 0 : python3 tools/hook-sessions --tool lope=target/release/lope --tool gump=.gump/target/release/gump --pelt /home/mfwolffe/lanes/lp01/lope/.pelt/target/release/pelt --expect tests/hooks/expected.tsv --report /home/mfwolffe/lanes/lp01/scratch/head1/hooks.tsv --logs /home/mfwolffe/lanes/lp01/scratch/head1/hooks-logs
+sync-census: scratch store on /home/mfwolffe/lanes/lp01/scratch/tmp/lope-sync-0jdycwim (btrfs)
+sync-census: first        ok    status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 121 of 121 bytes written to the temporary file, 0 left
+sync-census: again        ok    status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 207 of 207 bytes written to the temporary file, 0 left
+sync-census: stale        ok    status 0, excl-exists unlink-tmp open-tmp write-tmp sync-tmp rename open-dir sync-dir, 293 of 293 bytes written to the temporary file, 0 left
+sync-census: fault-write  ok    status 1, said 'lope: I/O error: No space left on device (os error 28)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-sync   ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-rename ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left
+sync-census: fault-dir    ok    status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the new bytes: yes, 0 temporary left
+sync-census: cost sync-tmp: median 11.298 ms over 13 saves (strace -T)
+sync-census: cost sync-dir: median 14.128 ms over 13 saves (strace -T)
+sync-census: cost `lope add`: median 27.96 ms over 31 runs (taskset -c 0-3); against /home/mfwolffe/lanes/lp01/scratch/lp01-lope-pin-release: 1.19 ms; the cost per save +26.77 ms
+sync-census: 0 row(s) differ
+== status 0 : tools/sync-census target/release/lope --against /home/mfwolffe/lanes/lp01/scratch/lp01-lope-pin-release --runs 31 --report /home/mfwolffe/lanes/lp01/scratch/head1/sync-cost.json
+{
+ "entries": 10000,
+ "runs": 31,
+ "taskset": true,
+ "query": {
+  "wolf": {
+   "lope_ms": 9.255,
+   "gump_ms": 10.027
+  },
+  "src": {
+   "lope_ms": 8.682,
+   "gump_ms": 10.595
+  },
+  "proj": {
+   "lope_ms": 3.063,
+   "gump_ms": 6.125
+  },
+  "cfg": {
+   "lope_ms": 4.865,
+   "gump_ms": 7.553
+  },
+  "gump src": {
+   "lope_ms": 8.716,
+   "gump_ms": 11.108
+  },
+  "doc": {
+   "lope_ms": 3.742,
+   "gump_ms": 6.34
+  },
+  "mtchr": {
+   "lope_ms": 5.43,
+   "gump_ms": 8.905
+  },
+  "zzqx": {
+   "lope_ms": 4.488,
+   "gump_ms": 10.428
+  }
+ },
+ "query_lope_ms": 5.147,
+ "query_gump_ms": 9.466,
+ "init": {
+  "lope_ms": 0.974,
+  "gump_ms": 1.047,
+  "ratio": 0.93
+ },
+ "list": {
+  "lope_ms": 9.467,
+  "gump_ms": 26.399,
+  "ratio": 0.359
+ },
+ "query_ratio": 0.544
+}
+speed: query lope 5.15 ms, gump 9.47 ms, ratio 0.544 (gate <= 1.000): ok
+speed: init ratio 0.930, list ratio 0.359 (reported)
+== status 0 : tools/speed target/release/lope .gump/target/release/gump --runs 31 --report /home/mfwolffe/lanes/lp01/scratch/head1/speed.json
+selftest: oracle-check went red on its planted difference (status 1): ok
+selftest: probe-check went red on its planted difference (status 1): ok
+selftest: cli-check went red on its planted difference (status 1): ok
+selftest: import-check went red on its planted difference (status 1): ok
+selftest: hook-sessions went red on its planted difference (status 1): ok
+selftest: sync-census went red on its planted difference (status 1): ok
+selftest: speed went red on its planted difference (status 1): ok
+== status 0 : tools/selftest target/release/lope
+done 2026-10-21T22:10:57Z

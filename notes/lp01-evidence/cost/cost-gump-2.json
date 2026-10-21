@@ -1,0 +1,42 @@
+{
+ "rows": {
+  "first": {
+   "ok": true,
+   "text": "status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 121 of 121 bytes written to the temporary file, 0 left"
+  },
+  "again": {
+   "ok": true,
+   "text": "status 0, open-tmp write-tmp sync-tmp rename open-dir sync-dir, 207 of 207 bytes written to the temporary file, 0 left"
+  },
+  "stale": {
+   "ok": true,
+   "text": "status 0, excl-exists unlink-tmp open-tmp write-tmp sync-tmp rename open-dir sync-dir, 293 of 293 bytes written to the temporary file, 0 left"
+  },
+  "fault-write": {
+   "ok": true,
+   "text": "status 1, said 'lope: I/O error: No space left on device (os error 28)', the store holds the old bytes: yes, 0 temporary left"
+  },
+  "fault-sync": {
+   "ok": true,
+   "text": "status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left"
+  },
+  "fault-rename": {
+   "ok": true,
+   "text": "status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the old bytes: yes, 0 temporary left"
+  },
+  "fault-dir": {
+   "ok": true,
+   "text": "status 1, said 'lope: I/O error: Input/output error (os error 5)', the store holds the new bytes: yes, 0 temporary left"
+  }
+ },
+ "cost": {
+  "sync-tmp_ms": 12.18,
+  "sync-dir_ms": 15.224,
+  "add_ms": {
+   "lope": 20.004449994303286,
+   "against": 10.89190598577261
+  },
+  "per_save_ms": 9.112544008530676
+ },
+ "fs": "btrfs"
+}
