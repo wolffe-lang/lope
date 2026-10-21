@@ -1,9 +1,8 @@
 
-# No-prefix directory jumping. pelt cc2fdc9 calls no function when a
-# command is not found (it says `NAME: not found` and the status is 127);
-# this is the function lope asks pelt to call then, in the shell's own
-# environment, with the command's words: it changes directory and answers
-# 0, or answers 127 and pelt says what it always says (sh21).
+# No-prefix directory jumping. pelt calls this function when a command is
+# not found (since sh21, pelt#43), in the shell's own environment, with
+# the command's words: it changes directory and answers 0, or answers 127
+# and pelt says what it always says (`NAME: not found`).
 command_not_found_handle() {
     if [ -d "$1" ]; then
         command cd -- "$1" && __lope_hook
