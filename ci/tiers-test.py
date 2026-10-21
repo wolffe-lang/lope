@@ -88,6 +88,8 @@ p = plan(["README.md", "notes/lp00-the-port.md", "CHANGELOG.md", "docs/MATCHER.m
 say(p["tier"] == "noop", "T2 prose alone is a noop")
 p = plan(["README.md", "src/lope.lu"], event="pull_request", action="opened")
 say(p["tier"] == "pr", "T2 prose beside code is pr")
+p = plan(["wolf-toolchain.toml", "gump.pin", "pelt.pin"], event="pull_request", action="synchronize")
+say(p["tier"] == "pr" and p["jobs"] == PR, "T2 the pins are pr (the toolchain, gump's, pelt's)")
 # T3
 p = plan(["somewhere/new"], event="pull_request", action="opened")
 say(p["tier"] == "full", "T3 a path no rule names is full")
