@@ -48,8 +48,15 @@ lope	pelt	word	/t/beta/gamma
 lope	pelt	two	/t/projects/myapp
 lope	pelt	here	/t/alpha
 lope	pelt	frag	/t/beta
+lope	pelt	autocd-rel	/home/pax
+lope	pelt	autocd-abs	/home/pax
+lope	pelt	autocd-parent	/t/beta
+lope	pelt	autocd-child	/t/alpha
+lope	pelt	autocd-proj	/t/projects/myapp
 lope	pelt	real	ran /t 
+lope	pelt	autocd-real	ran /t
 lope	pelt	miss	status 127, said not found
+lope	pelt	autocd-miss	status 127, said not found
 lope	pelt	g	/t/alpha, back /home, alone /home
 lope	pelt	menu	menu, /t/alpha
 lope	pelt	fzf	/t/beta/gamma

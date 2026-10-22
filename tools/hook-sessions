@@ -200,6 +200,10 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
     t = os.path.join(root, "t")
     for d in ("alpha", "beta/gamma", "projects/myapp", "printf", "ls", "delta", "v1"):
         os.makedirs(os.path.join(t, d))
+    # The two slashed autocd forms stay within this session's scratch tree.
+    # Their reported paths are normalized relative to root, so they model
+    # `home/pax` and `/home/pax/` without writing a host /home path.
+    os.makedirs(os.path.join(home, "pax"))
     os.makedirs(cfg)
     bin_ = os.path.join(root, "bin")
     fzfbin = os.path.join(root, "fzfbin")
@@ -251,6 +255,26 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
         s.line("cd %s" % t)
         s.line("bet")
         rows.append(("frag", where(s, root, shell)[0]))
+        if shell == "pelt":
+            # pelt 2dc8dbe's autocd takes slashed directory words before the
+            # command-not-found hook.  The old pin reaches the hook only for
+            # the bare cases, so the first two rows are deliberately red
+            # until pelt.pin moves.
+            s.line("cd %s" % root)
+            s.line("home/pax")
+            rows.append(("autocd-rel", where(s, root, shell)[0]))
+            s.line("cd %s" % root)
+            s.line(os.path.join(root, "home", "pax") + "/")
+            rows.append(("autocd-abs", where(s, root, shell)[0]))
+            s.line("cd %s/beta/gamma" % t)
+            s.line("..")
+            rows.append(("autocd-parent", where(s, root, shell)[0]))
+            s.line("cd %s" % t)
+            s.line("alpha")
+            rows.append(("autocd-child", where(s, root, shell)[0]))
+            s.line("cd %s" % home)
+            s.line("proj")
+            rows.append(("autocd-proj", where(s, root, shell)[0]))
         # real
         s.line("cd %s" % t)
         out = s.line("printf 'ok\\n'")
@@ -259,11 +283,15 @@ def run_one(tool, binary, shell, bins, fzf, outdir):
         ok2 = re.search(r"\nalpha/?\n", out.replace("\r", "")) is not None
         d, _ = where(s, root, shell)
         rows.append(("real", "%s %s %s" % ("ran" if ok1 and ok2 else "SHADOWED", d, "")))
+        if shell == "pelt":
+            rows.append(("autocd-real", "%s %s" % ("ran" if ok1 and ok2 else "SHADOWED", d)))
         # miss
         out = s.line("zzqqxx")
         st = status(s, shell)
         msg = "not found" in out or "Unknown command" in out
         rows.append(("miss", "status %s%s" % (st, ", said not found" if msg else ", SILENT")))
+        if shell == "pelt":
+            rows.append(("autocd-miss", "status %s%s" % (st, ", said not found" if msg else ", SILENT")))
         # g
         s.line("cd %s" % home)
         s.line("g alpha")
