@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `lope init pelt` enables pelt's `autocd` option with an old-pelt-safe
+  subshell guard. In an interactive PAX shell, slashed directory words such
+  as `home/pax` and `/home/pax/` now change directory; the existing
+  command-not-found hook still resolves bare fuzzy words.
+
 ## 0.1.0 (unreleased) — lp00, the port; lp01, the sync and the pin
 
 gump 0.2.7 (`43c114d`) ported to wolf 0.2.33 and renamed lope (lp00);

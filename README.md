@@ -48,7 +48,9 @@ commit `user/lope.pin` names, with the toolchain this tree pins, as
 pin). PAX's console shell is pelt, started with `ENV=/etc/shrc`, and
 `/etc/shrc` runs `eval "$(lope init pelt)"`: a `cd` is recorded, `g` and
 `gi` jump, and a word that names no command jumps (pelt's
-`command_not_found_handle`). The store is the user's,
+`command_not_found_handle`). On pelt `2dc8dbe` or later, it also enables
+`autocd`, so a slashed directory word such as `home/pax` or `/home/pax/`
+changes directory before the hook could see it. The store is the user's,
 `$HOME/.local/share/lope/store` (`/.local/share/lope/store` for root,
 whose `HOME` is `/`), in PAX's in-memory tree until PAX has storage. PAX
 has no fzf, so `gi` shows its numbered menu; with no editor, `lope edit`
