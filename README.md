@@ -27,7 +27,7 @@ runs on PAX; and its speed measured against gump's in CI.
 lope is not published yet. The packaging is prepared in `packaging/`
 (a Homebrew formula, an AUR `PKGBUILD`, an RPM spec) for a release.
 
-**From source** (the toolchain is fetched by digest; wolf 0.2.34):
+**From source** (the toolchain is fetched by digest; wolf 0.2.35):
 ```bash
 tools/fetch-toolchain
 tools/build --release
