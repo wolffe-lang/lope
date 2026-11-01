@@ -10,15 +10,17 @@
 # refuses when it drifts from `version_line`. `rev` is information: the
 # commit the tag names.
 #
-# ## The pin: 0.2.35 / 0.1.56 (r40p, 2026-10-23)
+# ## The pin: 0.2.36 / 0.1.58 (r41p, 2026-10-31)
 #
-# Digests read twice from the release API (wolf-lang release 421613621,
-# wolf-interp release 421458363), equal both times and compared with r40's
-# published evidence. The tag commits are v0.2.35 `cf0c13d` and v0.1.56
-# `28547b4`. The wolf archive bundles wolf-std `2386522e`
+# Digests read twice from the release API (wolf-lang release 427033151,
+# wolf-interp release 425116893), equal both times and compared with r41's
+# published evidence; the linux x86-64 pair was hashed twice after
+# download on hasu. The tag commits are v0.2.36 `5adf3d9` and v0.1.58
+# `6240efe`. The wolf archive bundles wolf-std `78b9d3cb`
 # (`std/STD-REV`), which is the std pin below.
 #
-# The prior pin was 0.2.34 / 0.1.55 / `e036bec` (lp01, 2026-10-21).
+# The prior pin was 0.2.35 / 0.1.56 / `2386522e` (r40p, 2026-10-23).
+# Before it, 0.2.34 / 0.1.55 / `e036bec` (lp01, 2026-10-21).
 # The first pin was 0.2.33 / 0.1.54 / `cceda63` (lp00, 2026-10-19).
 #
 # Windows is not pinned: lope is a shell companion for unix shells.
@@ -33,9 +35,9 @@ x86_64-unknown-linux-gnu = "d383c74c8cd123b9d9dfaa268271d4f004294f85c2b230237d0e
 aarch64-unknown-linux-gnu = "3d5bd9ef47d3d198dd67fb3f995dff3ef7b169097529fa0e7ae8524e723be3d4"
 
 [lupin]
-# The reference interpreter wolf 0.2.35 declares as its pairing:
-# `wolf --version` line 2 reads "paired with lupin 0.1.56 (reference
-# interpreter), pin 294d626".
+# The reference interpreter wolf 0.2.36 declares as its pairing:
+# `wolf --version` line 2 reads "paired with lupin 0.1.58 (reference
+# interpreter), pin a5378e3".
 version = "0.1.58"
 repo = "wolffe-lang/wolf-interp"
 rev = "6240efe5570dba1a33ba6269e3ba44bae33dd972"
