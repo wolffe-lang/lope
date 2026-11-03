@@ -1,0 +1,74 @@
+{
+  "main": "ci.yml",
+  "main_name": "ci",
+  "root": "plan",
+  "new_router": false,
+  "router_body": "    name: plan\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n    steps:\n      - name: full job set selected\n        if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix') }}\n        run: echo 'SELECTED plan-test linux macos linux-arm tier'\n      - uses: actions/checkout@v4\n        if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix') }}\n      - name: local gate wiring proof\n        if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix') }}\n        run: python3 -I ci/local-gate-test.py\n      - name: local evidence gate\n        if: ${{ !(github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix')) }}\n        run: echo 'Local gauntlet evidence is the gate; request ci or full-matrix for CI.'\n",
+  "planner": [
+    "python3",
+    "ci/tiers.py",
+    "plan"
+  ],
+  "full": {
+    "tier": "full",
+    "jobs": [
+      "plan-test",
+      "linux",
+      "macos",
+      "linux-arm"
+    ]
+  },
+  "selected": [
+    "plan-test",
+    "linux",
+    "macos",
+    "linux-arm",
+    "tier"
+  ],
+  "module_path": "src/local-module.lu",
+  "cross_paths": [
+    ".github/workflows/ci.yml",
+    "ci/local-gate-test.py",
+    "tools/shared.sh",
+    "wolf-toolchain.toml"
+  ],
+  "push_patterns": [
+    ".github/**",
+    "ci/**",
+    "!ci/*.md",
+    "!ci/**/*.md",
+    "tools/**",
+    "spec/**",
+    "**/wolf-toolchain.toml",
+    "**/rust-toolchain.toml",
+    "**/*.pin",
+    "**/PAIRING",
+    "**/STD-PIN",
+    "vendor/tools.toml",
+    "gnu-oracle.toml",
+    ".gitmodules",
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "push_before": "  push:\n    branches: [trunk]\n",
+  "preserve_push": false,
+  "workflows": {
+    "ci.yml": {
+      "plan": "    name: plan\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n    outputs:\n      tier: ${{ steps.plan.outputs.tier }}\n      jobs: ${{ steps.plan.outputs.jobs }}\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          fetch-depth: 2\n      - id: plan\n        env:\n          EVENT: ${{ github.event_name }}\n          ACTION: ${{ github.event.action }}\n          LABEL: ${{ github.event.label.name }}\n          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}\n          HEAD_SHA: ${{ github.event.pull_request.head.sha }}\n          IN_JOBS: ${{ inputs.jobs }}\n        run: python3 ci/tiers.py plan --merge --github-output \"$GITHUB_OUTPUT\"\n\n",
+      "plan-test": "    name: the planner's own test\n    needs: plan\n    if: contains(fromJSON(needs.plan.outputs.jobs || '[]'), 'plan-test')\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n    steps:\n      - uses: actions/checkout@v4\n      - run: python3 ci/tiers-test.py\n\n",
+      "linux": "    name: linux x86-64 (every gate)\n    needs: plan\n    if: contains(fromJSON(needs.plan.outputs.jobs || '[]'), 'linux')\n    runs-on: ubuntu-latest\n    timeout-minutes: 40\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: the pinned toolchain, by digest\n        run: tools/fetch-toolchain\n\n      - name: wolf fmt --check\n        if: ${{ !cancelled() }}\n        run: tools/check-fmt\n\n      - name: the generated sources are the generated ones\n        if: ${{ !cancelled() }}\n        run: |\n          python3 tools/gen-hooks --check\n          python3 -c \"import unicodedata; print('runner Unicode', unicodedata.unidata_version)\"\n          if python3 -c \"import unicodedata, sys; sys.exit(unicodedata.unidata_version != '16.0.0')\"; then\n            python3 tools/gen-fold --check\n          else\n            echo \"::notice::runner Python is not Unicode 16.0.0; the fold table is checked on kasumi\"\n          fi\n\n      - name: build, both tiers\n        if: ${{ !cancelled() }}\n        run: tools/build --all\n\n      - name: wolf test (the matcher's rows, frecency at frozen times, the codecs)\n        if: ${{ !cancelled() }}\n        run: tools/check-test\n\n      - name: the same unit tests on the reference interpreter\n        if: ${{ !cancelled() }}\n        run: |\n          .wolf-bin/lupin run src/matcher_test.lu\n          .wolf-bin/lupin run src/db_test.lu\n\n      - name: the 322 probe rows, both tiers\n        if: ${{ !cancelled() }}\n        run: |\n          tools/probe-check target/native/lope\n          tools/probe-check target/release/lope\n\n      - name: the oracle corpus (654 cases, floor tests/oracle/FLOOR), both tiers\n        if: ${{ !cancelled() }}\n        run: |\n          tools/oracle-check target/native/lope\n          tools/oracle-check target/release/lope\n\n      - name: the fold record (floor tests/oracle/FOLD-FLOOR)\n        if: ${{ !cancelled() }}\n        run: tools/fold-check target/release/lope\n\n      - name: gump's command lines (95 rows)\n        if: ${{ !cancelled() }}\n        run: tools/cli-check target/release/lope\n\n      - name: import from hand-written fixtures\n        if: ${{ !cancelled() }}\n        run: tools/import-check target/release/lope\n\n      - name: edit, and its refusals (no editor at all, as on PAX)\n        if: ${{ !cancelled() }}\n        run: tools/edit-check target/release/lope\n\n      - name: strace, for the sync census\n        if: ${{ !cancelled() }}\n        run: |\n          sudo apt-get update -qq\n          sudo apt-get install -y -qq strace >/dev/null\n          strace -V | head -1\n\n      # The store's save in its system calls (ruling #96 D9): the temporary\n      # file created exclusively, written, synced, renamed over the store,\n      # the directory synced; four failures injected. The scratch store is\n      # under $RUNNER_TEMP, on the runner's disk (a sync on tmpfs is free),\n      # and the cost per save is printed, not gated.\n      - name: the store's syncs, seen in its system calls, both tiers\n        if: ${{ !cancelled() }}\n        env:\n          TMPDIR: ${{ runner.temp }}\n        run: |\n          tools/sync-census target/native/lope\n          tools/sync-census target/release/lope\n\n      - name: the shells for the hook sessions\n        if: ${{ !cancelled() }}\n        run: |\n          sudo apt-get update -qq\n          sudo apt-get install -y -qq zsh fish fzf >/dev/null\n          bash --version | head -1\n          zsh --version\n          fish --version\n\n      - name: the hooks on PTYs (bash, zsh, fish)\n        if: ${{ !cancelled() }}\n        timeout-minutes: 10\n        run: python3 tools/hook-sessions --tool lope=target/release/lope --shells bash,zsh,fish --expect tests/hooks/expected.tsv --logs hook-logs\n\n      - name: pelt at pelt.pin, for its hook (lope#3)\n        if: ${{ !cancelled() }}\n        run: tools/fetch-pelt\n\n      - name: the hooks on PTYs (pelt at pelt.pin)\n        if: ${{ !cancelled() }}\n        timeout-minutes: 10\n        run: python3 tools/hook-sessions --tool lope=target/release/lope --shells pelt --pelt .pelt/target/release/pelt --expect tests/hooks/expected.tsv --logs hook-logs-pelt\n\n      - name: gump at gump.pin, for the speed gate\n        if: ${{ !cancelled() }}\n        run: tools/fetch-gump\n\n      - name: speed, lope against gump (query no slower; taskset -c 0-3)\n        if: ${{ !cancelled() }}\n        run: tools/speed target/release/lope .gump/target/release/gump\n\n      - name: the static x86-64 build and its digest (PAX)\n        if: ${{ !cancelled() }}\n        run: tools/mkstatic target/static\n\n      - name: the harnesses see a difference (the planted reds)\n        if: ${{ !cancelled() }}\n        run: tools/selftest target/release/lope\n\n",
+      "macos": "    name: macOS arm64\n    needs: plan\n    if: contains(fromJSON(needs.plan.outputs.jobs || '[]'), 'macos')\n    runs-on: macos-latest\n    timeout-minutes: 30\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: the pinned toolchain, by digest\n        run: tools/fetch-toolchain\n\n      - name: build, both tiers\n        if: ${{ !cancelled() }}\n        run: tools/build --all\n\n      - name: wolf test\n        if: ${{ !cancelled() }}\n        run: tools/check-test\n\n      - name: the probe rows, the corpus, the fold record\n        if: ${{ !cancelled() }}\n        run: |\n          tools/probe-check target/release/lope\n          tools/oracle-check target/release/lope\n          tools/fold-check target/release/lope\n\n      - name: gump's command lines, import, edit\n        if: ${{ !cancelled() }}\n        run: |\n          tools/cli-check target/release/lope\n          tools/import-check target/release/lope\n          tools/edit-check target/release/lope\n\n      # macOS's own bash is 3.2, which has no READLINE_LINE (the bash hook\n      # leaves the jump out there, by its version check); zsh is the\n      # shell macOS starts.\n      - name: the hooks on PTYs (zsh)\n        if: ${{ !cancelled() }}\n        timeout-minutes: 10\n        run: python3 tools/hook-sessions --tool lope=target/release/lope --shells zsh --fzf \"\" --expect tests/hooks/expected.tsv --logs hook-logs\n\n",
+      "linux-arm": "    name: linux aarch64\n    needs: plan\n    if: contains(fromJSON(needs.plan.outputs.jobs || '[]'), 'linux-arm')\n    runs-on: ubuntu-24.04-arm\n    timeout-minutes: 20\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: the pinned toolchain, by digest\n        run: tools/fetch-toolchain\n\n      # wolf 0.2.34, like 0.2.24..0.2.33 (pelt's CI), builds NO tier on\n      # linux aarch64 (wolf-lang#614): both refusals are asserted by name,\n      # so the day a tier arrives this goes red and the matrix widens.\n      - name: both tiers are refused on this host, by name (wolf-lang#614)\n        shell: bash\n        run: |\n          set +e\n          tools/build --native >native.log 2>&1\n          n=$?\n          tools/build --release >release.log 2>&1\n          r=$?\n          set -e\n          cat native.log release.log\n          if [ \"$n\" = 0 ] || [ \"$r\" = 0 ]; then\n            echo \"::error::a tier now builds on linux aarch64 (native $n, release $r); widen the matrix\"\n            exit 1\n          fi\n          grep -q \"this host cannot run the native tier\" native.log\n          grep -q \"this host cannot run the release tier\" release.log\n\n      - name: the unit tests on the reference interpreter\n        if: ${{ !cancelled() }}\n        run: |\n          .wolf-bin/lupin run src/matcher_test.lu\n          .wolf-bin/lupin run src/db_test.lu\n\n",
+      "tier": "    name: tier ${{ needs.plan.outputs.tier || 'unplanned' }}\n    if: ${{ !cancelled() }}\n    needs:\n      - plan\n      - plan-test\n      - linux\n      - macos\n      - linux-arm\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n    steps:\n      - uses: actions/checkout@v4\n      - name: every chosen job succeeded, every other was skipped\n        env:\n          NEEDS: ${{ toJSON(needs) }}\n        run: python3 ci/tiers.py verdict\n"
+    }
+  },
+  "schedules": {
+    "ci.yml": "    - cron: \"41 3 * * *\""
+  },
+  "unchanged": {},
+  "exempt_jobs": [
+    "nightly-red",
+    "notify",
+    "sleep-alarm"
+  ]
+}
