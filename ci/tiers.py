@@ -30,9 +30,10 @@ and `tier`.
            other than `full-matrix`.
   partial  a `workflow_dispatch` that names jobs (`-f jobs="plan-test"`).
 
-PROSE: the CHANGELOG, CLAUDE.md, README.md, docs/ and notes/ (no gate
-reads them). `verdict` exits 0 when the plan succeeded, the jobs it chose
-are the tier's, every chosen job succeeded and every other was skipped.
+PROSE: the CHANGELOG, CLAUDE.md, CONTRIBUTING.md, README.md, docs/ and
+notes/ (no gate reads them). `verdict` exits 0 when the plan succeeded,
+the jobs it chose are the tier's, every chosen job succeeded and every
+other was skipped.
 """
 import argparse
 import json
@@ -57,6 +58,7 @@ PROSE, PR, FULL = "prose", "pr", "full"
 RULES = [
     ("CHANGELOG.md", PROSE),
     ("CLAUDE.md", PROSE),
+    ("CONTRIBUTING.md", PROSE),
     ("README.md", PROSE),
     ("docs/**", PROSE),
     ("notes/**", PROSE),
