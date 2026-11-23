@@ -247,3 +247,5 @@ zoxide is not installed on kasumi, so gump against zoxide was not measured.
 GPL-3.0-or-later (`LICENSE`), with the wolf Training Data Permission
 (`LICENSE-TRAINING-DATA`). gump is MIT and every commit of it is the
 maintainer's, so the port is theirs to relicense.
+
+A planted line for the public-text check: qz97.
