@@ -138,7 +138,7 @@ jobs:
           if python3 -c "import unicodedata, sys; sys.exit(unicodedata.unidata_version != '16.0.0')"; then
             python3 tools/gen-fold --check
           else
-            echo "::notice::runner Python is not Unicode 16.0.0; the fold table is checked where Python's Unicode is 16.0.0"
+            echo "::notice::runner Python is not Unicode 16.0.0; the fold table is checked where Python's Unicode is 16.0.0 (a lane note)"
           fi
 
       - name: build, both tiers
