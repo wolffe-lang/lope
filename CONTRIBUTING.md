@@ -43,6 +43,8 @@ tools/probe-check target/release/lope
 tools/oracle-check target/release/lope
 tools/selftest target/release/lope
 python3 ci/tiers-test.py          # CI's planner against its rules
+python3 -I tools/check-public-text --self-test
+python3 -I tools/check-public-text   # no internal references in the public text
 ```
 
 Every behaviour claim has a gate:
@@ -59,6 +61,7 @@ Every behaviour claim has a gate:
 | import, edit | `tools/import-check`, `tools/edit-check` |
 | speed | `tools/speed` (a query no slower than gump's) |
 | each harness can go red | `tools/selftest` |
+| documents, comments and CI files hold no internal work-item ids, decision numbers, machine names or planning paths | `tools/check-public-text`, its `--self-test`, and `.github/workflows/public-text.yml` on every pull request |
 
 `tools/hook-sessions` runs the hooks only in shells it starts on its own
 pseudo-terminals, each with a scratch `HOME` and `XDG_*` directories, never
