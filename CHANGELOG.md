@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- `tools/check-public-text`, the check every repository of the organization carries, pinned by digest in
+  `tools/public-text.conf`: documents, code comments and CI files hold no new internal work-item ids, decision
+  numbers, machine names or planning paths (the ones already here are counted in `tools/public-text.baseline`,
+  which may only shrink). `.github/workflows/public-text.yml` runs it and its self-test on every pull request,
+  with no label; CONTRIBUTING.md lists it with the other checks.
 - `lope init pelt` enables pelt's `autocd` option with an old-pelt-safe
   subshell guard. In an interactive PAX shell, slashed directory words such
   as `home/pax` and `/home/pax/` now change directory; the existing
