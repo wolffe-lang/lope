@@ -55,14 +55,14 @@ Measured (lp01, `tools/sync-census`, `notes/lp01-evidence/cost/`):
 
 | where | the file's sync | the directory's | `lope add` | without the syncs | per save |
 |---|---|---|---|---|---|
-| kasumi, btrfs on nvme, load about 3 | 4.97 ms | 4.94 ms | 10.40 ms | 0.82 ms | +9.6 ms |
-| kasumi, the same, load 8–12 (other jobs writing), five runs | 6.2–11.7 ms | 9.7–15.0 ms | 18.1–43.9 ms | 1.4–2.3 ms | +16.6 to +42.4 ms |
+| a Linux x86-64 development host, btrfs on nvme, load about 3 | 4.97 ms | 4.94 ms | 10.40 ms | 0.82 ms | +9.6 ms |
+| the same host, load 8–12 (other jobs writing), five runs | 6.2–11.7 ms | 9.7–15.0 ms | 18.1–43.9 ms | 1.4–2.3 ms | +16.6 to +42.4 ms |
 | CI's runner, ext4 | 0.43–0.47 ms | 0.22–0.23 ms | 2.03–2.06 ms | | about +0.7 ms |
 
 Each sync's time is `strace -T`'s, the median of the census's saves;
 `lope add` is the median of 15 or 31 fresh processes under `taskset -c
 0-3`, interleaved with the same lope built without the syncs. gump's `add`
-syncs the file only: on kasumi, loaded, lope's took 20.0 and 31.0 ms
+syncs the file only: on that host, loaded, lope's took 20.0 and 31.0 ms
 against gump's 10.9 and 15.6 (interleaved, 31 runs each), about one sync
 more. On tmpfs, and in PAX's in-memory tree (which answers 0 to a sync of a
 file or a directory, pax `kernel/files/files.lu:4437`), a sync costs
